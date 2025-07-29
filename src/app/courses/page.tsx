@@ -48,152 +48,240 @@ interface CourseCategory {
 const categories: CourseCategory[] = [
   {
     id: 'beginner',
-    name: 'Beginner Courses',
-    description: 'Perfect for first-time divers and those new to scuba diving',
+    name: 'Entry Level Programs',
+    description: 'Perfect for first-time divers and those new to scuba diving - from Try Scuba to Open Water certification',
     icon: <Fish className="h-8 w-8" />,
     color: 'from-emerald-400 to-cyan-500'
   },
   {
     id: 'certification',
-    name: 'Certification Courses',
-    description: 'Advanced training for serious divers seeking professional certification',
+    name: 'Continuing Education',
+    description: 'Advanced training for certified divers seeking skill enhancement and rescue capabilities',
     icon: <Award className="h-8 w-8" />,
     color: 'from-blue-400 to-indigo-500'
   },
   {
     id: 'specialty',
     name: 'Specialty Courses',
-    description: 'Specialized training for unique diving experiences and skills',
+    description: 'Specialized training for unique diving experiences - from Deep Diving to Wreck Exploration',
     icon: <Anchor className="h-8 w-8" />,
     color: 'from-purple-400 to-pink-500'
   }
 ];
 
 const courses: Course[] = [
-  // Beginner Courses
-  {
-    id: 'discover-scuba',
-    title: 'Discover Scuba Diving',
-    description: 'Try scuba diving for the first time in a safe, controlled environment.',
-    duration: '1 day',
-    dives: 2,
-    price: '₹5,000',
-    level: 'Beginner',
-    certification: 'Experience Certificate',
-    category: 'beginner'
-  },
-  {
-    id: 'bubble-maker',
-    title: 'PADI Bubblemaker',
-    description: 'Introduction to scuba diving for kids aged 8-10 in shallow water.',
-    duration: '1 day',
-    dives: 1,
-    price: '₹3,500',
-    level: 'Kids',
-    certification: 'PADI Bubblemaker',
-    category: 'beginner'
-  },
+  // Beginner Courses (Entry Level Programs)
   {
     id: 'try-scuba',
-    title: 'Try Scuba Diving',
-    description: 'Pool session to experience breathing underwater before open water.',
-    duration: '2 hours',
+    title: 'Try Scuba',
+    description: 'Safe and exhilarating introduction to scuba diving, perfect for non-swimmers. Test the waters before you commit!',
+    duration: '3 hours',
     dives: 1,
-    price: '₹2,500',
+    price: '₹4,500',
     level: 'Beginner',
-    certification: 'Try Scuba',
+    certification: 'Try Scuba Experience',
+    category: 'beginner'
+  },
+  {
+    id: 'basic-diver',
+    title: 'SSI Basic Diver',
+    description: 'Gateway to exploring depths of up to 12 meters with an experienced SSI Professional. Credits towards further certifications.',
+    duration: '4 hours',
+    dives: 1,
+    price: '₹7,500',
+    level: 'Beginner',
+    certification: 'SSI Basic Diver',
+    category: 'beginner'
+  },
+  {
+    id: 'scuba-diver',
+    title: 'SSI Scuba Diver',
+    description: 'Excellent starting point combining online learning with practical dives. Dive up to 12 meters deep.',
+    duration: '2 days',
+    dives: 2,
+    price: '₹15,000',
+    level: 'Beginner',
+    certification: 'SSI Scuba Diver',
+    category: 'beginner'
+  },
+  {
+    id: 'open-water',
+    title: 'SSI Open Water Diver',
+    description: 'Globally recognized certification program. Your gateway to lifelong diving adventures up to 18 meters deep.',
+    duration: '4 days',
+    dives: 4,
+    price: '₹35,000',
+    level: 'Beginner',
+    certification: 'SSI Open Water Diver',
     category: 'beginner'
   },
 
-  // Certification Courses
+  // Certification Courses (Continuing Education)
   {
-    id: 'open-water',
-    title: 'PADI Open Water Diver',
-    description: 'Your gateway to the underwater world with fundamental scuba skills.',
-    duration: '3-4 days',
-    dives: 4,
-    price: '₹18,000',
-    level: 'Beginner',
-    certification: 'PADI Open Water',
-    category: 'certification'
-  },
-  {
-    id: 'advanced-open-water',
-    title: 'PADI Advanced Open Water',
-    description: 'Build confidence with adventure dives and enhanced skills.',
-    duration: '2-3 days',
+    id: 'advanced-adventurer',
+    title: 'SSI Advanced Adventurer',
+    description: 'Sample five SSI specialties through Adventure Dives. Certifies you to dive up to 30 meters deep.',
+    duration: '3 days',
     dives: 5,
-    price: '₹15,000',
+    price: '₹25,000',
     level: 'Intermediate',
-    certification: 'PADI Advanced Open Water',
+    certification: 'SSI Advanced Adventurer',
     category: 'certification'
   },
   {
-    id: 'rescue-diver',
-    title: 'PADI Rescue Diver',
-    description: 'Learn to prevent and manage underwater emergencies.',
+    id: 'scuba-skill-update',
+    title: 'SSI Scuba Skill Update',
+    description: 'Refresh your skills after inactivity. Perfect for divers who haven\'t been in water for a while.',
+    duration: '1 day',
+    dives: 0,
+    price: '₹8,000',
+    level: 'Refresher',
+    certification: 'Skill Update',
+    category: 'certification'
+  },
+  {
+    id: 'diver-stress-rescue',
+    title: 'SSI Diver Stress and Rescue',
+    description: 'Comprehensive course to manage emergencies effectively. Learn to identify stress signals and prevent accidents.',
     duration: '3-4 days',
     dives: 4,
-    price: '₹20,000',
+    price: 'Contact for pricing',
     level: 'Advanced',
-    certification: 'PADI Rescue Diver',
-    category: 'certification'
-  },
-  {
-    id: 'divemaster',
-    title: 'PADI Divemaster',
-    description: 'Professional level training to guide and assist other divers.',
-    duration: '4-6 weeks',
-    dives: 20,
-    price: '₹45,000',
-    level: 'Professional',
-    certification: 'PADI Divemaster',
+    certification: 'SSI Diver Stress and Rescue',
     category: 'certification'
   },
 
   // Specialty Courses
   {
     id: 'deep-diving',
-    title: 'PADI Deep Diver',
-    description: 'Explore deeper waters safely with proper deep diving techniques.',
+    title: 'SSI Deep Diving Specialty',
+    description: 'Prepare for dives ranging from 18 to 40 meters deep. Learn dive computers and gas consumption.',
     duration: '2 days',
     dives: 4,
     price: 'Contact for pricing',
     level: 'Advanced',
-    certification: 'PADI Deep Diver Specialty',
+    certification: 'SSI Deep Diving Specialty',
     category: 'specialty'
   },
   {
-    id: 'night-diving',
-    title: 'PADI Night Diver',
-    description: 'Experience the magic of underwater life after dark.',
+    id: 'perfect-buoyancy',
+    title: 'SSI Perfect Buoyancy',
+    description: 'Master buoyancy control underwater. Learn to swim like a fish and be balanced like a turtle.',
     duration: '1-2 days',
+    dives: 2,
+    price: 'Contact for pricing',
+    level: 'Open Water',
+    certification: 'SSI Perfect Buoyancy',
+    category: 'specialty'
+  },
+  {
+    id: 'nitrox',
+    title: 'SSI Nitrox Specialty',
+    description: 'Learn enriched air nitrox diving for longer bottom times and shorter surface intervals.',
+    duration: '1 day',
+    dives: 2,
+    price: 'Contact for pricing',
+    level: 'Open Water',
+    certification: 'SSI Nitrox Specialty',
+    category: 'specialty'
+  },
+  {
+    id: 'navigation',
+    title: 'SSI Navigation Specialty',
+    description: 'Master underwater navigation with compass and natural techniques. Never get lost underwater again!',
+    duration: '2 days',
     dives: 3,
     price: 'Contact for pricing',
-    level: 'Advanced',
-    certification: 'PADI Night Diver Specialty',
+    level: 'Open Water',
+    certification: 'SSI Navigation Specialty',
     category: 'specialty'
   },
   {
-    id: 'underwater-photography',
-    title: 'PADI Underwater Photography',
-    description: 'Capture the beauty of marine life with professional techniques.',
+    id: 'fish-identification',
+    title: 'SSI Fish Identification',
+    description: 'Learn to identify fish species, their behaviors, and habitats. Know what you\'re seeing underwater!',
     duration: '2 days',
     dives: 2,
     price: 'Contact for pricing',
     level: 'Open Water',
-    certification: 'PADI UW Photography Specialty',
+    certification: 'SSI Fish Identification',
     category: 'specialty'
   },
   {
     id: 'wreck-diving',
-    title: 'PADI Wreck Diver',
-    description: 'Safely explore sunken ships and artificial reefs.',
+    title: 'SSI Wreck Diving (Havelock Only)',
+    description: 'Explore and navigate wreck dive sites safely. Discover underwater history like the Titanic!',
     duration: '2 days',
     dives: 4,
     price: 'Contact for pricing',
     level: 'Advanced',
-    certification: 'PADI Wreck Diver Specialty',
+    certification: 'SSI Wreck Diving',
+    category: 'specialty'
+  },
+  {
+    id: 'night-diving',
+    title: 'SSI Night & Limited Visibility (Havelock Only)',
+    description: 'Safely navigate underwater environments in low light. Discover nocturnal marine life behaviors.',
+    duration: '2 days',
+    dives: 3,
+    price: 'Contact for pricing',
+    level: 'Open Water',
+    certification: 'SSI Night & Limited Visibility',
+    category: 'specialty'
+  },
+  {
+    id: 'science-diving',
+    title: 'SSI Science of Diving (Theory)',
+    description: 'Comprehensive understanding of diving physics, physiology, and decompression theory.',
+    duration: '1 day',
+    dives: 0,
+    price: 'Contact for pricing',
+    level: 'Open Water',
+    certification: 'SSI Science of Diving',
+    category: 'specialty'
+  },
+  {
+    id: 'boat-diving',
+    title: 'SSI Boat Diving Specialty',
+    description: 'Learn boat diving logistics, entry/exit techniques, and safety protocols for diving from boats.',
+    duration: '1 day',
+    dives: 2,
+    price: 'Contact for pricing',
+    level: 'Open Water',
+    certification: 'SSI Boat Diving',
+    category: 'specialty'
+  },
+  {
+    id: 'equipment-technique',
+    title: 'SSI Equipment Technique',
+    description: 'Master dive equipment maintenance, care, and troubleshooting. Make the right equipment choices.',
+    duration: '1 day',
+    dives: 0,
+    price: 'Contact for pricing',
+    level: 'Open Water',
+    certification: 'SSI Equipment Technique',
+    category: 'specialty'
+  },
+  {
+    id: 'search-recovery',
+    title: 'SSI Search and Recovery',
+    description: 'Learn to locate and retrieve objects underwater. Find that lost wedding ring!',
+    duration: '2 days',
+    dives: 4,
+    price: 'Contact for pricing',
+    level: 'Advanced',
+    certification: 'SSI Search and Recovery',
+    category: 'specialty'
+  },
+  {
+    id: 'computer-diving',
+    title: 'SSI Computer Diving',
+    description: 'Master dive computer operation for safer diving. Learn algorithms and dive profile optimization.',
+    duration: '1 day',
+    dives: 2,
+    price: 'Contact for pricing',
+    level: 'Open Water',
+    certification: 'SSI Computer Diving',
     category: 'specialty'
   }
 ];

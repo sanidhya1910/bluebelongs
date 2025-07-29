@@ -93,9 +93,9 @@ body {
     animation: underwaterShimmer 3s ease-in-out infinite;
   }
 
-  .floating-element {
+  /* .floating-element {
     animation: floatingMotion 6s ease-in-out infinite;
-  }
+  } */
 }
 
 @layer utilities {

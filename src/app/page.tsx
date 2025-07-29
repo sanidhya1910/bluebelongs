@@ -213,7 +213,7 @@ export default function HomePage() {
             {features.map((feature, index) => (
               <motion.div
                 key={index}
-                className="card text-center floating-element"
+                className="card text-center"
                 initial={{ opacity: 0, y: 50 }}
                 animate={featuresInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ delay: index * 0.2, duration: 0.8 }}

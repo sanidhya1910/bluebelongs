@@ -181,7 +181,7 @@ export default function BlogsPage() {
             >
               <Waves className="h-8 w-8 text-cyan-200 wave-animation" />
               <span className="text-cyan-200 font-medium">Latest Updates from Blue Belong</span>
-              <Anchor className="h-8 w-8 text-cyan-200 floating-element" />
+              <Anchor className="h-8 w-8 text-cyan-200" />
             </motion.div>
           </motion.div>
         </div>

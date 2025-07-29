@@ -258,7 +258,7 @@ export default function MedicalFormPage() {
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Personal Information */}
             <motion.div
-              className="card floating-element"
+              className="card"
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.8 }}
@@ -334,7 +334,7 @@ export default function MedicalFormPage() {
 
             {/* Medical Questions */}
             <motion.div
-              className="card floating-element"
+              className="card"
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.8 }}
@@ -380,7 +380,7 @@ export default function MedicalFormPage() {
 
             {/* Additional Information */}
             <motion.div
-              className="card floating-element"
+              className="card"
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.8 }}
@@ -403,7 +403,7 @@ export default function MedicalFormPage() {
             {/* Physician Approval */}
             {hasYesAnswers && (
               <motion.div
-                className="card bg-yellow-50 border-yellow-200 floating-element"
+                className="card bg-yellow-50 border-yellow-200"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.8, duration: 0.8 }}
@@ -436,7 +436,7 @@ export default function MedicalFormPage() {
 
             {/* Declaration */}
             <motion.div
-              className="card floating-element"
+              className="card"
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.0, duration: 0.8 }}
