@@ -12,15 +12,63 @@
   --font-mono: var(--font-geist-mono);
 }
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground: #1e293b;
+  --background: #f8fafc;
+  --primary-blue: #0ea5e9;
+  --secondary-blue: #0284c7;
+  --dark-blue: #0c4a6e;
+  --light-blue: #e0f2fe;
+  --ocean-blue: #0891b2;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --foreground: #e2e8f0;
+    --background: #0f172a;
   }
 }
 
 body {
-  background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--background);
+  font-family: 'Inter', Arial, Helvetica, sans-serif;
+}
+
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-slate-800 font-semibold;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-sky-500 hover:bg-sky-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+  }
+  
+  .btn-secondary {
+    @apply bg-slate-200 hover:bg-slate-300 text-slate-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+  }
+  
+  .card {
+    @apply bg-white rounded-xl shadow-lg border border-slate-200 p-6;
+  }
+  
+  .ocean-gradient {
+    @apply bg-gradient-to-br from-sky-400 via-blue-500 to-cyan-600;
+  }
+  
+  .text-ocean {
+    @apply text-sky-600;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
 }

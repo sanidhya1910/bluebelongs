@@ -1,36 +1,136 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Blue Belongs - Diving School Website
+
+A modern Next.js website for a diving school business in Andaman Islands, featuring course booking, medical questionnaires, and travel information.
+
+## Features
+
+- **Homepage**: Hero section with diving courses overview and testimonials
+- **Course Listings**: Detailed PADI certified courses with booking functionality
+- **Medical Questionnaire**: Comprehensive medical form for diving safety
+- **Travel Itinerary**: Complete guide for reaching Andaman Islands
+- **Authentication**: Login/signup system (demo implementation)
+- **Responsive Design**: Mobile-first approach with blue ocean theme
+- **Face-to-face Payment**: Booking system supports in-person payments
+
+## Tech Stack
+
+- **Framework**: Next.js 15 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Icons**: Lucide React
+- **Authentication**: NextAuth.js (ready for implementation)
+- **Forms**: React Hook Form with Zod validation (ready for implementation)
 
 ## Getting Started
 
-First, run the development server:
+1. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+2. **Run the development server**:
+   ```bash
+   npm run dev
+   ```
+
+3. **Open your browser**:
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+## Project Structure
+
+```
+src/
+├── app/
+│   ├── components/
+│   │   └── Navigation.tsx      # Site navigation
+│   ├── courses/
+│   │   └── page.tsx           # Courses listing and booking
+│   ├── login/
+│   │   └── page.tsx           # Authentication page
+│   ├── medical-form/
+│   │   └── page.tsx           # Medical questionnaire
+│   ├── itinerary/
+│   │   └── page.tsx           # Travel guide
+│   ├── globals.css            # Global styles and theme
+│   ├── layout.tsx             # Root layout
+│   └── page.tsx               # Homepage
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Features Overview
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Course Booking
+- Display of PADI certified courses
+- Detailed course information and pricing
+- Booking form with personal details
+- Face-to-face payment confirmation
+- Medical form requirement integration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Medical Questionnaire
+- Comprehensive diving safety questionnaire
+- Automatic physician approval requirements
+- Form validation and submission
+- Printable format for records
 
-## Learn More
+### Travel Itinerary
+- Transportation options to Andaman
+- Sample itinerary for diving trips
+- Essential travel information
+- Packing checklist
+- Local recommendations
 
-To learn more about Next.js, take a look at the following resources:
+### Design Theme
+- Ocean-inspired blue color palette
+- Professional diving school aesthetics
+- Mobile-responsive layouts
+- Accessible form designs
+- Clean typography and spacing
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Color Palette
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The design uses various shades of blue throughout:
+- Primary Blue: `#0ea5e9` (sky-500)
+- Secondary Blue: `#0284c7` (sky-600)
+- Dark Blue: `#0c4a6e` (sky-900)
+- Light Blue: `#e0f2fe` (sky-50)
+- Ocean Gradient: sky-400 to cyan-600
 
-## Deploy on Vercel
+## Development
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Adding New Features
+1. Create new pages in the `src/app` directory
+2. Update navigation in `components/Navigation.tsx`
+3. Follow the established design patterns and color scheme
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Customizing Styles
+- Global styles are in `src/app/globals.css`
+- Component-specific styles use Tailwind classes
+- Custom CSS utilities are defined in the globals file
+
+## Deployment
+
+The project is ready for deployment on platforms like:
+- Vercel (recommended for Next.js)
+- Netlify
+- AWS Amplify
+- Any platform supporting Node.js
+
+## Future Enhancements
+
+- Backend API integration for real bookings
+- Payment gateway integration
+- User dashboard for course tracking
+- Email notifications system
+- Admin panel for course management
+- Multi-language support
+- Progressive Web App (PWA) features
+
+## License
+
+This project is for demonstration purposes. The design and functionality can be adapted for actual diving school businesses.
+
+## Contact
+
+For questions about this project or diving school services:
+- Email: info@bluebelongs.com
+- Phone: +91 98765 43210
+- Location: Port Blair, Andaman Islands
