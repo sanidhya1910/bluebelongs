@@ -108,11 +108,30 @@ The design uses various shades of blue throughout:
 
 ## Deployment
 
-The project is ready for deployment on platforms like:
+### Cloudflare Pages Deployment
+
+This project is optimized for Cloudflare Pages deployment:
+
+**Build Command for Cloudflare Pages Dashboard:**
+```bash
+npm run build
+```
+
+**Output Directory:**
+```
+out
+```
+
+**Manual Deployment:**
+1. Install Wrangler CLI: `npm install -g wrangler`
+2. Build the project: `npm run build`
+3. Deploy: `npx wrangler pages deploy ./out`
+
+**Alternative Deployment Platforms:**
 - Vercel (recommended for Next.js)
 - Netlify
 - AWS Amplify
-- Any platform supporting Node.js
+- Any platform supporting static sites
 
 ## Future Enhancements
 

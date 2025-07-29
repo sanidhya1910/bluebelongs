@@ -6,10 +6,14 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "export": "next build && next export",
+    "preview": "npm run build && npx wrangler pages dev ./out",
+    "deploy": "npm run build && npx wrangler pages deploy ./out"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
+    "@cloudflare/next-on-pages": "^1.13.13",
     "@hookform/resolvers": "^5.2.0",
     "@prisma/client": "^6.12.0",
     "@types/bcryptjs": "^2.4.6",

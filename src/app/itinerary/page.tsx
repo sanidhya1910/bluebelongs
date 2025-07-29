@@ -1,4 +1,4 @@
-import { Plane, Ship, Car, MapPin, Clock, AlertCircle, Camera, Utensils } from 'lucide-react';
+import { Plane, Ship, MapPin, Clock, AlertCircle, Camera, Utensils } from 'lucide-react';
 
 export default function ItineraryPage() {
   const transportOptions = [

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Clock, Users, Award, Calendar, MapPin } from 'lucide-react';
+import { Clock, Users, Award, MapPin } from 'lucide-react';
 
 interface Course {
   id: string;
@@ -106,7 +106,7 @@ export default function CoursesPage() {
   const submitBooking = (e: React.FormEvent) => {
     e.preventDefault();
     // In a real application, this would submit to an API
-    alert(`Booking request submitted for ${selectedCourse?.title}! We'll contact you within 24 hours to confirm your slot. Payment can be made face-to-face at our center.`);
+    alert(`Booking request submitted for ${selectedCourse?.title}! We&apos;ll contact you within 24 hours to confirm your slot. Payment can be made face-to-face at our center.`);
     setSelectedCourse(null);
     setBookingForm({
       name: '',
@@ -176,7 +176,7 @@ export default function CoursesPage() {
               </div>
 
               <div className="mb-6">
-                <h4 className="font-semibold text-slate-800 mb-2">What's Included:</h4>
+                <h4 className="font-semibold text-slate-800 mb-2">What&apos;s Included:</h4>
                 <ul className="text-sm text-slate-600 space-y-1">
                   {course.features.map((feature, index) => (
                     <li key={index} className="flex items-center">
