@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Clock, Users, Award, MapPin, Waves, Fish, Anchor, ChevronDown, ChevronUp } from 'lucide-react';
+import { Clock, Award, MapPin, Waves, Fish, Anchor, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Coral SVG Component
@@ -304,19 +304,72 @@ export default function CoursesPage() {
     setBookingForm({ ...bookingForm, courseId: course.id });
   };
 
-  const submitBooking = (e: React.FormEvent) => {
+  const submitBooking = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`Booking request submitted for ${selectedCourse?.title}! We'll contact you within 24 hours to confirm your slot. Payment can be made face-to-face at our center.`);
-    setSelectedCourse(null);
-    setBookingForm({
-      name: '',
-      email: '',
-      phone: '',
-      courseId: '',
-      preferredDate: '',
-      experience: '',
-      medicalCleared: false
-    });
+    
+    // Get form and button references
+    const form = e.target as HTMLFormElement;
+    const button = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const originalText = button.textContent || 'Submit Booking Request';
+    
+    try {
+      // Show loading state
+      button.disabled = true;
+      button.textContent = 'Submitting...';
+
+      // Call backend API
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...bookingForm,
+          courseName: selectedCourse?.title,
+          coursePrice: selectedCourse?.price,
+          timestamp: new Date().toISOString()
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`✅ Booking request submitted successfully! 
+        
+Booking ID: ${data.bookingId}
+        
+We'll contact you within 24 hours to confirm your slot. 
+Payment can be made face-to-face at our center.
+
+A confirmation email has been sent to ${bookingForm.email}.`);
+        
+        setSelectedCourse(null);
+        setBookingForm({
+          name: '',
+          email: '',
+          phone: '',
+          courseId: '',
+          preferredDate: '',
+          experience: '',
+          medicalCleared: false
+        });
+      } else {
+        throw new Error(data.error || 'Booking submission failed');
+      }
+
+    } catch (error) {
+      console.error('Booking error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`❌ Booking submission failed: ${errorMessage}
+      
+Please try again or contact us directly:
+📧 Email: info@bluebelongs.com
+📱 Phone: +91-XXXX-XXXX`);
+    } finally {
+      // Reset button state
+      button.disabled = false;
+      button.textContent = originalText;
+    }
   };
 
   const toggleCategory = (categoryId: string) => {

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Award, Users, MapPin, Star, Fish, Anchor, Waves } from 'lucide-react';
+import { ArrowRight, Award, Users, MapPin, Star, Fish, Anchor } from 'lucide-react';
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Waves } from 'lucide-react';
+import { Menu, X, Waves, User, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Coral SVG Component
@@ -28,6 +28,23 @@ const CoralIcon = ({ className }: { className?: string }) => (
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState<{ name: string; role: string } | null>(null);
+
+  useEffect(() => {
+    // Check if user is logged in
+    const token = localStorage.getItem('authToken');
+    const userData = localStorage.getItem('user');
+    if (token && userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+    setUser(null);
+    window.location.reload();
+  };
 
   const navItems = [
     { href: '/', label: 'Home' },
@@ -36,7 +53,11 @@ export default function Navigation() {
     { href: '/blogs', label: 'Blogs' },
     { href: '/medical-form', label: 'Medical Form' },
     { href: '/itinerary', label: 'Itinerary' },
-    { href: '/login', label: 'Login' },
+    ...(user ? [
+      { href: '/dashboard', label: 'Dashboard' }
+    ] : [
+      { href: '/login', label: 'Login' }
+    ])
   ];
 
   return (
@@ -93,6 +114,23 @@ export default function Navigation() {
                 </Link>
               </motion.div>
             ))}
+            
+            {/* User Menu */}
+            {user && (
+              <div className="flex items-center space-x-4 ml-6 pl-6 border-l border-gray-200">
+                <div className="flex items-center space-x-2">
+                  <User className="h-5 w-5 text-sky-600" />
+                  <span className="text-sm font-medium text-slate-700">{user.name}</span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center space-x-1 px-3 py-1 rounded-lg hover:bg-red-50 text-red-600 transition-colors"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span className="text-sm">Logout</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Mobile menu button */}

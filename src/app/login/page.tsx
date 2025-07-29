@@ -14,7 +14,7 @@ export default function LoginPage() {
     confirmPassword: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!isLogin && formData.password !== formData.confirmPassword) {
@@ -22,11 +22,35 @@ export default function LoginPage() {
       return;
     }
 
-    // In a real application, this would handle authentication
-    if (isLogin) {
-      alert('Login functionality will be implemented with backend authentication.');
-    } else {
-      alert('Registration functionality will be implemented with backend authentication.');
+    try {
+      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+      const payload = isLogin 
+        ? { email: formData.email, password: formData.password }
+        : { name: formData.name, email: formData.email, password: formData.password };
+
+      const response = await fetch(`https://bluebelong-api.blackburn1910.workers.dev${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Store token and user info
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        // Redirect to dashboard
+        window.location.href = '/dashboard';
+      } else {
+        alert(data.error || 'Authentication failed');
+      }
+    } catch (error) {
+      console.error('Auth error:', error);
+      alert('Network error. Please try again.');
     }
   };
 

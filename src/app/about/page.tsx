@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion';
 import { Award, Heart, Users, MapPin, Waves, Star, Fish, Anchor } from 'lucide-react';
-import Image from 'next/image';
 
 // Coral SVG Component
 const CoralIcon = ({ className }: { className?: string }) => (
@@ -100,7 +99,7 @@ export default function AboutPage() {
           </h1>
           <p className="text-xl text-slate-600 max-w-3xl mx-auto">
             Founded with a passion for the ocean and a commitment to sharing the underwater world 
-            with fellow adventurers, Blue Belongs is your gateway to Andaman's marine paradise.
+            with fellow adventurers, Blue Belongs is your gateway to Andaman&apos;s marine paradise.
           </p>
         </motion.div>
 
@@ -127,7 +126,7 @@ export default function AboutPage() {
                 
                 <div className="space-y-4 text-slate-600">
                   <p>
-                    Welcome to Blue Belongs! I'm Nilanjana Biswas, and I've been sharing my passion 
+                    Welcome to Blue Belongs! I&apos;m Nilanjana Biswas, and I&apos;ve been sharing my passion 
                     for the underwater world in the pristine waters of the Andaman Islands for over a decade.
                   </p>
                   
@@ -139,9 +138,9 @@ export default function AboutPage() {
                   </p>
                   
                   <p>
-                    At Blue Belongs, we believe that diving is more than just a sport – it's a way 
+                    At Blue Belongs, we believe that diving is more than just a sport &ndash; it&apos;s a way 
                     to understand and protect our oceans. Through proper training, respect for marine 
-                    life, and responsible diving practices, we're building a community of ocean advocates.
+                    life, and responsible diving practices, we&apos;re building a community of ocean advocates.
                   </p>
                 </div>
 
@@ -294,9 +293,9 @@ export default function AboutPage() {
           <div className="bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500 rounded-2xl p-8 text-white">
             <h2 className="text-3xl font-bold mb-6">Our Mission</h2>
             <p className="text-xl leading-relaxed">
-              "To provide safe, professional, and inspiring diving experiences that foster 
+              &ldquo;To provide safe, professional, and inspiring diving experiences that foster 
               a deep connection with the ocean while promoting marine conservation and 
-              responsible diving practices in the pristine waters of the Andaman Islands."
+              responsible diving practices in the pristine waters of the Andaman Islands.&rdquo;
             </p>
             <motion.div
               className="mt-8"
