@@ -3,13 +3,13 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: 'export',
   trailingSlash: true,
+  skipTrailingSlashRedirect: true,
   images: {
     unoptimized: true,
   },
-  // Disable server-side features for static export
-  experimental: {
-    // Remove any server-side only features
-  }
+  
+  assetPrefix: undefined,
+  basePath: '',
 };
 
 export default nextConfig;

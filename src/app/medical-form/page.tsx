@@ -2,6 +2,28 @@
 
 import { useState } from 'react';
 import { AlertTriangle, CheckCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+// Coral SVG Component
+const CoralIcon = ({ className }: { className?: string }) => (
+  <motion.svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    animate={{ 
+      scale: [1, 1.05, 1]
+    }}
+    transition={{ 
+      duration: 4,
+      repeat: Infinity,
+      ease: "easeInOut"
+    }}
+  >
+    <path d="M12 2C8.5 2 8 4.5 8 6c0 1-1 2-2 3s-2 2-2 4c0 3 2 5 5 6h6c3-1 5-3 5-6 0-2-1-3-2-4s-2-2-2-3c0-1.5-.5-4-4-4z"/>
+    <path d="M10 8c-1 0-2 1-2 2s1 2 2 2 2-1 2-2-1-2-2-2z"/>
+    <path d="M14 10c-1 0-2 1-2 2s1 2 2 2 2-1 2-2-1-2-2-2z"/>
+  </motion.svg>
+);
 
 interface MedicalQuestion {
   id: string;
@@ -123,20 +145,50 @@ export default function MedicalFormPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-slate-50 py-12">
-        <div className="container mx-auto px-4">
+      <div className="min-h-screen bg-slate-50 py-12 relative overflow-hidden">
+        {/* Animated Background Elements */}
+        <CoralIcon className="absolute top-20 right-10 h-24 w-24 text-coral-400/10 coral-animation" />
+        <CoralIcon className="absolute bottom-20 left-10 h-20 w-20 text-coral-500/10 coral-animation" />
+        
+        <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-2xl mx-auto text-center">
-            <div className="card">
-              <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-              <h1 className="text-3xl font-bold text-slate-800 mb-4">
+            <motion.div
+              className="card"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
+              >
+                <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+              </motion.div>
+              <motion.h1
+                className="text-3xl font-bold text-slate-800 mb-4 underwater-text"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.8 }}
+              >
                 Medical Form Submitted Successfully
-              </h1>
-              <p className="text-lg text-slate-600 mb-6">
+              </motion.h1>
+              <motion.p
+                className="text-lg text-slate-600 mb-6"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7, duration: 0.8 }}
+              >
                 Thank you for completing the medical questionnaire. Your form has been received and will be reviewed by our team.
-              </p>
+              </motion.p>
               
               {hasYesAnswers && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <motion.div
+                  className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.9, duration: 0.8 }}
+                >
                   <div className="flex items-start">
                     <AlertTriangle className="h-5 w-5 text-yellow-600 mr-2 mt-0.5" />
                     <div className="text-left">
@@ -147,24 +199,33 @@ export default function MedicalFormPage() {
                       </p>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               )}
 
-              <div className="space-y-3">
-                <button 
+              <motion.div
+                className="space-y-3"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.1, duration: 0.8 }}
+              >
+                <motion.button 
                   onClick={() => window.print()} 
                   className="btn-secondary w-full"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   Print Form
-                </button>
-                <button 
+                </motion.button>
+                <motion.button 
                   onClick={() => setSubmitted(false)} 
                   className="btn-primary w-full"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   Fill Another Form
-                </button>
-              </div>
-            </div>
+                </motion.button>
+              </motion.div>
+            </motion.div>
           </div>
         </div>
       </div>
@@ -172,22 +233,36 @@ export default function MedicalFormPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12">
-      <div className="container mx-auto px-4">
+    <div className="min-h-screen bg-slate-50 py-12 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <CoralIcon className="absolute top-20 right-10 h-24 w-24 text-coral-400/10 coral-animation" />
+      <CoralIcon className="absolute bottom-20 left-10 h-20 w-20 text-coral-500/10 coral-animation" />
+      
+      <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-slate-800 mb-4">
+          <motion.div
+            className="text-center mb-8"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <h1 className="text-4xl font-bold text-slate-800 mb-4 underwater-text">
               Medical Questionnaire
             </h1>
             <p className="text-xl text-slate-600">
               This medical questionnaire is required for all diving activities. 
               Please answer all questions honestly to ensure your safety.
             </p>
-          </div>
+          </motion.div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Personal Information */}
-            <div className="card">
+            <motion.div
+              className="card floating-element"
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.8 }}
+            >
               <h2 className="text-2xl font-bold text-slate-800 mb-4">Personal Information</h2>
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
@@ -255,10 +330,15 @@ export default function MedicalFormPage() {
                   />
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* Medical Questions */}
-            <div className="card">
+            <motion.div
+              className="card floating-element"
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.8 }}
+            >
               <h2 className="text-2xl font-bold text-slate-800 mb-4">Medical History</h2>
               <p className="text-slate-600 mb-6">
                 Please answer YES or NO to the following questions. If you answer YES to any question, 
@@ -296,10 +376,15 @@ export default function MedicalFormPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </motion.div>
 
             {/* Additional Information */}
-            <div className="card">
+            <motion.div
+              className="card floating-element"
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.8 }}
+            >
               <h2 className="text-2xl font-bold text-slate-800 mb-4">Additional Information</h2>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -313,11 +398,16 @@ export default function MedicalFormPage() {
                   placeholder="Include any medications, recent surgeries, or other health concerns..."
                 />
               </div>
-            </div>
+            </motion.div>
 
             {/* Physician Approval */}
             {hasYesAnswers && (
-              <div className="card bg-yellow-50 border-yellow-200">
+              <motion.div
+                className="card bg-yellow-50 border-yellow-200 floating-element"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.8, duration: 0.8 }}
+              >
                 <div className="flex items-start">
                   <AlertTriangle className="h-6 w-6 text-yellow-600 mr-3 mt-1" />
                   <div>
@@ -341,11 +431,16 @@ export default function MedicalFormPage() {
                     </label>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             )}
 
             {/* Declaration */}
-            <div className="card">
+            <motion.div
+              className="card floating-element"
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.0, duration: 0.8 }}
+            >
               <h2 className="text-2xl font-bold text-slate-800 mb-4">Declaration</h2>
               <div className="bg-slate-50 p-4 rounded-lg mb-4">
                 <p className="text-sm text-slate-700">
@@ -367,14 +462,24 @@ export default function MedicalFormPage() {
                   provided is accurate and complete. *
                 </span>
               </label>
-            </div>
+            </motion.div>
 
             {/* Submit Button */}
-            <div className="text-center">
-              <button type="submit" className="btn-primary text-lg px-8 py-3">
+            <motion.div
+              className="text-center"
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.2, duration: 0.8 }}
+            >
+              <motion.button
+                type="submit"
+                className="btn-primary text-lg px-8 py-3"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
                 Submit Medical Form
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
           </form>
         </div>
       </div>
