@@ -495,55 +495,121 @@ export default function HomePage() {
               >
                 {/* Gallery Items */}
                 {[
-                  { id: 1, title: "Coral Gardens", desc: "Vibrant coral formations in crystal clear waters", color: "from-cyan-400 to-blue-500" },
-                  { id: 2, title: "Tropical Fish", desc: "Schools of colorful tropical fish", color: "from-sky-400 to-cyan-500" },
-                  { id: 3, title: "Sea Turtles", desc: "Gentle giants of the ocean", color: "from-blue-400 to-indigo-500" },
-                  { id: 4, title: "Reef Diving", desc: "Exploring pristine coral reefs", color: "from-teal-400 to-cyan-500" },
-                  { id: 5, title: "Night Diving", desc: "Mysterious underwater night adventures", color: "from-indigo-500 to-purple-600" },
-                  { id: 6, title: "Deep Blue", desc: "Crystal clear Andaman waters", color: "from-sky-500 to-blue-600" },
-                  { id: 7, title: "Marine Life", desc: "Diverse ecosystem underwater", color: "from-cyan-500 to-teal-500" },
-                  { id: 8, title: "Adventure", desc: "Unforgettable diving experiences", color: "from-blue-500 to-cyan-600" },
+                  { 
+                    id: 1, 
+                    title: "Coral Gardens", 
+                    desc: "Vibrant coral formations in crystal clear waters", 
+                    color: "from-cyan-400 to-blue-500",
+                    image: "https://images.unsplash.com/photo-1583212292454-1fe6229603b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                  },
+                  { 
+                    id: 2, 
+                    title: "Tropical Fish", 
+                    desc: "Schools of colorful tropical fish", 
+                    color: "from-sky-400 to-cyan-500",
+                    image: "https://images.unsplash.com/photo-1544552866-d3ed42536cfd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                  },
+                  { 
+                    id: 3, 
+                    title: "Sea Turtle", 
+                    desc: "Gentle giants of the ocean", 
+                    color: "from-blue-400 to-indigo-500",
+                    image: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                  },
+                  { 
+                    id: 4, 
+                    title: "Reef Diving", 
+                    desc: "Exploring pristine coral reefs", 
+                    color: "from-teal-400 to-cyan-500",
+                    image: "https://images.unsplash.com/photo-1582967788606-a171c1080cb0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                  },
+                  { 
+                    id: 5, 
+                    title: "Deep Blue", 
+                    desc: "Crystal clear underwater views", 
+                    color: "from-indigo-500 to-blue-600",
+                    image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                  },
+                  { 
+                    id: 6, 
+                    title: "Scuba Adventure", 
+                    desc: "Professional diving experiences", 
+                    color: "from-sky-500 to-blue-600",
+                    image: "https://images.unsplash.com/photo-1582845512264-dbb30cd05e8e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                  },
+                  { 
+                    id: 7, 
+                    title: "Marine Life", 
+                    desc: "Diverse underwater ecosystem", 
+                    color: "from-cyan-500 to-teal-500",
+                    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                  },
+                  { 
+                    id: 8, 
+                    title: "Underwater World", 
+                    desc: "Magical underwater landscapes", 
+                    color: "from-blue-500 to-cyan-600",
+                    image: "https://images.unsplash.com/photo-1588481123261-9b6a0cb5f584?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                  },
                   // Duplicate for seamless loop
-                  { id: 9, title: "Coral Gardens", desc: "Vibrant coral formations in crystal clear waters", color: "from-cyan-400 to-blue-500" },
-                  { id: 10, title: "Tropical Fish", desc: "Schools of colorful tropical fish", color: "from-sky-400 to-cyan-500" },
-                  { id: 11, title: "Sea Turtles", desc: "Gentle giants of the ocean", color: "from-blue-400 to-indigo-500" },
-                  { id: 12, title: "Reef Diving", desc: "Exploring pristine coral reefs", color: "from-teal-400 to-cyan-500" },
+                  { 
+                    id: 9, 
+                    title: "Coral Gardens", 
+                    desc: "Vibrant coral formations in crystal clear waters", 
+                    color: "from-cyan-400 to-blue-500",
+                    image: "https://images.unsplash.com/photo-1583212292454-1fe6229603b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                  },
+                  { 
+                    id: 10, 
+                    title: "Tropical Fish", 
+                    desc: "Schools of colorful tropical fish", 
+                    color: "from-sky-400 to-cyan-500",
+                    image: "https://images.unsplash.com/photo-1544552866-d3ed42536cfd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                  },
+                  { 
+                    id: 11, 
+                    title: "Sea Turtle", 
+                    desc: "Gentle giants of the ocean", 
+                    color: "from-blue-400 to-indigo-500",
+                    image: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                  },
+                  { 
+                    id: 12, 
+                    title: "Reef Diving", 
+                    desc: "Exploring pristine coral reefs", 
+                    color: "from-teal-400 to-cyan-500",
+                    image: "https://images.unsplash.com/photo-1582967788606-a171c1080cb0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                  },
                 ].map((item, index) => (
                   <motion.div
                     key={`${item.id}-${index}`}
-                    className="flex-shrink-0 w-80 h-64 rounded-2xl overflow-hidden relative group cursor-pointer"
+                    className="flex-shrink-0 w-80 h-64 rounded-2xl overflow-hidden relative group cursor-pointer shadow-xl"
                     whileHover={{ scale: 1.05, y: -8 }}
                     transition={{ duration: 0.3 }}
                   >
-                    {/* Background gradient */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${item.color}`}></div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                    {/* Background Image */}
+                    <div 
+                      className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                      style={{
+                        backgroundImage: `url(${item.image})`
+                      }}
+                    ></div>
                     
-                    {/* Placeholder for images */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <motion.div
-                        animate={{ 
-                          scale: [1, 1.1, 1],
-                          rotate: [0, 5, -5, 0]
-                        }}
-                        transition={{ 
-                          duration: 4,
-                          repeat: Infinity,
-                          ease: "easeInOut"
-                        }}
-                      >
-                        <Fish className="h-16 w-16 text-white/70" />
-                      </motion.div>
-                    </div>
+                    {/* Gradient Overlays */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-40`}></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20"></div>
                     
                     {/* Content overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 p-6">
-                      <h3 className="text-xl font-semibold text-white mb-2">{item.title}</h3>
-                      <p className="text-white/80 text-sm font-light">{item.desc}</p>
+                    <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
+                      <h3 className="text-xl font-semibold text-white mb-2 drop-shadow-lg">{item.title}</h3>
+                      <p className="text-white/90 text-sm font-light drop-shadow-md">{item.desc}</p>
                     </div>
                     
                     {/* Hover effect overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-sky-600/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-sky-600/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20"></div>
+                    
+                    {/* Decorative corner accent */}
+                    <div className="absolute top-4 right-4 w-2 h-2 bg-white/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30"></div>
                   </motion.div>
                 ))}
               </motion.div>
