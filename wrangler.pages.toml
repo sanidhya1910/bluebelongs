@@ -5,11 +5,13 @@ compatibility_date = "2024-01-01"
 # Pages configuration
 pages_build_output_dir = "out"
 
+# Environment variables for Pages
+[vars]
+ENVIRONMENT = "production"
+
 # Pages environments (only preview and production are supported)
 [env.production.vars]
-ENVIRONMENT = "production"
 ALLOWED_ORIGINS = "https://bluebelong.pages.dev,https://www.bluebelong.pages.dev"
 
 [env.preview.vars]
-ENVIRONMENT = "preview"
 ALLOWED_ORIGINS = "http://localhost:3000"

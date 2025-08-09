@@ -1,0 +1,23 @@
+# Blue Belongs - Worker Configuration
+name = "bluebelong-api"
+main = "workers/booking-api.js"
+compatibility_date = "2024-01-01"
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "bluebelong-bookings"
+database_id = "8e4a3945-3150-4c16-bc22-13059e14fa13"
+
+# Environment variables
+[vars]
+ENVIRONMENT = "production"
+ADMIN_EMAIL = "admin@bluebelong.com"
+RESEND_API_KEY = "re_ZFPSeZHG_4QF4CSdYwLWSi3ybej8LNJSA"
+
+# CORS settings
+[env.production.vars]
+ALLOWED_ORIGINS = "https://bluebelong.pages.dev,https://www.bluebelong.pages.dev"
+
+[env.development.vars]
+ALLOWED_ORIGINS = "http://localhost:3000"

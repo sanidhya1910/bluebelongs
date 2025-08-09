@@ -9,10 +9,10 @@
     "lint": "next lint",
     "export": "next build && next export",
     "preview": "npm run build && npx wrangler pages dev ./out",
-    "deploy": "npm run build && npx wrangler pages deploy ./out",
+    "deploy": "npm run build && npx wrangler pages deploy ./out --project-name=bluebelongs",
     "deploy:full": "./deploy.sh",
-    "db:migrate": "npx wrangler d1 execute bluebelong-bookings --file=./database/schema.sql",
-    "worker:deploy": "npx wrangler deploy workers/booking-api.js"
+    "db:migrate": "npx wrangler d1 execute bluebelong-bookings --file=./database/schema.sql --config=wrangler.worker.toml",
+    "worker:deploy": "npx wrangler deploy --config=wrangler.worker.toml"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
