@@ -409,9 +409,9 @@ export default function HomePage() {
                   animate={aboutInView ? { opacity: 1, y: 0 } : {}}
                   transition={{ delay: 1.2, duration: 1 }}
                 >
-                  "At BlueBelong, we're experienced dive professionals helping you find peace, connection, 
-                  and confidence in the underwater world. Whether you're seeking your first breath underwater 
-                  or advancing your diving journey, we're here to guide you safely into the blue."
+                  &quot;At BlueBelong, we&apos;re experienced dive professionals helping you find peace, connection, 
+                  and confidence in the underwater world. Whether you&apos;re seeking your first breath underwater 
+                  or advancing your diving journey, we&apos;re here to guide you safely into the blue.&quot;
                 </motion.p>
                 
                 {/* Qualifications */}
@@ -631,7 +631,7 @@ export default function HomePage() {
             >
               <p className="text-slate-600 font-light max-w-3xl mx-auto">
                 Every dive tells a story. From the vibrant coral gardens to the mysterious depths, 
-                experience the magic of Andaman's underwater world through our guided diving adventures.
+                experience the magic of Andaman&apos;s underwater world through our guided diving adventures.
               </p>
             </motion.div>
           </div>
@@ -677,7 +677,7 @@ export default function HomePage() {
                   
                   {/* Comment */}
                   <blockquote className="text-slate-700 mb-6 text-lg font-light leading-relaxed italic">
-                    "                    {testimonial.comment}"
+                    &quot;{testimonial.comment}&quot;
                   </blockquote>
                   
                   {/* Author */}
