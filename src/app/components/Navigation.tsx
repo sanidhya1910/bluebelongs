@@ -29,8 +29,12 @@ const CoralIcon = ({ className }: { className?: string }) => (
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<{ name: string; role: string } | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
+    // Mark as hydrated first to prevent hydration mismatches
+    setIsHydrated(true);
+    
     // Check if user is logged in
     const token = localStorage.getItem('authToken');
     const userData = localStorage.getItem('user');
@@ -51,7 +55,7 @@ export default function Navigation() {
     { href: '/about', label: 'About' },
     { href: '/courses', label: 'Courses' },
     { href: '/blogs', label: 'Blogs' },
-    { href: '/medical-form', label: 'Medical Form' },
+    ...(isHydrated && user ? [{ href: '/medical-form', label: 'Medical Form' }] : []),
     { href: '/itinerary', label: 'Itinerary' },
     ...(user ? [
       { href: '/dashboard', label: 'Dashboard' }
@@ -116,7 +120,7 @@ export default function Navigation() {
             ))}
             
             {/* User Menu */}
-            {user && (
+            {isHydrated && user && (
               <div className="flex items-center space-x-4 ml-6 pl-6 border-l border-gray-200">
                 <div className="flex items-center space-x-2">
                   <User className="h-5 w-5 text-sky-600" />

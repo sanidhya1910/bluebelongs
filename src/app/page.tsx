@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { ArrowRight, Award, Users, MapPin, Star, Fish, Anchor } from 'lucide-react';
 import { motion, useInView } from 'framer-motion';
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 // Coral SVG Component
 const CoralIcon = ({ className }: { className?: string }) => (
@@ -27,7 +27,7 @@ const CoralIcon = ({ className }: { className?: string }) => (
 );
 
 // Bubble Component
-const Bubble = ({ delay }: { delay: number }) => (
+const Bubble = ({ delay, position }: { delay: number; position: number }) => (
   <motion.div
     className="absolute w-4 h-4 bg-white/20 rounded-full"
     initial={{ y: 100, opacity: 0 }}
@@ -43,7 +43,7 @@ const Bubble = ({ delay }: { delay: number }) => (
       ease: "easeInOut"
     }}
     style={{
-      left: `${Math.random() * 100}%`,
+      left: `${position}%`,
     }}
   />
 );
@@ -71,6 +71,14 @@ export default function HomePage() {
   const testimonialsRef = useRef(null);
   const ctaRef = useRef(null);
   
+  // Generate bubble positions only on client side to prevent hydration mismatch
+  const [bubblePositions, setBubblePositions] = useState<number[]>([]);
+  
+  useEffect(() => {
+    // Generate random positions for bubbles after component mounts
+    setBubblePositions(Array.from({ length: 15 }, () => Math.random() * 100));
+  }, []);
+  
   const featuresInView = useInView(featuresRef, { once: true });
   const testimonialsInView = useInView(testimonialsRef, { once: true });
   const ctaInView = useInView(ctaRef, { once: true });
@@ -78,7 +86,7 @@ export default function HomePage() {
   const features = [
     {
       icon: <Award className="h-8 w-8 text-sky-500" />,
-      title: "PADI Certified Courses",
+      title: "SSI Certified Courses",
       description: "Professional diving courses from beginner to advanced levels with certified instructors."
     },
     {
@@ -95,12 +103,12 @@ export default function HomePage() {
 
   const testimonials = [
     {
-      name: "Sarah Johnson",
+      name: "Sanidhya",
       rating: 5,
       comment: "Amazing experience! The instructors were professional and the waters were absolutely stunning."
     },
     {
-      name: "Mike Chen",
+      name: "Dhruv",
       rating: 5,
       comment: "Best diving school in Andaman. Highly recommend for both beginners and experienced divers."
     }
@@ -116,8 +124,8 @@ export default function HomePage() {
           <SwimmingFish />
           
           {/* Floating Bubbles */}
-          {[...Array(15)].map((_, i) => (
-            <Bubble key={i} delay={i * 0.5} />
+          {bubblePositions.map((position, i) => (
+            <Bubble key={i} delay={i * 0.5} position={position} />
           ))}
           
           {/* Coral Decorations */}

@@ -10,7 +10,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Blue Belong - Diving School Andaman",
   description: "Premier diving school in Andaman Islands offering certified diving courses, underwater adventures, and marine exploration experiences.",
-  keywords: "diving school, scuba diving, Andaman, PADI courses, underwater adventure, marine life",
+  keywords: "diving school, scuba diving, Andaman, SSI courses, underwater adventure, marine life",
 };
 
 export default function RootLayout({

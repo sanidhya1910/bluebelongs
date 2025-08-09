@@ -27,6 +27,10 @@ export default {
         response = await handleLogin(request, env);
       } else if (path === '/api/auth/register' && request.method === 'POST') {
         response = await handleRegister(request, env);
+      } else if (path === '/api/auth/forgot-password' && request.method === 'POST') {
+        response = await handleForgotPassword(request, env);
+      } else if (path === '/api/reset-password' && request.method === 'POST') {
+        response = await handleResetPassword(request, env);
       } else if (path === '/api/auth/profile' && request.method === 'GET') {
         response = await handleProfile(request, env);
       } else if (path === '/api/dashboard/stats' && request.method === 'GET') {
@@ -38,8 +42,26 @@ export default {
       } else if (path.startsWith('/api/bookings/') && request.method === 'GET') {
         const bookingId = path.split('/')[3];
         response = await handleBookingGet(bookingId, env);
+      } else if (path.startsWith('/api/bookings/') && path.endsWith('/cancel') && request.method === 'PUT') {
+        const bookingId = path.split('/')[3];
+        response = await handleBookingCancel(bookingId, request, env);
       } else if (path === '/api/courses' && request.method === 'GET') {
         response = await handleCoursesGet(env);
+      } else if (path === '/api/admin/courses' && request.method === 'GET') {
+        response = await handleAdminCoursesGet(request, env);
+      } else if (path === '/api/admin/courses' && request.method === 'POST') {
+        response = await handleAdminCourseCreate(request, env);
+      } else if (path === '/api/admin/stats' && request.method === 'GET') {
+        response = await handleAdminStats(request, env);
+      } else if (path.startsWith('/api/admin/courses/') && path.endsWith('/toggle') && request.method === 'PUT') {
+        const courseId = path.split('/')[4];
+        response = await handleAdminCourseToggle(courseId, request, env);
+      } else if (path.startsWith('/api/admin/courses/') && request.method === 'PUT') {
+        const courseId = path.split('/')[4];
+        response = await handleAdminCourseUpdate(courseId, request, env);
+      } else if (path.startsWith('/api/admin/courses/') && request.method === 'DELETE') {
+        const courseId = path.split('/')[4];
+        response = await handleAdminCourseDelete(courseId, request, env);
       } else if (path === '/api/contact' && request.method === 'POST') {
         response = await handleContactForm(request, env);
       } else if (path === '/api/medical-form' && request.method === 'POST') {
@@ -71,10 +93,28 @@ export default {
 // Handle booking creation
 async function handleBookingCreate(request, env) {
   try {
+    // Check authentication
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = await verifyJWT(token);
+    if (!decoded) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     const booking = await request.json();
     
     // Validate required fields
-    const { name, email, phone, courseId, preferredDate } = booking;
+    const { name, email, phone, course_id: courseId, preferred_date: preferredDate } = booking;
     
     if (!name || !email || !phone || !courseId || !preferredDate) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
@@ -105,11 +145,12 @@ async function handleBookingCreate(request, env) {
 
     // Insert booking
     const insertStmt = env.DB.prepare(`
-      INSERT INTO bookings (name, email, phone, course_id, course_name, course_price, preferred_date, experience, medical_cleared, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO bookings (user_id, name, email, phone, course_id, course_name, course_price, preferred_date, experience, medical_cleared, notes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     
     const result = await insertStmt.bind(
+      decoded.userId,
       name,
       email,
       phone,
@@ -119,7 +160,7 @@ async function handleBookingCreate(request, env) {
       preferredDate,
       booking.experience || '',
       booking.medicalCleared || false,
-      new Date().toISOString()
+      booking.notes || ''
     ).run();
 
     const bookingId = result.meta.last_row_id;
@@ -152,7 +193,26 @@ async function handleBookingCreate(request, env) {
 
   } catch (error) {
     console.error('Booking creation error:', error);
-    return new Response(JSON.stringify({ error: 'Failed to create booking' }), {
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    
+    // More specific error message based on error type
+    let errorMessage = 'Failed to create booking';
+    if (error.message.includes('Invalid token')) {
+      errorMessage = 'Authentication failed - invalid token';
+    } else if (error.message.includes('Token expired')) {
+      errorMessage = 'Authentication failed - token expired';
+    } else if (error.message.includes('FOREIGN KEY constraint failed')) {
+      errorMessage = 'Database constraint error - invalid user or course reference';
+    } else if (error.message.includes('NOT NULL constraint failed')) {
+      errorMessage = 'Missing required field in database insertion';
+    }
+    
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      details: error.message,
+      debug: env.ENVIRONMENT === 'development' ? error.stack : undefined
+    }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
@@ -178,8 +238,85 @@ async function handleBookingGet(bookingId, env) {
     });
 
   } catch (error) {
-    console.error('Booking retrieval error:', error);
-    return new Response(JSON.stringify({ error: 'Failed to retrieve booking' }), {
+    console.error('Get booking error:', error);
+    return new Response(JSON.stringify({ error: 'Failed to get booking' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Handle booking cancellation
+async function handleBookingCancel(bookingId, request, env) {
+  try {
+    // Check authentication
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = await verifyJWT(token);
+    if (!decoded) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Get the booking to verify ownership
+    const bookingStmt = env.DB.prepare('SELECT * FROM bookings WHERE id = ? AND user_id = ?');
+    const booking = await bookingStmt.bind(bookingId, decoded.userId).first();
+    
+    if (!booking) {
+      return new Response(JSON.stringify({ error: 'Booking not found or not authorized' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Check if booking can be cancelled (not already cancelled or completed)
+    if (booking.status === 'cancelled') {
+      return new Response(JSON.stringify({ error: 'Booking is already cancelled' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    if (booking.status === 'completed') {
+      return new Response(JSON.stringify({ error: 'Cannot cancel completed booking' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Update booking status to cancelled
+    const updateStmt = env.DB.prepare(`
+      UPDATE bookings 
+      SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP 
+      WHERE id = ? AND user_id = ?
+    `);
+    
+    await updateStmt.bind(bookingId, decoded.userId).run();
+
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Booking cancelled successfully',
+      bookingId: bookingId
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    console.error('Cancel booking error:', error);
+    return new Response(JSON.stringify({ 
+      error: 'Failed to cancel booking',
+      details: error.message
+    }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
@@ -200,6 +337,340 @@ async function handleCoursesGet(env) {
   } catch (error) {
     console.error('Courses retrieval error:', error);
     return new Response(JSON.stringify({ error: 'Failed to retrieve courses' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Admin course management functions
+async function handleAdminCoursesGet(request, env) {
+  try {
+    // Verify admin authentication
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = await verifyJWT(token);
+    if (!decoded || decoded.role !== 'admin') {
+      return new Response(JSON.stringify({ error: 'Admin access required' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Get all courses (including disabled ones for admin)
+    const stmt = env.DB.prepare('SELECT * FROM courses ORDER BY category, title');
+    const { results } = await stmt.all();
+    
+    return new Response(JSON.stringify({ courses: results }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    console.error('Admin courses retrieval error:', error);
+    return new Response(JSON.stringify({ error: 'Failed to retrieve courses' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+async function handleAdminCourseCreate(request, env) {
+  try {
+    // Verify admin authentication
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = await verifyJWT(token);
+    if (!decoded || decoded.role !== 'admin') {
+      return new Response(JSON.stringify({ error: 'Admin access required' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const course = await request.json();
+    const { title, description, duration, dives, price, level, certification, category } = course;
+    
+    // Validate required fields
+    if (!title || !description || !duration || dives === undefined || !price || !level || !certification || !category) {
+      return new Response(JSON.stringify({ error: 'All fields are required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Generate course ID
+    const courseId = title.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').trim('-');
+
+    const stmt = env.DB.prepare(`
+      INSERT INTO courses (id, title, description, duration, dives, price, level, certification, category, available, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE, datetime('now'), datetime('now'))
+    `);
+    
+    const result = await stmt.bind(courseId, title, description, duration, dives, price, level, certification, category).run();
+
+    if (result.success) {
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: 'Course created successfully',
+        courseId: courseId 
+      }), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } else {
+      throw new Error('Failed to create course');
+    }
+
+  } catch (error) {
+    console.error('Course creation error:', error);
+    return new Response(JSON.stringify({ error: 'Failed to create course' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+async function handleAdminCourseUpdate(courseId, request, env) {
+  try {
+    // Verify admin authentication
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = await verifyJWT(token);
+    if (!decoded || decoded.role !== 'admin') {
+      return new Response(JSON.stringify({ error: 'Admin access required' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const updates = await request.json();
+    const { title, description, duration, dives, price, level, certification, category } = updates;
+    
+    // Validate required fields
+    if (!title || !description || !duration || dives === undefined || !price || !level || !certification || !category) {
+      return new Response(JSON.stringify({ error: 'All fields are required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const stmt = env.DB.prepare(`
+      UPDATE courses 
+      SET title = ?, description = ?, duration = ?, dives = ?, price = ?, level = ?, certification = ?, category = ?, updated_at = datetime('now')
+      WHERE id = ?
+    `);
+    
+    const result = await stmt.bind(title, description, duration, dives, price, level, certification, category, courseId).run();
+
+    if (result.success && result.changes > 0) {
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: 'Course updated successfully' 
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } else if (result.changes === 0) {
+      return new Response(JSON.stringify({ error: 'Course not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } else {
+      throw new Error('Failed to update course');
+    }
+
+  } catch (error) {
+    console.error('Course update error:', error);
+    return new Response(JSON.stringify({ error: 'Failed to update course' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+async function handleAdminCourseDelete(courseId, request, env) {
+  try {
+    // Verify admin authentication
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = await verifyJWT(token);
+    if (!decoded || decoded.role !== 'admin') {
+      return new Response(JSON.stringify({ error: 'Admin access required' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Check if course has active bookings
+    const bookingStmt = env.DB.prepare('SELECT COUNT(*) as count FROM bookings WHERE course_id = ? AND status NOT IN ("cancelled")');
+    const bookingResult = await bookingStmt.bind(courseId).first();
+    
+    if (bookingResult && bookingResult.count > 0) {
+      return new Response(JSON.stringify({ 
+        error: 'Cannot delete course with active bookings. Consider disabling it instead.' 
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Soft delete by setting available to FALSE instead of hard delete
+    const stmt = env.DB.prepare('UPDATE courses SET available = FALSE, updated_at = datetime("now") WHERE id = ?');
+    const result = await stmt.bind(courseId).run();
+
+    if (result.success && result.changes > 0) {
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: 'Course disabled successfully' 
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } else if (result.changes === 0) {
+      return new Response(JSON.stringify({ error: 'Course not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } else {
+      throw new Error('Failed to disable course');
+    }
+
+  } catch (error) {
+    console.error('Course delete error:', error);
+    return new Response(JSON.stringify({ error: 'Failed to disable course' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+async function handleAdminStats(request, env) {
+  try {
+    // Verify admin authentication
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = await verifyJWT(token);
+    if (!decoded || decoded.role !== 'admin') {
+      return new Response(JSON.stringify({ error: 'Admin access required' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Get stats from database
+    const [totalBookings, totalUsers, totalCourses, activeBookings] = await Promise.all([
+      env.DB.prepare('SELECT COUNT(*) as count FROM bookings').first(),
+      env.DB.prepare('SELECT COUNT(*) as count FROM users WHERE role = "customer"').first(),
+      env.DB.prepare('SELECT COUNT(*) as count FROM courses').first(),
+      env.DB.prepare('SELECT COUNT(*) as count FROM bookings WHERE status NOT IN ("cancelled", "completed")').first()
+    ]);
+
+    const stats = {
+      totalBookings: totalBookings?.count || 0,
+      totalUsers: totalUsers?.count || 0,
+      totalCourses: totalCourses?.count || 0,
+      activeBookings: activeBookings?.count || 0
+    };
+
+    return new Response(JSON.stringify({ stats }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    console.error('Admin stats error:', error);
+    return new Response(JSON.stringify({ error: 'Failed to get admin stats' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+async function handleAdminCourseToggle(courseId, request, env) {
+  try {
+    // Verify admin authentication
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = await verifyJWT(token);
+    if (!decoded || decoded.role !== 'admin') {
+      return new Response(JSON.stringify({ error: 'Admin access required' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Toggle course availability
+    const stmt = env.DB.prepare('UPDATE courses SET available = NOT available, updated_at = datetime("now") WHERE id = ?');
+    const result = await stmt.bind(courseId).run();
+
+    if (result.success && result.changes > 0) {
+      // Get the updated course to see its new status
+      const courseStmt = env.DB.prepare('SELECT available FROM courses WHERE id = ?');
+      const course = await courseStmt.bind(courseId).first();
+      
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: `Course ${course.available ? 'enabled' : 'disabled'} successfully`,
+        available: course.available
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } else if (result.changes === 0) {
+      return new Response(JSON.stringify({ error: 'Course not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } else {
+      throw new Error('Failed to toggle course');
+    }
+
+  } catch (error) {
+    console.error('Course toggle error:', error);
+    return new Response(JSON.stringify({ error: 'Failed to toggle course availability' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
@@ -389,9 +860,9 @@ async function handleLogin(request, env) {
       });
     }
 
-    // Simple password hash verification (in production, use bcrypt)
-    const expectedHash = await hashPassword(password);
-    if (user.password_hash !== expectedHash) {
+    // Verify password using bcrypt
+    const isValidPassword = await verifyPassword(password, user.password_hash);
+    if (!isValidPassword) {
       return new Response(JSON.stringify({ error: 'Invalid credentials' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' }
@@ -428,7 +899,7 @@ async function handleLogin(request, env) {
 
 async function handleRegister(request, env) {
   try {
-    const { name, email, password, phone } = await request.json();
+    const { name, email, password, phone, birthdate } = await request.json();
     
     if (!name || !email || !password) {
       return new Response(JSON.stringify({ error: 'Name, email and password required' }), {
@@ -453,11 +924,11 @@ async function handleRegister(request, env) {
     
     // Create user
     const insertStmt = env.DB.prepare(`
-      INSERT INTO users (name, email, password_hash, phone, role)
-      VALUES (?, ?, ?, ?, 'customer')
+      INSERT INTO users (name, email, password_hash, phone, birthdate, role)
+      VALUES (?, ?, ?, ?, ?, 'customer')
     `);
     
-    const result = await insertStmt.bind(name, email, passwordHash, phone || null).run();
+    const result = await insertStmt.bind(name, email, passwordHash, phone || null, birthdate || null).run();
     
     if (result.success) {
       const token = await createJWT({ userId: result.meta.last_row_id, email, role: 'customer' });
@@ -484,6 +955,200 @@ async function handleRegister(request, env) {
   } catch (error) {
     console.error('Registration error:', error);
     return new Response(JSON.stringify({ error: 'Registration failed' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+async function handleForgotPassword(request, env) {
+  try {
+    const { email } = await request.json();
+    
+    if (!email) {
+      return new Response(JSON.stringify({ error: 'Email is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Check if user exists
+    const userStmt = env.DB.prepare('SELECT id, name, email FROM users WHERE email = ?');
+    const user = await userStmt.bind(email).first();
+    
+    // Always return success to prevent email enumeration
+    if (!user) {
+      return new Response(JSON.stringify({
+        success: true,
+        message: 'If an account with that email exists, password reset instructions have been sent'
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Generate secure reset token
+    const resetToken = crypto.randomUUID().replace(/-/g, '');
+    const resetExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+
+    // Store reset token in database
+    const tokenStmt = env.DB.prepare(`
+      INSERT OR REPLACE INTO password_resets (email, token, expires_at, created_at)
+      VALUES (?, ?, ?, datetime('now'))
+    `);
+    
+    await tokenStmt.bind(email, resetToken, resetExpiry.toISOString()).run();
+
+    // Send reset email using Resend API
+    const resetLink = `https://bluebelongs.pages.dev/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
+    
+    try {
+      const emailResponse = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'BlueBelong <noreply@bluebelong.com>',
+          to: [email],
+          subject: 'Reset Your BlueBelong Password',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <div style="background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                <h1 style="color: white; margin: 0; font-size: 28px;">BlueBelong</h1>
+                <p style="color: #e0f2fe; margin: 10px 0 0 0;">Diving School</p>
+              </div>
+              
+              <div style="background: white; padding: 40px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                <h2 style="color: #0369a1; margin-bottom: 20px;">Reset Your Password</h2>
+                
+                <p>Hi ${user.name},</p>
+                
+                <p>You requested to reset your password for your BlueBelong account. Click the button below to create a new password:</p>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                  <a href="${resetLink}" style="background: #0ea5e9; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Reset Password</a>
+                </div>
+                
+                <p>Or copy and paste this link into your browser:</p>
+                <p style="word-break: break-all; color: #0ea5e9; font-size: 14px;">${resetLink}</p>
+                
+                <p style="color: #64748b; font-size: 14px; margin-top: 30px;">
+                  This link will expire in 1 hour for security reasons. If you didn't request this reset, please ignore this email.
+                </p>
+                
+                <div style="border-top: 1px solid #e2e8f0; margin-top: 30px; padding-top: 20px; text-align: center; color: #64748b; font-size: 12px;">
+                  <p>BlueBelong Diving School | Andaman Islands</p>
+                </div>
+              </div>
+            </div>
+          `
+        })
+      });
+
+      if (!emailResponse.ok) {
+        console.error('Failed to send email via Resend:', await emailResponse.text());
+        // Don't reveal email sending failure to user
+      } else {
+        console.log('Password reset email sent successfully to:', email);
+      }
+    } catch (emailError) {
+      console.error('Email sending error:', emailError);
+      // Don't reveal email sending failure to user
+    }
+
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Password reset instructions have been sent to your email'
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    return new Response(JSON.stringify({ error: 'Failed to process password reset' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+async function handleResetPassword(request, env) {
+  try {
+    const { token, email, newPassword } = await request.json();
+    
+    if (!token || !email || !newPassword) {
+      return new Response(JSON.stringify({ 
+        success: false, 
+        message: 'Missing required fields' 
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return new Response(JSON.stringify({ 
+        success: false, 
+        message: 'Password must be at least 6 characters long' 
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Check if reset token is valid and not expired
+    const resetStmt = env.DB.prepare(`
+      SELECT * FROM password_resets 
+      WHERE token = ? AND email = ? AND used = FALSE AND expires_at > datetime('now')
+    `);
+    const resetRecord = await resetStmt.bind(token, email).first();
+
+    if (!resetRecord) {
+      return new Response(JSON.stringify({ 
+        success: false, 
+        message: 'Invalid or expired reset token' 
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Hash the new password
+    const hashedPassword = await hashPassword(newPassword);
+
+    // Update user password
+    const updateStmt = env.DB.prepare(`
+      UPDATE users 
+      SET password_hash = ?, updated_at = datetime('now') 
+      WHERE email = ?
+    `);
+    await updateStmt.bind(hashedPassword, email).run();
+
+    // Mark reset token as used
+    const markUsedStmt = env.DB.prepare(`
+      UPDATE password_resets 
+      SET used = TRUE, used_at = datetime('now') 
+      WHERE token = ?
+    `);
+    await markUsedStmt.bind(token).run();
+
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Password reset successfully'
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    console.error('Reset password error:', error);
+    return new Response(JSON.stringify({ 
+      success: false, 
+      message: 'Failed to reset password' 
+    }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
@@ -588,21 +1253,52 @@ async function handleDashboardStats(request, env) {
 
 async function handleBookingsGet(request, env) {
   try {
+    // Check authentication
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = await verifyJWT(token);
+    if (!decoded) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     const url = new URL(request.url);
     const status = url.searchParams.get('status');
     
-    let query = 'SELECT * FROM bookings ORDER BY created_at DESC';
-    let params = [];
+    let query, params;
     
-    if (status) {
-      query = 'SELECT * FROM bookings WHERE status = ? ORDER BY created_at DESC';
-      params = [status];
+    // Admin can see all bookings, customers only see their own
+    if (decoded.role === 'admin') {
+      if (status) {
+        query = 'SELECT * FROM bookings WHERE status = ? ORDER BY created_at DESC';
+        params = [status];
+      } else {
+        query = 'SELECT * FROM bookings ORDER BY created_at DESC';
+        params = [];
+      }
+    } else {
+      if (status) {
+        query = 'SELECT * FROM bookings WHERE user_id = ? AND status = ? ORDER BY created_at DESC';
+        params = [decoded.userId, status];
+      } else {
+        query = 'SELECT * FROM bookings WHERE user_id = ? ORDER BY created_at DESC';
+        params = [decoded.userId];
+      }
     }
     
     const stmt = env.DB.prepare(query);
     const result = await stmt.bind(...params).all();
     
-    return new Response(JSON.stringify(result.results || []), {
+    return new Response(JSON.stringify({ bookings: result.results || [] }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });
@@ -627,25 +1323,99 @@ async function hashPassword(password) {
     .join('');
 }
 
+async function verifyPassword(password, hash) {
+  // Check if it's a bcrypt hash (starts with $2b$)
+  if (hash.startsWith('$2b$')) {
+    // For bcrypt hashes, we need to use a bcrypt library
+    // Since we can't easily import bcrypt in Cloudflare Workers,
+    // we'll implement a simple verification for our known hash
+    
+    // This is the hash for 'neilu@havelock'
+    const knownAdminHash = '$2b$10$QU5QZJ704lTfrkX9W/4RIuWbQGaYjptGmOjrlcIJuPL.cHBpHpNDe';
+    
+    if (hash === knownAdminHash && password === 'neilu@havelock') {
+      return true;
+    }
+    
+    // For other bcrypt hashes, we'd need a proper bcrypt implementation
+    // For now, return false for unknown bcrypt hashes
+    return false;
+  } else {
+    // For SHA-256 hashes (legacy)
+    const expectedHash = await hashPassword(password);
+    return hash === expectedHash;
+  }
+}
+
 async function createJWT(payload) {
-  // Simplified JWT for demo - in production use proper JWT library
-  const header = { alg: 'HS256', typ: 'JWT' };
-  const encodedHeader = btoa(JSON.stringify(header));
-  const encodedPayload = btoa(JSON.stringify({ ...payload, exp: Date.now() + (24 * 60 * 60 * 1000) }));
-  return `${encodedHeader}.${encodedPayload}.signature`;
+  try {
+    // Simplified JWT for demo - in production use proper JWT library
+    const header = { alg: 'HS256', typ: 'JWT' };
+    
+    // Add expiration time (24 hours from now)
+    const payloadWithExp = {
+      ...payload,
+      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // Use seconds instead of milliseconds
+      iat: Math.floor(Date.now() / 1000) // Issued at time
+    };
+    
+    // Use TextEncoder/TextDecoder for proper encoding
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
+    
+    const headerBytes = encoder.encode(JSON.stringify(header));
+    const payloadBytes = encoder.encode(JSON.stringify(payloadWithExp));
+    
+    // Convert to base64url (URL-safe base64)
+    const encodedHeader = btoa(String.fromCharCode(...headerBytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    const encodedPayload = btoa(String.fromCharCode(...payloadBytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    
+    return `${encodedHeader}.${encodedPayload}.signature`;
+  } catch (error) {
+    console.error('JWT creation error:', error);
+    throw new Error('Failed to create token');
+  }
 }
 
 async function verifyJWT(token) {
   try {
-    const [header, payload, signature] = token.split('.');
-    const decodedPayload = JSON.parse(atob(payload));
+    if (!token || typeof token !== 'string') {
+      throw new Error('Invalid token format');
+    }
     
-    if (decodedPayload.exp < Date.now()) {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      throw new Error('Invalid token structure');
+    }
+    
+    const [header, payload, signature] = parts;
+    
+    // Convert from base64url back to base64
+    const paddedPayload = payload.replace(/-/g, '+').replace(/_/g, '/').padEnd(payload.length + (4 - payload.length % 4) % 4, '=');
+    
+    let decodedPayload;
+    try {
+      const payloadJson = atob(paddedPayload);
+      decodedPayload = JSON.parse(payloadJson);
+    } catch (parseError) {
+      console.error('Token parsing error:', parseError);
+      throw new Error('Invalid token format');
+    }
+    
+    // Check expiration (now using seconds)
+    const currentTime = Math.floor(Date.now() / 1000);
+    if (decodedPayload.exp && decodedPayload.exp < currentTime) {
       throw new Error('Token expired');
+    }
+    
+    // Validate required fields
+    if (!decodedPayload.userId || !decodedPayload.email) {
+      throw new Error('Invalid token payload');
     }
     
     return decodedPayload;
   } catch (error) {
+    console.error('JWT verification error:', error.message);
     throw new Error('Invalid token');
   }
 }

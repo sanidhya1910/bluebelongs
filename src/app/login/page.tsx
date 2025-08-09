@@ -6,16 +6,48 @@ import { Eye, EyeOff, User, Lock, Mail } from 'lucide-react';
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    phone: '',
+    birthdate: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isForgotPassword) {
+      // Handle forgot password
+      try {
+        const response = await fetch(`https://bluebelong-api.blackburn1910.workers.dev/api/auth/forgot-password`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            email: formData.email
+          }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          alert('Password reset instructions sent to your email!');
+          setIsForgotPassword(false);
+          setIsLogin(true);
+        } else {
+          alert(data.error || 'Failed to send reset email');
+        }
+      } catch (error) {
+        console.error('Forgot password error:', error);
+        alert('Network error. Please try again.');
+      }
+      return;
+    }
     
     if (!isLogin && formData.password !== formData.confirmPassword) {
       alert('Passwords do not match!');
@@ -26,7 +58,7 @@ export default function LoginPage() {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
       const payload = isLogin 
         ? { email: formData.email, password: formData.password }
-        : { name: formData.name, email: formData.email, password: formData.password };
+        : { name: formData.name, email: formData.email, password: formData.password, phone: formData.phone, birthdate: formData.birthdate };
 
       const response = await fetch(`https://bluebelong-api.blackburn1910.workers.dev${endpoint}`, {
         method: 'POST',
@@ -43,8 +75,12 @@ export default function LoginPage() {
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
         
-        // Redirect to dashboard
-        window.location.href = '/dashboard';
+        // Redirect based on user role
+        if (data.user.role === 'admin') {
+          window.location.href = '/admin/dashboard';
+        } else {
+          window.location.href = '/dashboard';
+        }
       } else {
         alert(data.error || 'Authentication failed');
       }
@@ -67,44 +103,51 @@ export default function LoginPage() {
         <div className="max-w-md mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-slate-800 mb-2">
-              {isLogin ? 'Welcome Back' : 'Create Account'}
+              {isForgotPassword ? 'Reset Password' : (isLogin ? 'Welcome Back' : 'Create Account')}
             </h1>
             <p className="text-slate-600">
-              {isLogin 
-                ? 'Sign in to access your diving course bookings and profile' 
-                : 'Join Blue Belongs to book courses and track your progress'
+              {isForgotPassword 
+                ? 'Enter your email to receive password reset instructions'
+                : (isLogin 
+                  ? 'Sign in to access your diving course bookings and profile' 
+                  : 'Join Blue Belongs to book courses and track your progress'
+                )
               }
             </p>
           </div>
 
           <div className="card">
-            {/* Toggle Buttons */}
-            <div className="flex bg-slate-100 rounded-lg p-1 mb-6">
-              <button
-                onClick={() => setIsLogin(true)}
-                className={`flex-1 py-2 px-4 rounded-md transition-colors ${
-                  isLogin
-                    ? 'bg-white text-sky-600 shadow-sm font-medium'
-                    : 'text-slate-600 hover:text-slate-800'
-                }`}
-              >
-                Sign In
-              </button>
-              <button
-                onClick={() => setIsLogin(false)}
-                className={`flex-1 py-2 px-4 rounded-md transition-colors ${
-                  !isLogin
-                    ? 'bg-white text-sky-600 shadow-sm font-medium'
-                    : 'text-slate-600 hover:text-slate-800'
-                }`}
-              >
-                Sign Up
-              </button>
-            </div>
+            {!isForgotPassword && (
+              <>
+                {/* Toggle Buttons */}
+                <div className="flex bg-slate-100 rounded-lg p-1 mb-6">
+                  <button
+                    onClick={() => setIsLogin(true)}
+                    className={`flex-1 py-2 px-4 rounded-md transition-colors ${
+                      isLogin
+                        ? 'bg-white text-sky-600 shadow-sm font-medium'
+                        : 'text-slate-600 hover:text-slate-800'
+                    }`}
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    onClick={() => setIsLogin(false)}
+                    className={`flex-1 py-2 px-4 rounded-md transition-colors ${
+                      !isLogin
+                        ? 'bg-white text-sky-600 shadow-sm font-medium'
+                        : 'text-slate-600 hover:text-slate-800'
+                    }`}
+                  >
+                    Sign Up
+                  </button>
+                </div>
+              </>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Name Field (Registration only) */}
-              {!isLogin && (
+              {!isLogin && !isForgotPassword && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Full Name *
@@ -143,34 +186,69 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {/* Password Field */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Password *
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+              {/* Phone Field (Registration only) */}
+              {!isLogin && !isForgotPassword && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Phone Number
+                  </label>
                   <input
-                    type={showPassword ? 'text' : 'password'}
-                    name="password"
-                    required
-                    value={formData.password}
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-12 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
-                    placeholder="Enter your password"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    placeholder="Enter your phone number"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
                 </div>
-              </div>
+              )}
+
+              {/* Date of Birth Field (Registration only) */}
+              {!isLogin && !isForgotPassword && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Date of Birth
+                  </label>
+                  <input
+                    type="date"
+                    name="birthdate"
+                    value={formData.birthdate}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                </div>
+              )}
+
+              {/* Password Field */}
+              {!isForgotPassword && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Password *
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      name="password"
+                      required
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className="w-full pl-10 pr-12 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      placeholder="Enter your password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Confirm Password Field (Registration only) */}
-              {!isLogin && (
+              {!isLogin && !isForgotPassword && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Confirm Password *
@@ -191,7 +269,7 @@ export default function LoginPage() {
               )}
 
               {/* Remember Me / Forgot Password */}
-              {isLogin && (
+              {isLogin && !isForgotPassword && (
                 <div className="flex items-center justify-between">
                   <label className="flex items-center">
                     <input
@@ -202,6 +280,7 @@ export default function LoginPage() {
                   </label>
                   <button
                     type="button"
+                    onClick={() => setIsForgotPassword(true)}
                     className="text-sm text-sky-600 hover:text-sky-700"
                   >
                     Forgot password?
@@ -210,7 +289,7 @@ export default function LoginPage() {
               )}
 
               {/* Terms and Conditions (Registration only) */}
-              {!isLogin && (
+              {!isLogin && !isForgotPassword && (
                 <div className="flex items-start">
                   <input
                     type="checkbox"
@@ -233,49 +312,43 @@ export default function LoginPage() {
 
               {/* Submit Button */}
               <button type="submit" className="btn-primary w-full">
-                {isLogin ? 'Sign In' : 'Create Account'}
+                {isForgotPassword ? 'Send Reset Email' : (isLogin ? 'Sign In' : 'Create Account')}
               </button>
+              
+              {/* Back to Login (Forgot Password) */}
+              {isForgotPassword && (
+                <button
+                  type="button"
+                  onClick={() => setIsForgotPassword(false)}
+                  className="w-full text-center text-sm text-sky-600 hover:text-sky-700"
+                >
+                  Back to Login
+                </button>
+              )}
             </form>
-
-            {/* Divider */}
-            <div className="my-6 flex items-center">
-              <div className="flex-1 border-t border-slate-200"></div>
-              <span className="px-4 text-sm text-slate-500">or</span>
-              <div className="flex-1 border-t border-slate-200"></div>
-            </div>
-
-            {/* Social Login (placeholder) */}
-            <div className="space-y-3">
-              <button className="w-full flex items-center justify-center px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
-                <div className="w-5 h-5 mr-3 bg-red-500 rounded"></div>
-                Continue with Google
-              </button>
-              <button className="w-full flex items-center justify-center px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
-                <div className="w-5 h-5 mr-3 bg-blue-600 rounded"></div>
-                Continue with Facebook
-              </button>
-            </div>
           </div>
 
           {/* Additional Info */}
-          <div className="text-center mt-6">
-            <p className="text-sm text-slate-600">
-              {isLogin ? "Don't have an account? " : "Already have an account? "}
-              <button
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-sky-600 hover:text-sky-700 font-medium"
-              >
-                {isLogin ? 'Sign up' : 'Sign in'}
-              </button>
-            </p>
-          </div>
+          {!isForgotPassword && (
+            <div className="text-center mt-6">
+              <p className="text-sm text-slate-600">
+                {isLogin ? "Don't have an account? " : "Already have an account? "}
+                <button
+                  onClick={() => setIsLogin(!isLogin)}
+                  className="text-sky-600 hover:text-sky-700 font-medium"
+                >
+                  {isLogin ? 'Sign up' : 'Sign in'}
+                </button>
+              </p>
+            </div>
+          )}
 
-          {/* Demo Info */}
+          {/* Admin Info */}
           <div className="bg-blue-50 rounded-lg p-4 mt-6">
-            <h3 className="font-semibold text-blue-800 mb-2">Demo Note</h3>
+            <h3 className="font-semibold text-blue-800 mb-2">Admin Access</h3>
             <p className="text-sm text-blue-700">
-              This is a demo login page. In a production environment, this would be integrated 
-              with a secure authentication system like NextAuth.js with proper user management.
+              Admin users will be redirected to the course management dashboard upon login.
+              Regular users access their booking dashboard.
             </p>
           </div>
         </div>
