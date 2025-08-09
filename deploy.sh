@@ -40,7 +40,7 @@ echo "🚀 Deploying to Cloudflare Pages..."
 echo "Project name: bluebelong"
 
 # Deploy the static site
-npx wrangler pages deploy ./out --project-name=bluebelong
+npx wrangler pages deploy ./out --project-name=bluebelongs
 
 if [ $? -eq 0 ]; then
     echo "✅ Static site deployed successfully!"
@@ -59,7 +59,7 @@ if [ $? -eq 0 ]; then
         npx wrangler d1 execute bluebelong-bookings --file=./database/schema.sql
         
         echo "🚀 Deploying worker..."
-        npx wrangler deploy workers/booking-api.js
+        npx wrangler deploy --config=wrangler.worker.toml
         
         if [ $? -eq 0 ]; then
             echo "✅ API worker deployed successfully!"
