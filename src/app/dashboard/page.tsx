@@ -15,7 +15,8 @@ import {
   Activity,
   Waves,
   Fish,
-  MapPin
+  MapPin,
+  X
 } from 'lucide-react';
 
 interface User {
@@ -132,6 +133,35 @@ export default function DashboardPage() {
       </div>
     );
   }
+
+  const cancelBooking = async (bookingId: number) => {
+    if (!confirm('Are you sure you want to cancel this booking? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`https://bluebelong-api.blackburn1910.workers.dev/api/bookings/${bookingId}/cancel`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        alert('Booking cancelled successfully');
+        // Reload the data to show updated status
+        loadDashboardData();
+      } else {
+        const error = await response.json();
+        alert(`Failed to cancel booking: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Cancel booking error:', error);
+      alert('Failed to cancel booking. Please try again.');
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -380,6 +410,15 @@ export default function DashboardPage() {
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.payment_status)}`}>
                           Payment: {booking.payment_status}
                         </span>
+                        {(booking.status === 'pending' || booking.status === 'confirmed') && (
+                          <button
+                            onClick={() => cancelBooking(booking.id)}
+                            className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <X className="h-3 w-3" />
+                            Cancel
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

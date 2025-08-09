@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Clock, Award, MapPin, Waves, Fish, Anchor, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -289,6 +289,8 @@ const courses: Course[] = [
 export default function CoursesPage() {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [expandedCategory, setExpandedCategory] = useState<string | null>('beginner');
+  const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
   const [bookingForm, setBookingForm] = useState({
     name: '',
     email: '',
@@ -299,13 +301,44 @@ export default function CoursesPage() {
     medicalCleared: false
   });
 
+  useEffect(() => {
+    // Mark as hydrated and check authentication
+    setIsHydrated(true);
+    
+    const token = localStorage.getItem('authToken');
+    const userData = localStorage.getItem('user');
+    if (token && userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
+
   const handleBooking = (course: Course) => {
+    // Check if user is logged in
+    if (!user) {
+      alert('Please log in to book a course. You will be redirected to the login page.');
+      window.location.href = '/login';
+      return;
+    }
+    
     setSelectedCourse(course);
-    setBookingForm({ ...bookingForm, courseId: course.id });
+    setBookingForm({ 
+      ...bookingForm, 
+      courseId: course.id,
+      name: user.name,
+      email: user.email 
+    });
   };
 
   const submitBooking = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check authentication
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      alert('Please log in to book a course.');
+      window.location.href = '/login';
+      return;
+    }
     
     // Get form and button references
     const form = e.target as HTMLFormElement;
@@ -318,20 +351,33 @@ export default function CoursesPage() {
       button.textContent = 'Submitting...';
 
       // Call backend API
-      const response = await fetch('/api/bookings', {
+      const requestPayload = {
+        ...bookingForm,
+        course_id: bookingForm.courseId,
+        preferred_date: bookingForm.preferredDate,
+        courseName: selectedCourse?.title,
+        coursePrice: selectedCourse?.price,
+        timestamp: new Date().toISOString()
+      };
+      
+      // Log the request payload for debugging
+      console.log('Sending booking request:', requestPayload);
+      console.log('Token:', token ? 'Present' : 'Missing');
+      
+      const response = await fetch('https://bluebelong-api.blackburn1910.workers.dev/api/bookings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          ...bookingForm,
-          courseName: selectedCourse?.title,
-          coursePrice: selectedCourse?.price,
-          timestamp: new Date().toISOString()
-        }),
+        body: JSON.stringify(requestPayload),
       });
 
       const data = await response.json();
+      
+      // Log response for debugging
+      console.log('Response status:', response.status);
+      console.log('Response data:', data);
 
       if (response.ok) {
         alert(`✅ Booking request submitted successfully! 
@@ -341,12 +387,15 @@ Booking ID: ${data.bookingId}
 We'll contact you within 24 hours to confirm your slot. 
 Payment can be made face-to-face at our center.
 
+IMPORTANT: Please complete your medical form before your course date.
+You can access it from your dashboard or the medical form section.
+
 A confirmation email has been sent to ${bookingForm.email}.`);
         
         setSelectedCourse(null);
         setBookingForm({
-          name: '',
-          email: '',
+          name: user?.name || '',
+          email: user?.email || '',
           phone: '',
           courseId: '',
           preferredDate: '',
@@ -360,6 +409,10 @@ A confirmation email has been sent to ${bookingForm.email}.`);
     } catch (error) {
       console.error('Booking error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      
+      // Log the full response for debugging
+      console.error('Full error details:', error);
+      
       alert(`❌ Booking submission failed: ${errorMessage}
       
 Please try again or contact us directly:
@@ -397,7 +450,7 @@ Please try again or contact us directly:
             Diving Courses
           </h1>
           <p className="text-xl text-slate-600 max-w-3xl mx-auto">
-            Choose from our range of PADI certified diving courses, designed for all skill levels. 
+            Choose from our range of SSI certified diving courses, designed for all skill levels. 
             From complete beginners to advanced divers, we have the perfect course for you.
           </p>
         </motion.div>
@@ -505,7 +558,7 @@ Please try again or contact us directly:
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                             >
-                              Book Now
+                              {isHydrated && !user ? 'Login to Book' : 'Book Now'}
                             </motion.button>
                           </div>
                         </motion.div>
@@ -546,8 +599,9 @@ Please try again or contact us directly:
                     type="text"
                     required
                     value={bookingForm.name}
+                    readOnly={!!user}
                     onChange={(e) => setBookingForm({ ...bookingForm, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className={`w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 ${user ? 'bg-slate-100 text-slate-700' : ''}`}
                   />
                 </div>
 
@@ -559,8 +613,9 @@ Please try again or contact us directly:
                     type="email"
                     required
                     value={bookingForm.email}
+                    readOnly={!!user}
                     onChange={(e) => setBookingForm({ ...bookingForm, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className={`w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 ${user ? 'bg-slate-100 text-slate-700' : ''}`}
                   />
                 </div>
 

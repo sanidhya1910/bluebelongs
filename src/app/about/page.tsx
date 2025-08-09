@@ -27,7 +27,7 @@ const CoralIcon = ({ className }: { className?: string }) => (
 const achievements = [
   {
     icon: <Award className="h-8 w-8" />,
-    title: "PADI Certified Instructor",
+    title: "SSI Certified Instructor",
     description: "Professional diving instructor with advanced certifications",
     color: "from-amber-400 to-orange-500"
   },
@@ -52,12 +52,12 @@ const achievements = [
 ];
 
 const certifications = [
-  "PADI Open Water Scuba Instructor (OWSI)",
-  "PADI Advanced Open Water Instructor",
-  "PADI Rescue Diver Instructor",
-  "PADI Divemaster Instructor",
+  "SSI Open Water Scuba Instructor (OWSI)",
+  "SSI Advanced Open Water Instructor",
+  "SSI Rescue Diver Instructor",
+  "SSI Divemaster Instructor",
   "Emergency First Responder (EFR) Instructor",
-  "PADI Specialty Instructor (Multiple Specialties)"
+  "SSI Specialty Instructor (Multiple Specialties)"
 ];
 
 const values = [
@@ -151,7 +151,7 @@ export default function AboutPage() {
                   </div>
                   <div className="flex items-center text-emerald-600">
                     <Award className="h-4 w-4 mr-1" />
-                    PADI Certified Instructor
+                    SSI Certified Instructor
                   </div>
                 </div>
               </motion.div>

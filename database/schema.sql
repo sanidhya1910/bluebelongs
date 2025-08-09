@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
   name TEXT NOT NULL,
   email TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
+  birthdate DATE,
   role TEXT DEFAULT 'customer' CHECK (role IN ('admin', 'instructor', 'customer')),
   phone TEXT,
   certification_level TEXT,
@@ -14,6 +15,17 @@ CREATE TABLE IF NOT EXISTS users (
   is_verified BOOLEAN DEFAULT FALSE,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Password reset tokens table
+CREATE TABLE IF NOT EXISTS password_resets (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT NOT NULL,
+  token TEXT NOT NULL UNIQUE,
+  expires_at DATETIME NOT NULL,
+  used BOOLEAN DEFAULT FALSE,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  used_at DATETIME
 );
 
 -- Courses table
@@ -35,6 +47,7 @@ CREATE TABLE IF NOT EXISTS courses (
 -- Bookings table
 CREATE TABLE IF NOT EXISTS bookings (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER,
   name TEXT NOT NULL,
   email TEXT NOT NULL,
   phone TEXT NOT NULL,
@@ -49,6 +62,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   notes TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id),
   FOREIGN KEY (course_id) REFERENCES courses(id)
 );
 
@@ -117,6 +131,9 @@ INSERT OR IGNORE INTO courses (id, title, description, duration, dives, price, l
 ('night-diving', 'SSI Night & Limited Visibility (Havelock Only)', 'Safely navigate underwater environments in low light.', '2 days', 3, 'Contact for pricing', 'Open Water', 'SSI Night & Limited Visibility', 'specialty');
 
 -- Create indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_password_resets_token ON password_resets(token);
+CREATE INDEX IF NOT EXISTS idx_password_resets_email ON password_resets(email);
 CREATE INDEX IF NOT EXISTS idx_bookings_email ON bookings(email);
 CREATE INDEX IF NOT EXISTS idx_bookings_date ON bookings(preferred_date);
 CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);

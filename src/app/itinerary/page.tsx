@@ -64,7 +64,7 @@ export default function ItineraryPage() {
       title: "Certification & Exploration",
       activities: [
         "Final skills assessment",
-        "Receive PADI certification",
+        "Receive SSI certification",
         "Explore Ross Island or North Bay",
         "Celebration dinner"
       ]

@@ -12,6 +12,7 @@ database_id = "8e4a3945-3150-4c16-bc22-13059e14fa13"
 [vars]
 ENVIRONMENT = "production"
 ADMIN_EMAIL = "admin@bluebelong.com"
+RESEND_API_KEY = "re_ZFPSeZHG_4QF4CSdYwLWSi3ybej8LNJSA"
 
 # CORS settings
 [env.production.vars]
@@ -22,4 +23,4 @@ ALLOWED_ORIGINS = "http://localhost:3000"
 
 # Email service configuration (add your API keys)
 # SENDGRID_API_KEY = "your-sendgrid-key"
-# RESEND_API_KEY = "your-resend-key"
+# RESEND_API_KEY = "re_ZFPSeZHG_4QF4CSdYwLWSi3ybej8LNJSA"

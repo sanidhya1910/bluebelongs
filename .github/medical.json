@@ -1,0 +1,144 @@
+{
+  "title": "Medical Evaluation Questionnaire",
+  "description": "Recreational scuba diving and freediving requires good physical and mental health. There are a few medical conditions which can be hazardous while diving, listed below. Those who have, or are predisposed to, any of these conditions, should be evaluated by a physician. This Diver Medical Participant Questionnaire provides a basis to determine if you should seek out that evaluation. If you have any concerns about your diving fitness not represented on this form, consult with your physician before diving. If you are feeling ill, avoid diving. If you think you may have a contagious disease, protect yourself and others by not participating in dive training and/or dive activities. References to 'diving' on this form encompass both recreational scuba diving and freediving. This form is principally designed as an initial medical screen for new divers, but is also appropriate for divers taking continuing education. For your safety, and that of others who may dive with you, answer all questions honestly.",
+  "participantStatement": "I have answered all questions honestly, and understand that I accept responsibility for any consequences resulting from any questions I may have answered inaccurately or for my failure to disclose any existing or past health conditions.",
+  "questions": [
+    {
+      "id": 1,
+      "text": "I have had problems with my lungs, breathing, heart and/or blood affecting my normal physical or mental performance.",
+      "goToBox": "A"
+    },
+    {
+      "id": 2,
+      "text": "I am over 45 years of age.",
+      "goToBox": "B"
+    },
+    {
+      "id": 3,
+      "text": "I struggle to perform moderate exercise (e.g., walk 1.6 km/1 mile in 14 minutes or swim 200 meters/yards without resting), OR I have been unable to participate in a normal physical activity due to fitness or health reasons within the past 12 months.",
+      "requiresMedicalEvaluation": true
+    },
+    {
+      "id": 4,
+      "text": "I have had problems with my eyes, ears, or nasal passages/sinuses.",
+      "goToBox": "C"
+    },
+    {
+      "id": 5,
+      "text": "I have had surgery within the last 12 months, OR I have ongoing problems related to past surgery.",
+      "requiresMedicalEvaluation": true
+    },
+    {
+      "id": 6,
+      "text": "I have lost consciousness, had migraine headaches, seizures, stroke, significant head injury, or suffer from persistent neurologic injury or disease.",
+      "goToBox": "D"
+    },
+    {
+      "id": 7,
+      "text": "I am currently undergoing treatment (or have required treatment within the last five years) for psychological problems, personality disorder, panic attacks, or an addiction to drugs or alcohol; or, I have been diagnosed with a learning or developmental disability.",
+      "goToBox": "E"
+    },
+    {
+      "id": 8,
+      "text": "I have had back problems, hernia, ulcers, or diabetes.",
+      "goToBox": "F"
+    },
+    {
+      "id": 9,
+      "text": "I have had stomach or intestine problems, including recent diarrhea.",
+      "goToBox": "G"
+    },
+    {
+      "id": 10,
+      "text": "I am taking prescription medications (except birth control or anti-malarial drugs other than mefloquine (Lariam)).",
+      "requiresMedicalEvaluation": true
+    }
+  ],
+  "signatureFields": {
+    "participantName": "",
+    "birthdate": "",
+    "date": "",
+    "facilityName": "",
+    "instructorName": "",
+    "participantSignature": ""
+  },
+  "instructions": {
+    "noteToWomen": "If you are pregnant, or attempting to become pregnant, do not dive.",
+    "evaluationRequiredIf": [
+      "Yes to questions 3, 5 or 10",
+      "Yes to any question on page 2 (Box A–G)"
+    ]
+  },
+
+  "boxes": {
+    "A": {
+      "title": "BOX A – I HAVE/HAVE HAD",
+      "questions": [
+        "Chest surgery, heart surgery, heart valve surgery, an implantable medical device (e.g., stent, pacemaker, neurostimulator), pneumothorax, and/or chronic lung disease.",
+        "Asthma, wheezing, severe allergies, hay fever or congested airways within the last 12 months that limits my physical activity/exercise.",
+        "A problem or illness involving my heart such as: angina, chest pain on exertion, heart failure, immersion pulmonary edema, heart attack or stroke, OR am taking medication for any heart condition.",
+        "Recurrent bronchitis and currently coughing within the past 12 months, OR have been diagnosed with emphysema.",
+        "Symptoms affecting my lungs, breathing, heart and/or blood in the last 30 days that impair my physical or mental performance."
+      ]
+    },
+    "B": {
+      "title": "BOX B – I AM OVER 45 YEARS OF AGE AND",
+      "questions": [
+        "I currently smoke or inhale nicotine by other means.",
+        "I have a high cholesterol level.",
+        "I have high blood pressure.",
+        "I have had a close blood relative die suddenly or of cardiac disease or stroke before the age of 50, OR have a family history of heart disease before age 50 (including abnormal heart rhythms, coronary artery disease or cardiomyopathy)."
+      ]
+    },
+    "C": {
+      "title": "BOX C – I HAVE/HAVE HAD",
+      "questions": [
+        "Sinus surgery within the last 6 months.",
+        "Ear disease or ear surgery, hearing loss, or problems with balance.",
+        "Recurrent sinusitis within the past 12 months.",
+        "Eye surgery within the past 3 months."
+      ]
+    },
+    "D": {
+      "title": "BOX D – I HAVE/HAVE HAD",
+      "questions": [
+        "Head injury with loss of consciousness within the past 5 years.",
+        "Persistent neurologic injury or disease.",
+        "Recurring migraine headaches within the past 12 months, or take medications to prevent them.",
+        "Blackouts or fainting (full/partial loss of consciousness) within the last 5 years.",
+        "Epilepsy, seizures, or convulsions, OR take medications to prevent them."
+      ]
+    },
+    "E": {
+      "title": "BOX E – I HAVE/HAVE HAD",
+      "questions": [
+        "Behavioral health, mental or psychological problems requiring medical/psychiatric treatment.",
+        "Major depression, suicidal ideation, panic attacks, uncontrolled bipolar disorder requiring medication/psychiatric treatment.",
+        "Been diagnosed with a mental health condition or a learning/developmental disorder that requires ongoing care or special accommodation.",
+        "An addiction to drugs or alcohol requiring treatment within the last 5 years."
+      ]
+    },
+    "F": {
+      "title": "BOX F – I HAVE/HAVE HAD",
+      "questions": [
+        "Recurrent back problems in the last 6 months that limit my everyday activity.",
+        "Back or spinal surgery within the last 12 months.",
+        "Diabetes, either drug or diet controlled, OR gestational diabetes within the last 12 months.",
+        "An uncorrected hernia that limits my physical abilities.",
+        "Active or untreated ulcers, problem wounds, or ulcer surgery within the last 6 months."
+      ]
+    },
+    "G": {
+      "title": "BOX G – I HAVE HAD",
+      "questions": [
+        "Ostomy surgery and do not have medical clearance to swim or engage in physical activity.",
+        "Dehydration requiring medical intervention within the last 7 days.",
+        "Active or untreated stomach or intestinal ulcers or ulcer surgery within the last 6 months.",
+        "Frequent heartburn, regurgitation, or gastroesophageal reflux disease (GERD).",
+        "Active or uncontrolled ulcerative colitis or Crohn’s disease.",
+        "Bariatric surgery within the last 12 months."
+      ]
+    }
+  },
+  "note": "*Physician’s medical evaluation required (see page 1)."
+}
