@@ -62,6 +62,16 @@ export default {
       } else if (path.startsWith('/api/admin/courses/') && request.method === 'DELETE') {
         const courseId = path.split('/')[4];
         response = await handleAdminCourseDelete(courseId, request, env);
+      } else if (path === '/api/admin/bookings' && request.method === 'GET') {
+        response = await handleAdminBookingsGet(request, env);
+      } else if (path.startsWith('/api/admin/bookings/') && request.method === 'PATCH') {
+        const bookingId = path.split('/')[4];
+        response = await handleAdminBookingUpdate(bookingId, request, env);
+      } else if (path === '/api/admin/users' && request.method === 'GET') {
+        response = await handleAdminUsersGet(request, env);
+      } else if (path.startsWith('/api/admin/users/') && request.method === 'PATCH') {
+        const userId = path.split('/')[4];
+        response = await handleAdminUserUpdate(userId, request, env);
       } else if (path === '/api/contact' && request.method === 'POST') {
         response = await handleContactForm(request, env);
       } else if (path === '/api/medical-form' && request.method === 'POST') {
@@ -1417,5 +1427,152 @@ async function verifyJWT(token) {
   } catch (error) {
     console.error('JWT verification error:', error.message);
     throw new Error('Invalid token');
+  }
+}
+
+// Admin Bookings Management
+async function handleAdminBookingsGet(request, env) {
+  try {
+    const query = `
+      SELECT 
+        b.*,
+        c.title as course_name,
+        c.price as course_price
+      FROM bookings b
+      LEFT JOIN courses c ON b.course_id = c.id
+      ORDER BY b.created_at DESC
+    `;
+    
+    const result = await env.BOOKING_DB.prepare(query).all();
+    
+    return new Response(JSON.stringify({
+      success: true,
+      bookings: result.results
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Error fetching admin bookings:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Failed to fetch bookings'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+async function handleAdminBookingUpdate(bookingId, request, env) {
+  try {
+    const { status, payment_status } = await request.json();
+    
+    const query = `
+      UPDATE bookings 
+      SET status = ?, payment_status = ?
+      WHERE id = ?
+    `;
+    
+    await env.BOOKING_DB.prepare(query).bind(
+      status || null,
+      payment_status || null,
+      bookingId
+    ).run();
+    
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Booking updated successfully'
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Error updating booking:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Failed to update booking'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Admin Users Management
+async function handleAdminUsersGet(request, env) {
+  try {
+    const query = `
+      SELECT 
+        id,
+        name,
+        email,
+        role,
+        phone,
+        certification_level,
+        total_dives,
+        created_at
+      FROM users
+      ORDER BY created_at DESC
+    `;
+    
+    const result = await env.BOOKING_DB.prepare(query).all();
+    
+    return new Response(JSON.stringify({
+      success: true,
+      users: result.results
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Error fetching admin users:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Failed to fetch users'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+async function handleAdminUserUpdate(userId, request, env) {
+  try {
+    const { role, phone, certification_level, total_dives } = await request.json();
+    
+    const query = `
+      UPDATE users 
+      SET role = COALESCE(?, role),
+          phone = COALESCE(?, phone),
+          certification_level = COALESCE(?, certification_level),
+          total_dives = COALESCE(?, total_dives)
+      WHERE id = ?
+    `;
+    
+    await env.BOOKING_DB.prepare(query).bind(
+      role || null,
+      phone || null,
+      certification_level || null,
+      total_dives || null,
+      userId
+    ).run();
+    
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'User updated successfully'
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Failed to update user'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }

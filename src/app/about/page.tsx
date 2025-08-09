@@ -80,7 +80,7 @@ const values = [
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-12 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-12 pt-28 relative overflow-hidden">
       {/* Animated Background Elements */}
       <CoralIcon className="absolute top-20 right-10 h-32 w-32 text-coral-400/10" />
       <CoralIcon className="absolute bottom-20 left-10 h-24 w-24 text-coral-500/10" />

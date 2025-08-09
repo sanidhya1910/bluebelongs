@@ -98,7 +98,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12">
+    <div className="min-h-screen bg-slate-50 py-12 pt-28">
       <div className="container mx-auto px-4">
         <div className="max-w-md mx-auto">
           <div className="text-center mb-8">
@@ -342,15 +342,6 @@ export default function LoginPage() {
               </p>
             </div>
           )}
-
-          {/* Admin Info */}
-          <div className="bg-blue-50 rounded-lg p-4 mt-6">
-            <h3 className="font-semibold text-blue-800 mb-2">Admin Access</h3>
-            <p className="text-sm text-blue-700">
-              Admin users will be redirected to the course management dashboard upon login.
-              Regular users access their booking dashboard.
-            </p>
-          </div>
         </div>
       </div>
     </div>
