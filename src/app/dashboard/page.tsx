@@ -173,7 +173,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50 pt-20">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-sky-100">
         <div className="container mx-auto px-4 py-4">

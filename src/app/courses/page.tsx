@@ -434,7 +434,7 @@ Please try again or contact us directly:
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 py-12 pt-28 relative overflow-hidden">
       {/* Animated Background Elements */}
       <CoralIcon className="absolute top-20 right-10 h-24 w-24 text-coral-400/10" />
       <CoralIcon className="absolute bottom-20 left-10 h-20 w-20 text-coral-500/10" />
