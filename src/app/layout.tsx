@@ -59,7 +59,7 @@ export default function RootLayout({
                   Dive into Adventure in the pristine waters of Andaman Islands
                 </p>
                 <p className="text-sm text-slate-400 italic">
-                  "You are the ocean" - Where dreams meet the deep blue
+                  &quot;You are the ocean&quot; - Where dreams meet the deep blue
                 </p>
               </div>
             </div>
