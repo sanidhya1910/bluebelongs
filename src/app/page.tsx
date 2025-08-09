@@ -128,14 +128,14 @@ export default function HomePage() {
     {
       name: "Sanidhya",
       rating: 5,
-      comment: "&ldquo;BlueBelong transformed my relationship with the ocean. The instructors create such a peaceful, connected experience.&rdquo;",
+      comment: "BlueBelong transformed my relationship with the ocean. The instructors create such a peaceful, connected experience.",
       role: "Open Water Diver",
       avatar: "S"
     },
     {
       name: "Dhruv", 
       rating: 5,
-      comment: "&ldquo;The most calming and professional diving experience. I felt truly at home in the blue waters of Andaman.&rdquo;",
+      comment: "The most calming and professional diving experience. I felt truly at home in the blue waters of Andaman.",
       role: "Advanced Diver",
       avatar: "D"
     }
@@ -145,7 +145,7 @@ export default function HomePage() {
     <div className="min-h-screen relative overflow-hidden" style={{ backgroundColor: 'rgb(225, 217, 203)' }}>
       
       {/* HERO SECTION - Framer Style */}
-      <section className="relative min-h-screen flex items-center overflow-hidden" id="hero">
+      <section className="relative min-h-screen flex items-center overflow-hidden pt-20" id="hero">
         {/* Hero Gradient Wrapper */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-sky-400 via-blue-500 to-cyan-600"></div>
@@ -409,9 +409,9 @@ export default function HomePage() {
                   animate={aboutInView ? { opacity: 1, y: 0 } : {}}
                   transition={{ delay: 1.2, duration: 1 }}
                 >
-                  "                  &ldquo;At BlueBelong, we&apos;re experienced dive professionals helping you find peace, connection, 
-                  and confidence in the underwater world. Whether you&apos;re seeking your first breath underwater 
-                  or advancing your diving journey, we&apos;re here to guide you safely into the blue.&rdquo;"
+                  "At BlueBelong, we're experienced dive professionals helping you find peace, connection, 
+                  and confidence in the underwater world. Whether you're seeking your first breath underwater 
+                  or advancing your diving journey, we're here to guide you safely into the blue."
                 </motion.p>
                 
                 {/* Qualifications */}
@@ -446,6 +446,128 @@ export default function HomePage() {
                 </motion.div>
               </motion.div>
             </div>
+          </div>
+        </section>
+
+        {/* GALLERY SECTION - Auto-scrolling */}
+        <section className="py-16 relative overflow-hidden" style={{ backgroundColor: 'rgb(239, 236, 229)' }}>
+          <div className="container mx-auto px-4">
+            <motion.div
+              className="text-center mb-12"
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1 }}
+              viewport={{ once: true }}
+            >
+              <motion.div
+                className="inline-flex items-center gap-2 bg-sky-100 border border-sky-200 px-4 py-2 rounded-full mb-6"
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2, duration: 0.8 }}
+                viewport={{ once: true }}
+              >
+                <Fish className="h-4 w-4 text-sky-600" />
+                <span className="text-sm font-medium text-sky-700">UNDERWATER GALLERY</span>
+              </motion.div>
+              
+              <h2 className="text-3xl md:text-4xl font-light text-slate-800 mb-4">
+                Dive into <span className="font-bold text-sky-700">Amazing Moments</span>
+              </h2>
+              <p className="text-lg text-slate-600 max-w-2xl mx-auto font-light">
+                Discover the breathtaking underwater world through the eyes of our divers
+              </p>
+            </motion.div>
+          </div>
+          
+          {/* Auto-scrolling gallery */}
+          <div className="relative">
+            <div className="overflow-hidden">
+              <motion.div
+                className="flex gap-6 w-max"
+                animate={{
+                  x: [0, -1600]
+                }}
+                transition={{
+                  duration: 30,
+                  repeat: Infinity,
+                  ease: "linear"
+                }}
+              >
+                {/* Gallery Items */}
+                {[
+                  { id: 1, title: "Coral Gardens", desc: "Vibrant coral formations in crystal clear waters", color: "from-cyan-400 to-blue-500" },
+                  { id: 2, title: "Tropical Fish", desc: "Schools of colorful tropical fish", color: "from-sky-400 to-cyan-500" },
+                  { id: 3, title: "Sea Turtles", desc: "Gentle giants of the ocean", color: "from-blue-400 to-indigo-500" },
+                  { id: 4, title: "Reef Diving", desc: "Exploring pristine coral reefs", color: "from-teal-400 to-cyan-500" },
+                  { id: 5, title: "Night Diving", desc: "Mysterious underwater night adventures", color: "from-indigo-500 to-purple-600" },
+                  { id: 6, title: "Deep Blue", desc: "Crystal clear Andaman waters", color: "from-sky-500 to-blue-600" },
+                  { id: 7, title: "Marine Life", desc: "Diverse ecosystem underwater", color: "from-cyan-500 to-teal-500" },
+                  { id: 8, title: "Adventure", desc: "Unforgettable diving experiences", color: "from-blue-500 to-cyan-600" },
+                  // Duplicate for seamless loop
+                  { id: 9, title: "Coral Gardens", desc: "Vibrant coral formations in crystal clear waters", color: "from-cyan-400 to-blue-500" },
+                  { id: 10, title: "Tropical Fish", desc: "Schools of colorful tropical fish", color: "from-sky-400 to-cyan-500" },
+                  { id: 11, title: "Sea Turtles", desc: "Gentle giants of the ocean", color: "from-blue-400 to-indigo-500" },
+                  { id: 12, title: "Reef Diving", desc: "Exploring pristine coral reefs", color: "from-teal-400 to-cyan-500" },
+                ].map((item, index) => (
+                  <motion.div
+                    key={`${item.id}-${index}`}
+                    className="flex-shrink-0 w-80 h-64 rounded-2xl overflow-hidden relative group cursor-pointer"
+                    whileHover={{ scale: 1.05, y: -8 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {/* Background gradient */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${item.color}`}></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                    
+                    {/* Placeholder for images */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <motion.div
+                        animate={{ 
+                          scale: [1, 1.1, 1],
+                          rotate: [0, 5, -5, 0]
+                        }}
+                        transition={{ 
+                          duration: 4,
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                      >
+                        <Fish className="h-16 w-16 text-white/70" />
+                      </motion.div>
+                    </div>
+                    
+                    {/* Content overlay */}
+                    <div className="absolute bottom-0 left-0 right-0 p-6">
+                      <h3 className="text-xl font-semibold text-white mb-2">{item.title}</h3>
+                      <p className="text-white/80 text-sm font-light">{item.desc}</p>
+                    </div>
+                    
+                    {/* Hover effect overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-sky-600/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </div>
+            
+            {/* Gradient overlays for fade effect */}
+            <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-[rgb(239,236,229)] to-transparent pointer-events-none z-10"></div>
+            <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-[rgb(239,236,229)] to-transparent pointer-events-none z-10"></div>
+          </div>
+          
+          {/* Gallery description */}
+          <div className="container mx-auto px-4 mt-12">
+            <motion.div
+              className="text-center"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 0.3 }}
+              viewport={{ once: true }}
+            >
+              <p className="text-slate-600 font-light max-w-3xl mx-auto">
+                Every dive tells a story. From the vibrant coral gardens to the mysterious depths, 
+                experience the magic of Andaman's underwater world through our guided diving adventures.
+              </p>
+            </motion.div>
           </div>
         </section>
 
