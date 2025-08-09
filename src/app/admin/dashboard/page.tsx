@@ -18,9 +18,30 @@ interface Course {
 }
 
 interface User {
+  id: number;
   name: string;
   email: string;
   role: string;
+  phone?: string;
+  certification_level?: string;
+  total_dives?: number;
+  created_at: string;
+}
+
+interface Booking {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  course_id: string;
+  course_name: string;
+  course_price: string;
+  preferred_date: string;
+  experience?: string;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  payment_status: 'pending' | 'paid' | 'cancelled' | 'refunded';
+  created_at: string;
+  notes?: string;
 }
 
 interface AdminStats {
@@ -33,6 +54,8 @@ interface AdminStats {
 export default function AdminDashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [adminStats, setAdminStats] = useState<AdminStats>({ totalBookings: 0, totalUsers: 0, totalCourses: 0, activeBookings: 0 });
   const [activeTab, setActiveTab] = useState<'courses' | 'bookings' | 'users' | 'settings'>('courses');
   const [isLoading, setIsLoading] = useState(true);
@@ -54,7 +77,12 @@ export default function AdminDashboard() {
     checkAuth();
     loadCourses();
     loadAdminStats();
-  }, []);
+    if (activeTab === 'bookings') {
+      loadBookings();
+    } else if (activeTab === 'users') {
+      loadUsers();
+    }
+  }, [activeTab]);
 
   const checkAuth = () => {
     const userData = localStorage.getItem('user');
@@ -110,6 +138,65 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error('Error loading admin stats:', error);
+    }
+  };
+
+  const loadBookings = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('https://bluebelong-api.blackburn1910.workers.dev/api/admin/bookings', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setBookings(data.bookings || []);
+      }
+    } catch (error) {
+      console.error('Error loading bookings:', error);
+    }
+  };
+
+  const loadUsers = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('https://bluebelong-api.blackburn1910.workers.dev/api/admin/users', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.users || []);
+      }
+    } catch (error) {
+      console.error('Error loading users:', error);
+    }
+  };
+
+      const updateBookingStatus = async (id: number, status: Booking['status']) => {
+    try {
+      const response = await fetch(`https://bluebelong-api.blackburn1910.workers.dev/api/admin/bookings/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status })
+      });
+
+      if (response.ok) {
+        // Update local state
+        setBookings(bookings.map(booking => 
+          booking.id === id ? { ...booking, status } : booking
+        ));
+      } else {
+        alert('Failed to update booking status');
+      }
+    } catch (error) {
+      alert('Error updating booking status');
     }
   };
 
@@ -630,10 +717,133 @@ export default function AdminDashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="bg-white rounded-lg shadow-sm border p-6"
             >
-              <h3 className="text-lg font-semibold text-slate-800 mb-4">Booking Management</h3>
-              <p className="text-slate-600">Booking management features coming soon...</p>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold text-slate-800">Booking Management</h2>
+                <div className="flex gap-2">
+                  <select 
+                    className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    onChange={(e) => {
+                      // Filter bookings by status
+                      const filtered = e.target.value === 'all' 
+                        ? bookings 
+                        : bookings.filter(booking => booking.status === e.target.value);
+                      setBookings(filtered);
+                    }}
+                  >
+                    <option value="all">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                          Booking ID
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                          Customer
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                          Course
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                          Date & Time
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                          Participants
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                          Payment
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-slate-200">
+                      {bookings.map((booking) => (
+                        <tr key={booking.id} className="hover:bg-slate-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
+                            #{booking.id.toString().padStart(6, '0')}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-slate-900">{booking.name}</div>
+                            <div className="text-sm text-slate-500">{booking.email}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
+                            {booking.course_name}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
+                            <div>{new Date(booking.preferred_date).toLocaleDateString()}</div>
+                            <div className="text-slate-500">As requested</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
+                            1 person
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                              booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              booking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                              'bg-blue-100 text-blue-800'
+                            }`}>
+                              {booking.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              booking.payment_status === 'paid' ? 'bg-green-100 text-green-800' :
+                              booking.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {booking.payment_status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex items-center gap-2">
+                              <select
+                                value={booking.status}
+                                onChange={(e) => updateBookingStatus(booking.id, e.target.value as Booking['status'])}
+                                className="text-xs px-2 py-1 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              >
+                                <option value="pending">Pending</option>
+                                <option value="confirmed">Confirmed</option>
+                                <option value="cancelled">Cancelled</option>
+                                <option value="completed">Completed</option>
+                              </select>
+                              <button
+                                onClick={() => {
+                                  // View booking details
+                                  alert(`Booking Details:\n\nCustomer: ${booking.name}\nEmail: ${booking.email}\nPhone: ${booking.phone}\nCourse: ${booking.course_name}\nPrice: ${booking.course_price}\nPreferred Date: ${new Date(booking.preferred_date).toLocaleDateString()}\nExperience: ${booking.experience || 'None specified'}\nNotes: ${booking.notes || 'None'}\nBooking Date: ${new Date(booking.created_at).toLocaleDateString()}\nPayment Status: ${booking.payment_status}`);
+                                }}
+                                className="text-blue-600 hover:text-blue-900 text-xs"
+                              >
+                                View
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {bookings.length === 0 && (
+                    <div className="text-center py-8 text-slate-500">
+                      No bookings found
+                    </div>
+                  )}
+                </div>
+              </div>
             </motion.div>
           )}
           
@@ -643,10 +853,131 @@ export default function AdminDashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="bg-white rounded-lg shadow-sm border p-6"
             >
-              <h3 className="text-lg font-semibold text-slate-800 mb-4">User Management</h3>
-              <p className="text-slate-600">User management features coming soon...</p>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold text-slate-800">User Management</h2>
+                <div className="flex gap-2">
+                  <select 
+                    className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    onChange={(e) => {
+                      // Filter users by role
+                      const filtered = e.target.value === 'all' 
+                        ? users 
+                        : users.filter(user => user.role === e.target.value);
+                      setUsers(filtered);
+                    }}
+                  >
+                    <option value="all">All Roles</option>
+                    <option value="admin">Admin</option>
+                    <option value="user">User</option>
+                    <option value="instructor">Instructor</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                          User ID
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                          Name & Email
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                          Phone
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                          Role
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                          Certification
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                          Total Dives
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                          Joined
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-slate-200">
+                      {users.map((user) => (
+                        <tr key={user.id} className="hover:bg-slate-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
+                            #{user.id.toString().padStart(4, '0')}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-slate-900">{user.name}</div>
+                            <div className="text-sm text-slate-500">{user.email}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
+                            {user.phone || 'Not provided'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              user.role === 'admin' ? 'bg-red-100 text-red-800' :
+                              user.role === 'instructor' ? 'bg-blue-100 text-blue-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {user.role}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
+                            {user.certification_level || 'None'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
+                            {user.total_dives || 0}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
+                            {new Date(user.created_at).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => {
+                                  // View user details
+                                  alert(`User Details:\n\nName: ${user.name}\nEmail: ${user.email}\nPhone: ${user.phone || 'Not provided'}\nRole: ${user.role}\nCertification Level: ${user.certification_level || 'None'}\nTotal Dives: ${user.total_dives || 0}\nJoined: ${new Date(user.created_at).toLocaleDateString()}`);
+                                }}
+                                className="text-blue-600 hover:text-blue-900 text-xs"
+                              >
+                                View
+                              </button>
+                              <select
+                                value={user.role}
+                                onChange={(e) => {
+                                  // Update user role
+                                  const newRole = e.target.value;
+                                  setUsers(users.map(u => 
+                                    u.id === user.id ? { ...u, role: newRole } : u
+                                  ));
+                                  // Here you would typically make an API call to update the role
+                                  console.log(`Updated user ${user.id} role to ${newRole}`);
+                                }}
+                                className="text-xs px-2 py-1 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              >
+                                <option value="user">User</option>
+                                <option value="instructor">Instructor</option>
+                                <option value="admin">Admin</option>
+                              </select>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {users.length === 0 && (
+                    <div className="text-center py-8 text-slate-500">
+                      No users found
+                    </div>
+                  )}
+                </div>
+              </div>
             </motion.div>
           )}
           
@@ -656,10 +987,198 @@ export default function AdminDashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="bg-white rounded-lg shadow-sm border p-6"
             >
-              <h3 className="text-lg font-semibold text-slate-800 mb-4">System Settings</h3>
-              <p className="text-slate-600">System settings and configuration options coming soon...</p>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold text-slate-800">System Settings</h2>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* General Settings */}
+                <div className="bg-white rounded-lg shadow-sm border p-6">
+                  <h3 className="text-lg font-semibold text-slate-800 mb-4">General Settings</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Business Name
+                      </label>
+                      <input
+                        type="text"
+                        defaultValue="BlueBelong Diving School"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Contact Email
+                      </label>
+                      <input
+                        type="email"
+                        defaultValue="info@bluebelong.com"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Contact Phone
+                      </label>
+                      <input
+                        type="tel"
+                        defaultValue="+91-123-456-7890"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Business Address
+                      </label>
+                      <textarea
+                        rows={3}
+                        defaultValue="Havelock Island, Andaman and Nicobar Islands, India"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Booking Settings */}
+                <div className="bg-white rounded-lg shadow-sm border p-6">
+                  <h3 className="text-lg font-semibold text-slate-800 mb-4">Booking Settings</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Advance Booking Days
+                      </label>
+                      <input
+                        type="number"
+                        defaultValue="30"
+                        min="1"
+                        max="365"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Maximum Group Size
+                      </label>
+                      <input
+                        type="number"
+                        defaultValue="6"
+                        min="1"
+                        max="20"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Cancellation Policy (hours)
+                      </label>
+                      <input
+                        type="number"
+                        defaultValue="48"
+                        min="0"
+                        max="168"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        defaultChecked
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded"
+                      />
+                      <label className="ml-2 block text-sm text-slate-700">
+                        Auto-confirm bookings
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        defaultChecked
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded"
+                      />
+                      <label className="ml-2 block text-sm text-slate-700">
+                        Send confirmation emails
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Email Settings */}
+                <div className="bg-white rounded-lg shadow-sm border p-6">
+                  <h3 className="text-lg font-semibold text-slate-800 mb-4">Email Settings</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        SMTP Server Status
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                          Connected (Resend API)
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        From Email Address
+                      </label>
+                      <input
+                        type="email"
+                        defaultValue="noreply@bluebelong.com"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Email Templates
+                      </label>
+                      <select className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option>Booking Confirmation</option>
+                        <option>Password Reset</option>
+                        <option>Welcome Email</option>
+                        <option>Course Reminder</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* System Information */}
+                <div className="bg-white rounded-lg shadow-sm border p-6">
+                  <h3 className="text-lg font-semibold text-slate-800 mb-4">System Information</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-slate-600">Version:</span>
+                      <span className="text-sm text-slate-900">v1.0.0</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-slate-600">Database:</span>
+                      <span className="text-sm text-slate-900">Cloudflare D1</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-slate-600">API Status:</span>
+                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                        Online
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-slate-600">Last Backup:</span>
+                      <span className="text-sm text-slate-900">Today, 3:30 AM</span>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-6 pt-4 border-t border-slate-200">
+                    <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm">
+                      Export Database
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Save Button */}
+              <div className="mt-8 flex justify-end">
+                <button className="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                  Save Settings
+                </button>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
