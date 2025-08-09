@@ -342,15 +342,6 @@ export default function LoginPage() {
               </p>
             </div>
           )}
-
-          {/* Admin Info */}
-          <div className="bg-blue-50 rounded-lg p-4 mt-6">
-            <h3 className="font-semibold text-blue-800 mb-2">Admin Access</h3>
-            <p className="text-sm text-blue-700">
-              Admin users will be redirected to the course management dashboard upon login.
-              Regular users access their booking dashboard.
-            </p>
-          </div>
         </div>
       </div>
     </div>

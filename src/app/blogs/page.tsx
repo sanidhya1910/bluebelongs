@@ -47,7 +47,7 @@ const blogPosts: BlogPost[] = [
     date: '2024-01-15',
     category: 'Conservation',
     readTime: '8 min read',
-    image: '/api/placeholder/600/400',
+    image: 'https://images.unsplash.com/photo-1583212292454-1fe6229603b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
     featured: true
   },
   {
@@ -58,7 +58,7 @@ const blogPosts: BlogPost[] = [
     date: '2024-01-10',
     category: 'Diving Spots',
     readTime: '6 min read',
-    image: '/api/placeholder/600/400',
+    image: 'https://images.unsplash.com/photo-1582967788606-a171c1080cb0?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
     featured: false
   },
   {
@@ -69,7 +69,7 @@ const blogPosts: BlogPost[] = [
     date: '2024-01-08',
     category: 'Techniques',
     readTime: '5 min read',
-    image: '/api/placeholder/600/400',
+    image: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
     featured: false
   },
   {
@@ -80,7 +80,7 @@ const blogPosts: BlogPost[] = [
     date: '2024-01-05',
     category: 'Photography',
     readTime: '7 min read',
-    image: '/api/placeholder/600/400',
+    image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
     featured: false
   },
   {
@@ -91,7 +91,7 @@ const blogPosts: BlogPost[] = [
     date: '2024-01-02',
     category: 'Conservation',
     readTime: '10 min read',
-    image: '/api/placeholder/600/400',
+    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
     featured: true
   },
   {
@@ -102,7 +102,7 @@ const blogPosts: BlogPost[] = [
     date: '2023-12-28',
     category: 'Safety',
     readTime: '6 min read',
-    image: '/api/placeholder/600/400',
+    image: 'https://images.unsplash.com/photo-1588481123261-9b6a0cb5f584?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
     featured: false
   }
 ];
@@ -241,11 +241,15 @@ export default function BlogsPage() {
               >
                 <div className="relative mb-6 overflow-hidden rounded-lg">
                   <motion.div
-                    className="h-64 bg-gradient-to-br from-sky-400 to-cyan-600 flex items-center justify-center"
+                    className="h-64 bg-cover bg-center bg-no-repeat relative"
+                    style={{
+                      backgroundImage: `url(${post.image})`
+                    }}
                     whileHover={{ scale: 1.1 }}
                     transition={{ duration: 0.6 }}
                   >
-                    <Fish className="h-20 w-20 text-white/60" />
+                    {/* Gradient overlay for better text readability */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20"></div>
                   </motion.div>
                   <div className="absolute top-4 left-4">
                     <span className="bg-sky-500 text-white px-3 py-1 rounded-full text-sm font-medium">
@@ -307,11 +311,15 @@ export default function BlogsPage() {
               >
                 <div className="relative mb-4 overflow-hidden rounded-lg">
                   <motion.div
-                    className="h-48 bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center"
+                    className="h-48 bg-cover bg-center bg-no-repeat relative"
+                    style={{
+                      backgroundImage: `url(${post.image})`
+                    }}
                     whileHover={{ scale: 1.1 }}
                     transition={{ duration: 0.6 }}
                   >
-                    <CoralIcon className="h-16 w-16 text-white/60" />
+                    {/* Gradient overlay for better text readability */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10"></div>
                   </motion.div>
                   <div className="absolute top-3 left-3">
                     <span className="bg-sky-500 text-white px-2 py-1 rounded-full text-xs font-medium">
