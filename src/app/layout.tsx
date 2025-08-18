@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Navigation from "./components/Navigation";
+import ClientRoot from './components/ClientRoot';
 
 const inter = Inter({
   subsets: ["latin"],
@@ -20,12 +21,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-slate-50`}>
-        <Navigation />
-        <main className="min-h-screen">
-          {children}
-        </main>
-        <footer className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-sky-900 text-white">
+  <body className={`${inter.className}`}>
+          <Navigation />
+          <ClientRoot>
+            <main className="min-h-screen">
+              {children}
+            </main>
+          </ClientRoot>
+          <footer className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-sky-900 text-white">
           {/* Sophisticated background patterns */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"></div>
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-400"></div>
@@ -127,7 +130,7 @@ export default function RootLayout({
           
           {/* Bottom gradient */}
           <div className="absolute bottom-0 left-0 w-full h-20 bg-gradient-to-t from-black/30 to-transparent"></div>
-        </footer>
+          </footer>
       </body>
     </html>
   );

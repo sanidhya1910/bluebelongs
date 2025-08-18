@@ -35,6 +35,7 @@ interface Course {
   level: string;
   certification: string;
   category: 'beginner' | 'certification' | 'specialty';
+  image?: string;
 }
 
 interface CourseCategory {
@@ -80,7 +81,8 @@ const courses: Course[] = [
     price: '₹4,500',
     level: 'Beginner',
     certification: 'Try Scuba Experience',
-    category: 'beginner'
+  category: 'beginner',
+  image: 'https://source.unsplash.com/featured/1200x800?scuba,try-dive,beginner,reef,guide'
   },
   {
     id: 'basic-diver',
@@ -91,7 +93,8 @@ const courses: Course[] = [
     price: '₹7,500',
     level: 'Beginner',
     certification: 'SSI Basic Diver',
-    category: 'beginner'
+  category: 'beginner',
+  image: 'https://source.unsplash.com/featured/1200x800?scuba,training,instructor,student,shallow-reef'
   },
   {
     id: 'scuba-diver',
@@ -102,7 +105,8 @@ const courses: Course[] = [
     price: '₹15,000',
     level: 'Beginner',
     certification: 'SSI Scuba Diver',
-    category: 'beginner'
+  category: 'beginner',
+  image: 'https://source.unsplash.com/featured/1200x800?scuba,beginner,reef,training,open-water'
   },
   {
     id: 'open-water',
@@ -113,7 +117,8 @@ const courses: Course[] = [
     price: '₹35,000',
     level: 'Beginner',
     certification: 'SSI Open Water Diver',
-    category: 'beginner'
+  category: 'beginner',
+  image: 'https://source.unsplash.com/featured/1200x800?open-water,diver,training,mask,regulator,blue-water'
   },
 
   // Certification Courses (Continuing Education)
@@ -126,7 +131,8 @@ const courses: Course[] = [
     price: '₹25,000',
     level: 'Intermediate',
     certification: 'SSI Advanced Adventurer',
-    category: 'certification'
+  category: 'certification',
+  image: 'https://source.unsplash.com/featured/1200x800?advanced,scuba,deep,blue,skills,30m'
   },
   {
     id: 'scuba-skill-update',
@@ -137,7 +143,8 @@ const courses: Course[] = [
     price: '₹8,000',
     level: 'Refresher',
     certification: 'Skill Update',
-    category: 'certification'
+  category: 'certification',
+  image: 'https://source.unsplash.com/featured/1200x800?scuba,refresher,skills,pool,mask-clearing'
   },
   {
     id: 'diver-stress-rescue',
@@ -148,7 +155,8 @@ const courses: Course[] = [
     price: 'Contact for pricing',
     level: 'Advanced',
     certification: 'SSI Diver Stress and Rescue',
-    category: 'certification'
+  category: 'certification',
+  image: 'https://source.unsplash.com/featured/1200x800?rescue-diver,training,tow,assist,scuba'
   },
 
   // Specialty Courses
@@ -161,7 +169,8 @@ const courses: Course[] = [
     price: 'Contact for pricing',
     level: 'Advanced',
     certification: 'SSI Deep Diving Specialty',
-    category: 'specialty'
+  category: 'specialty',
+  image: 'https://source.unsplash.com/featured/1200x800?scuba,deep-dive,descent-line,blue-water,40m'
   },
   {
     id: 'perfect-buoyancy',
@@ -172,7 +181,8 @@ const courses: Course[] = [
     price: 'Contact for pricing',
     level: 'Open Water',
     certification: 'SSI Perfect Buoyancy',
-    category: 'specialty'
+  category: 'specialty',
+  image: 'https://source.unsplash.com/featured/1200x800?scuba,perfect-buoyancy,hover,trim,frog-kick'
   },
   {
     id: 'nitrox',
@@ -183,7 +193,8 @@ const courses: Course[] = [
     price: 'Contact for pricing',
     level: 'Open Water',
     certification: 'SSI Nitrox Specialty',
-    category: 'specialty'
+  category: 'specialty',
+  image: 'https://source.unsplash.com/featured/1200x800?scuba,nitrox,EAN32,tank,analyzer'
   },
   {
     id: 'navigation',
@@ -194,7 +205,8 @@ const courses: Course[] = [
     price: 'Contact for pricing',
     level: 'Open Water',
     certification: 'SSI Navigation Specialty',
-    category: 'specialty'
+  category: 'specialty',
+  image: 'https://source.unsplash.com/featured/1200x800?scuba,underwater,compass,navigation,course'
   },
   {
     id: 'fish-identification',
@@ -205,7 +217,8 @@ const courses: Course[] = [
     price: 'Contact for pricing',
     level: 'Open Water',
     certification: 'SSI Fish Identification',
-    category: 'specialty'
+  category: 'specialty',
+  image: 'https://source.unsplash.com/featured/1200x800?scuba,reef,fish,identification,slate'
   },
   {
     id: 'wreck-diving',
@@ -216,7 +229,8 @@ const courses: Course[] = [
     price: 'Contact for pricing',
     level: 'Advanced',
     certification: 'SSI Wreck Diving',
-    category: 'specialty'
+  category: 'specialty',
+  image: 'https://source.unsplash.com/featured/1200x800?wreck,diving,shipwreck,penetration,scuba'
   },
   {
     id: 'night-diving',
@@ -227,7 +241,8 @@ const courses: Course[] = [
     price: 'Contact for pricing',
     level: 'Open Water',
     certification: 'SSI Night & Limited Visibility',
-    category: 'specialty'
+  category: 'specialty',
+  image: 'https://source.unsplash.com/featured/1200x800?night,dive,torch,limited-visibility,scuba'
   },
   {
     id: 'science-diving',
@@ -238,7 +253,8 @@ const courses: Course[] = [
     price: 'Contact for pricing',
     level: 'Open Water',
     certification: 'SSI Science of Diving',
-    category: 'specialty'
+  category: 'specialty',
+  image: 'https://source.unsplash.com/featured/1200x800?scuba,slate,notes,theory,underwater'
   },
   {
     id: 'boat-diving',
@@ -249,7 +265,8 @@ const courses: Course[] = [
     price: 'Contact for pricing',
     level: 'Open Water',
     certification: 'SSI Boat Diving',
-    category: 'specialty'
+  category: 'specialty',
+  image: 'https://source.unsplash.com/featured/1200x800?boat-diving,giant-stride,backroll,ladder,scuba'
   },
   {
     id: 'equipment-technique',
@@ -260,7 +277,8 @@ const courses: Course[] = [
     price: 'Contact for pricing',
     level: 'Open Water',
     certification: 'SSI Equipment Technique',
-    category: 'specialty'
+  category: 'specialty',
+  image: 'https://source.unsplash.com/featured/1200x800?regulator,BCD,octopus,scuba-gear,closeup'
   },
   {
     id: 'search-recovery',
@@ -271,7 +289,8 @@ const courses: Course[] = [
     price: 'Contact for pricing',
     level: 'Advanced',
     certification: 'SSI Search and Recovery',
-    category: 'specialty'
+  category: 'specialty',
+  image: 'https://source.unsplash.com/featured/1200x800?search-and-recovery,scuba,lift-bag,pattern-search'
   },
   {
     id: 'computer-diving',
@@ -282,7 +301,8 @@ const courses: Course[] = [
     price: 'Contact for pricing',
     level: 'Open Water',
     certification: 'SSI Computer Diving',
-    category: 'specialty'
+  category: 'specialty',
+  image: 'https://source.unsplash.com/featured/1200x800?dive-computer,wrist,scubadiving,gauge'
   }
 ];
 
@@ -434,7 +454,7 @@ Please try again or contact us directly:
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 pt-28 relative overflow-hidden">
+  <div className="min-h-screen sand-section py-12 pt-28 relative overflow-hidden">
       {/* Animated Background Elements */}
       <CoralIcon className="absolute top-20 right-10 h-24 w-24 text-coral-400/10" />
       <CoralIcon className="absolute bottom-20 left-10 h-20 w-20 text-coral-500/10" />
@@ -458,9 +478,9 @@ Please try again or contact us directly:
         {/* Course Categories */}
         <div className="space-y-6 mb-12">
           {categories.map((category, index) => (
-            <motion.div
+                        <motion.div
               key={category.id}
-              className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden"
+                          className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.2, duration: 0.6 }}
@@ -508,13 +528,16 @@ Please try again or contact us directly:
                       {getCoursesForCategory(category.id).map((course, courseIndex) => (
                         <motion.div
                           key={course.id}
-                          className="bg-slate-50 rounded-lg p-6 border border-slate-200"
+                          className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow"
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: courseIndex * 0.1, duration: 0.4 }}
                           whileHover={{ scale: 1.02 }}
                         >
-                          <div className="mb-4">
+                          {course.image && (
+                            <div className="h-40 w-full bg-cover bg-center" style={{ backgroundImage: `url(${course.image})` }} aria-label={`${course.title} cover image`} />
+                          )}
+                          <div className="mb-4 p-6">
                             <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium mb-2 ${
                               course.level === 'Beginner' || course.level === 'Kids' ? 'bg-green-100 text-green-800' :
                               course.level === 'Intermediate' || course.level === 'Open Water' ? 'bg-blue-100 text-blue-800' :
@@ -529,7 +552,7 @@ Please try again or contact us directly:
                             <p className="text-slate-600 text-sm mb-4">{course.description}</p>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-4 mb-4 text-sm text-slate-600">
+                          <div className="grid grid-cols-2 gap-4 mb-4 text-sm text-slate-600 px-6">
                             <div className="flex items-center">
                               <Clock className="h-4 w-4 mr-2 text-sky-500" />
                               {course.duration}
@@ -548,7 +571,7 @@ Please try again or contact us directly:
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between px-6 pb-6">
                             <div className="text-2xl font-bold text-sky-600">
                               {course.price}
                             </div>

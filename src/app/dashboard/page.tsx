@@ -114,7 +114,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50 flex items-center justify-center">
+      <div className="min-h-screen sand-section flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600 mx-auto mb-4"></div>
           <p className="text-sky-600">Loading your diving dashboard...</p>
@@ -125,7 +125,7 @@ export default function DashboardPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50 flex items-center justify-center">
+      <div className="min-h-screen sand-section flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-4">Please log in to access the dashboard</p>
           <Link href="/login" className="btn-primary">Go to Login</Link>
@@ -173,7 +173,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50 pt-20">
+    <div className="min-h-screen sand-section pt-20">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-sky-100">
         <div className="container mx-auto px-4 py-4">

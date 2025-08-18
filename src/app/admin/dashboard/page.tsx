@@ -589,7 +589,7 @@ export default function AdminDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen sand-section flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
           <p className="mt-4 text-slate-600">Loading admin dashboard...</p>
@@ -599,7 +599,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen sand-section">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1015,37 +1015,37 @@ export default function AdminDashboard() {
               <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-slate-50">
+                    <thead className="sand-gradient">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Booking ID
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Customer
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Course
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Date & Time
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Participants
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Status
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Payment
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Actions
                         </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-slate-200">
                       {bookings.map((booking) => (
-                        <tr key={booking.id} className="hover:bg-slate-50">
+                        <tr key={booking.id} className="hover:bg-sand-50">
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
                             #{booking.id.toString().padStart(6, '0')}
                           </td>
@@ -1150,37 +1150,37 @@ export default function AdminDashboard() {
               <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-slate-50">
+                    <thead className="sand-gradient">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           User ID
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Name & Email
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Phone
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Role
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Certification
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Total Dives
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Joined
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Actions
                         </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-slate-200">
                       {users.map((user) => (
-                        <tr key={user.id} className="hover:bg-slate-50">
+                        <tr key={user.id} className="hover:bg-sand-50">
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
                             #{user.id.toString().padStart(4, '0')}
                           </td>
@@ -1294,21 +1294,21 @@ export default function AdminDashboard() {
               {/* Blogs List */}
               <div className="bg-white rounded-lg shadow-sm border">
                 <div className="overflow-x-auto">
-                  <table className="w-full">
+          <table className="w-full">
                     <thead>
-                      <tr className="border-b border-slate-200">
-                        <th className="text-left p-4 text-sm font-medium text-slate-700">Image</th>
-                        <th className="text-left p-4 text-sm font-medium text-slate-700">Title</th>
-                        <th className="text-left p-4 text-sm font-medium text-slate-700">Category</th>
-                        <th className="text-left p-4 text-sm font-medium text-slate-700">Author</th>
-                        <th className="text-left p-4 text-sm font-medium text-slate-700">Date</th>
-                        <th className="text-left p-4 text-sm font-medium text-slate-700">Status</th>
-                        <th className="text-left p-4 text-sm font-medium text-slate-700">Actions</th>
+            <tr className="border-b border-slate-200 sand-gradient">
+            <th className="text-left p-4 text-sm font-medium text-slate-700">Image</th>
+            <th className="text-left p-4 text-sm font-medium text-slate-700">Title</th>
+            <th className="text-left p-4 text-sm font-medium text-slate-700">Category</th>
+            <th className="text-left p-4 text-sm font-medium text-slate-700">Author</th>
+            <th className="text-left p-4 text-sm font-medium text-slate-700">Date</th>
+            <th className="text-left p-4 text-sm font-medium text-slate-700">Status</th>
+            <th className="text-left p-4 text-sm font-medium text-slate-700">Actions</th>
                       </tr>
                     </thead>
-                    <tbody>
+          <tbody>
                       {blogs.map((blog) => (
-                        <tr key={blog.id} className="border-b border-slate-100">
+            <tr key={blog.id} className="border-b border-slate-100 hover:bg-sand-50">
                           <td className="p-4">
                             <img
                               src={blog.image}

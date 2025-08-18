@@ -102,7 +102,7 @@ export default function ItineraryPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 pt-28">
+    <div className="min-h-screen sand-section py-12 pt-28">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-slate-800 mb-4">
@@ -161,8 +161,8 @@ export default function ItineraryPage() {
                     </li>
                   ))}
                 </ul>
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="text-sm text-blue-800">
+                <div className="sand-gradient p-3 rounded-lg border border-slate-200">
+                  <p className="text-sm text-slate-700">
                     <strong>Tip:</strong> {option.tips}
                   </p>
                 </div>

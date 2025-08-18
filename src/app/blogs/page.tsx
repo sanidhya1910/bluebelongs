@@ -117,7 +117,7 @@ export default function BlogsPage() {
   const postsInView = useInView(postsRef, { once: true });
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen sand-section">
       {/* Hero Section */}
       <section ref={heroRef} className="relative py-20 ocean-gradient text-white overflow-hidden">
         {/* Animated Background Elements */}
@@ -186,6 +186,13 @@ export default function BlogsPage() {
           </motion.div>
         </div>
       </section>
+
+      {/* Sand wave divider */}
+      <div className="w-full overflow-hidden leading-none" aria-hidden="true">
+        <svg viewBox="0 0 1440 100" xmlns="http://www.w3.org/2000/svg" className="block w-full h-[60px] rotate-180" preserveAspectRatio="none">
+          <path d="M0,32 C120,52 240,72 360,72 C480,72 600,52 720,40 C840,28 960,24 1080,32 C1200,40 1320,60 1440,72 L1440,100 L0,100 Z" fill="#F7F3EA" />
+        </svg>
+      </div>
 
       {/* Categories Filter */}
       <section className="py-8 bg-white border-b border-slate-200">
