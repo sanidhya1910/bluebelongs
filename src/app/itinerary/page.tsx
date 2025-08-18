@@ -1,6 +1,43 @@
-import { Plane, Ship, MapPin, Clock, AlertCircle, Camera, Utensils } from 'lucide-react';
+"use client";
+import { useEffect, useState } from 'react';
+import { Plane, Ship, MapPin, Clock, AlertCircle, Camera, Utensils, ThermometerSun, Cloud, Wind } from 'lucide-react';
+
+type Weather = {
+  temp: number | null;
+  wind: number | null;
+  code: number | null;
+};
+
+const islandCoords = {
+  havelock: { name: 'Havelock (Swaraj Dweep)', lat: 11.957, lon: 93.0 },
+  neil: { name: 'Neil (Shaheed Dweep)', lat: 11.83, lon: 93.03 }
+};
 
 export default function ItineraryPage() {
+  const [havelock, setHavelock] = useState<Weather>({ temp: null, wind: null, code: null });
+  const [neil, setNeil] = useState<Weather>({ temp: null, wind: null, code: null });
+
+  useEffect(() => {
+    // Open-Meteo (no API key). Units: metric, current weather
+    const fetchWeather = async (lat: number, lon: number) => {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return {
+        temp: data?.current_weather?.temperature ?? null,
+        wind: data?.current_weather?.windspeed ?? null,
+        code: data?.current_weather?.weathercode ?? null,
+      } as Weather;
+    };
+
+    fetchWeather(islandCoords.havelock.lat, islandCoords.havelock.lon)
+      .then((w) => w && setHavelock(w))
+      .catch(() => {});
+    fetchWeather(islandCoords.neil.lat, islandCoords.neil.lon)
+      .then((w) => w && setNeil(w))
+      .catch(() => {});
+  }, []);
   const transportOptions = [
     {
       icon: <Plane className="h-8 w-8 text-sky-500" />,
@@ -113,6 +150,68 @@ export default function ItineraryPage() {
             and join us for an unforgettable diving experience.
           </p>
         </div>
+
+        {/* Islands & Live Weather */}
+        <section className="mb-12">
+          <h2 className="text-3xl font-bold text-slate-800 mb-6 text-center">Havelock & Neil Islands</h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Havelock */}
+            <div className="card">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <MapPin className="h-6 w-6 text-sky-600" />
+                  <h3 className="text-xl font-semibold text-slate-800">{islandCoords.havelock.name}</h3>
+                </div>
+                <span className="text-sm text-slate-500">Live Weather</span>
+              </div>
+              <div className="grid grid-cols-3 gap-4 items-center">
+                <div className="flex items-center gap-2">
+                  <ThermometerSun className="h-5 w-5 text-sky-600" />
+                  <span className="text-slate-700">{havelock.temp !== null ? `${havelock.temp}°C` : '—'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Wind className="h-5 w-5 text-sky-600" />
+                  <span className="text-slate-700">{havelock.wind !== null ? `${havelock.wind} km/h` : '—'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Cloud className="h-5 w-5 text-sky-600" />
+                  <span className="text-slate-700">{havelock.code !== null ? 'Conditions updated' : '—'}</span>
+                </div>
+              </div>
+              <div className="mt-4 text-slate-600 text-sm">
+                Usual climate: Oct–May calm seas, 26–30°C; Jun–Sep monsoon with variable visibility.
+              </div>
+            </div>
+
+            {/* Neil */}
+            <div className="card">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <MapPin className="h-6 w-6 text-sky-600" />
+                  <h3 className="text-xl font-semibold text-slate-800">{islandCoords.neil.name}</h3>
+                </div>
+                <span className="text-sm text-slate-500">Live Weather</span>
+              </div>
+              <div className="grid grid-cols-3 gap-4 items-center">
+                <div className="flex items-center gap-2">
+                  <ThermometerSun className="h-5 w-5 text-sky-600" />
+                  <span className="text-slate-700">{neil.temp !== null ? `${neil.temp}°C` : '—'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Wind className="h-5 w-5 text-sky-600" />
+                  <span className="text-slate-700">{neil.wind !== null ? `${neil.wind} km/h` : '—'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Cloud className="h-5 w-5 text-sky-600" />
+                  <span className="text-slate-700">{neil.code !== null ? 'Conditions updated' : '—'}</span>
+                </div>
+              </div>
+              <div className="mt-4 text-slate-600 text-sm">
+                Usual climate: Similar to Havelock; gentle reefs, great for relaxed diving and macro.
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Quick Overview */}
         <div className="grid md:grid-cols-4 gap-6 mb-12">
@@ -239,7 +338,7 @@ export default function ItineraryPage() {
               </h2>
               <div className="space-y-4">
                 <div className="flex items-start">
-                  <AlertCircle className="h-5 w-5 text-amber-500 mr-3 mt-0.5" />
+                  <AlertCircle className="h-5 w-5 text-sky-600 mr-3 mt-0.5" />
                   <div>
                     <h4 className="font-semibold text-slate-800">Permit Requirements</h4>
                     <p className="text-sm text-slate-600">
@@ -248,7 +347,7 @@ export default function ItineraryPage() {
                   </div>
                 </div>
                 <div className="flex items-start">
-                  <Utensils className="h-5 w-5 text-green-500 mr-3 mt-0.5" />
+                  <Utensils className="h-5 w-5 text-sky-600 mr-3 mt-0.5" />
                   <div>
                     <h4 className="font-semibold text-slate-800">Local Cuisine</h4>
                     <p className="text-sm text-slate-600">
@@ -257,7 +356,7 @@ export default function ItineraryPage() {
                   </div>
                 </div>
                 <div className="flex items-start">
-                  <MapPin className="h-5 w-5 text-blue-500 mr-3 mt-0.5" />
+                  <MapPin className="h-5 w-5 text-sky-600 mr-3 mt-0.5" />
                   <div>
                     <h4 className="font-semibold text-slate-800">Our Location</h4>
                     <p className="text-sm text-slate-600">
@@ -272,7 +371,7 @@ export default function ItineraryPage() {
 
         {/* Contact for Travel Assistance */}
         <section className="text-center">
-          <div className="card bg-gradient-to-r from-sky-50 to-blue-50 border-sky-200">
+          <div className="card bg-gradient-to-r from-sky-50 to-cyan-50 border-sky-200">
             <h2 className="text-2xl font-bold text-slate-800 mb-4">
               Need Travel Assistance?
             </h2>

@@ -29,13 +29,13 @@ const achievements = [
     icon: <Award className="h-8 w-8" />,
     title: "SSI Certified Instructor",
     description: "Professional diving instructor with advanced certifications",
-    color: "from-amber-400 to-orange-500"
+  color: "from-sky-500 to-cyan-600"
   },
   {
     icon: <Users className="h-8 w-8" />,
     title: "500+ Students Trained",
     description: "Successfully certified hundreds of diving enthusiasts",
-    color: "from-emerald-400 to-green-500"
+  color: "from-blue-500 to-sky-600"
   },
   {
     icon: <Waves className="h-8 w-8" />,
@@ -47,7 +47,7 @@ const achievements = [
     icon: <Heart className="h-8 w-8" />,
     title: "Ocean Conservation Advocate",
     description: "Passionate about marine life protection and education",
-    color: "from-pink-400 to-rose-500"
+  color: "from-sky-600 to-blue-700"
   }
 ];
 
@@ -145,14 +145,13 @@ export default function AboutPage() {
                 </div>
 
                 <div className="mt-6 flex items-center space-x-4 text-sm">
-                  <div className="flex items-center text-blue-600">
+                  <div className="flex items-center text-sky-700">
                     <MapPin className="h-4 w-4 mr-1" />
                     Havelock Island, Andaman
                   </div>
-                  <div className="flex items-center text-emerald-600">
-                    <Award className="h-4 w-4 mr-1" />
-                    SSI Certified Instructor
-                  </div>
+                  <span className="inline-flex items-center gap-2 bg-sky-100 text-sky-700 px-3 py-1 rounded-full border border-sky-200">
+                    <Award className="h-4 w-4" /> SSI Certified Instructor
+                  </span>
                 </div>
               </motion.div>
             </div>
@@ -177,7 +176,7 @@ export default function AboutPage() {
                   </div>
                 </div>
                 <motion.div
-                  className="absolute -top-4 -right-4 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full p-3"
+                  className="absolute -top-4 -right-4 bg-gradient-to-r from-sky-500 to-cyan-600 rounded-full p-3"
                   animate={{ scale: [1, 1.1, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >

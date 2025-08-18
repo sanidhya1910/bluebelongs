@@ -138,9 +138,9 @@ export default function BlogsPage() {
             <Fish className="h-12 w-12 text-cyan-200/40" />
           </motion.div>
           
-          {/* Coral Decorations */}
-          <CoralIcon className="absolute bottom-10 left-10 h-20 w-20 text-coral-400/30" />
-          <CoralIcon className="absolute top-20 right-20 h-16 w-16 text-coral-500/25" />
+          {/* Light blue accents only */}
+          <div className="absolute bottom-10 left-10 h-20 w-20 rounded-full bg-white/10 blur-xl" />
+          <div className="absolute top-20 right-20 h-16 w-16 rounded-full bg-white/10 blur-xl" />
         </div>
 
         <div className="container mx-auto px-4 text-center relative z-10">
@@ -381,7 +381,7 @@ export default function BlogsPage() {
               ease: "easeInOut"
             }}
           />
-          <CoralIcon className="absolute bottom-10 right-10 h-24 w-24 text-coral-400/20" />
+          <div className="absolute bottom-10 right-10 h-24 w-24 rounded-full bg-white/10 blur-xl" />
         </div>
         
         <div className="container mx-auto px-4 text-center relative z-10">
