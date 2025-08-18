@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Award, Users, MapPin, Star, Fish, Waves, Heart, Eye, Shield } from 'lucide-react';
+import { ArrowRight, Award, MapPin, Star, Fish, Waves, Heart, Eye, Shield } from 'lucide-react';
 import { motion, useInView, useReducedMotion } from 'framer-motion';
 import Masonry from '@/utils/masonry';
 import { useRef, useState, useEffect } from 'react';
