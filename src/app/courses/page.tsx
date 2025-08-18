@@ -1,29 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import type { CSSProperties } from 'react';
 import { Clock, Award, MapPin, Waves, Fish, Anchor, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Coral SVG Component
-const CoralIcon = ({ className }: { className?: string }) => (
-  <motion.svg
-    className={className}
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    animate={{ 
-      scale: [1, 1.05, 1]
-    }}
-    transition={{ 
-      duration: 4,
-      repeat: Infinity,
-      ease: "easeInOut"
-    }}
-  >
-    <path d="M12 2C8.5 2 8 4.5 8 6c0 1-1 2-2 3s-2 2-2 4c0 3 2 5 5 6h6c3-1 5-3 5-6 0-2-1-3-2-4s-2-2-2-3c0-1.5-.5-4-4-4z"/>
-    <path d="M10 8c-1 0-2 1-2 2s1 2 2 2 2-1 2-2-1-2-2-2z"/>
-    <path d="M14 10c-1 0-2 1-2 2s1 2 2 2 2-1 2-2-1-2-2-2z"/>
-  </motion.svg>
-);
 
 interface Course {
   id: string;
@@ -52,21 +33,21 @@ const categories: CourseCategory[] = [
     name: 'Entry Level Programs',
     description: 'Perfect for first-time divers and those new to scuba diving - from Try Scuba to Open Water certification',
     icon: <Fish className="h-8 w-8" />,
-    color: 'from-emerald-400 to-cyan-500'
+  color: 'from-sky-400 to-cyan-500'
   },
   {
     id: 'certification',
     name: 'Continuing Education',
     description: 'Advanced training for certified divers seeking skill enhancement and rescue capabilities',
     icon: <Award className="h-8 w-8" />,
-    color: 'from-blue-400 to-indigo-500'
+  color: 'from-blue-500 to-indigo-600'
   },
   {
     id: 'specialty',
     name: 'Specialty Courses',
     description: 'Specialized training for unique diving experiences - from Deep Diving to Wreck Exploration',
     icon: <Anchor className="h-8 w-8" />,
-    color: 'from-purple-400 to-pink-500'
+  color: 'from-cyan-500 to-sky-600'
   }
 ];
 
@@ -455,9 +436,7 @@ Please try again or contact us directly:
 
   return (
   <div className="min-h-screen sand-section py-12 pt-28 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <CoralIcon className="absolute top-20 right-10 h-24 w-24 text-coral-400/10" />
-      <CoralIcon className="absolute bottom-20 left-10 h-20 w-20 text-coral-500/10" />
+  {/* Removed coral background elements */}
       
       <div className="container mx-auto px-4 relative z-10">
         <motion.div
@@ -539,10 +518,10 @@ Please try again or contact us directly:
                           )}
                           <div className="p-6 flex flex-col gap-3">
                             <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium mb-2 ${
-                              course.level === 'Beginner' || course.level === 'Kids' ? 'bg-green-100 text-green-800' :
+                              course.level === 'Beginner' || course.level === 'Kids' ? 'bg-sky-100 text-sky-800' :
                               course.level === 'Intermediate' || course.level === 'Open Water' ? 'bg-blue-100 text-blue-800' :
-                              course.level === 'Advanced' ? 'bg-purple-100 text-purple-800' :
-                              'bg-orange-100 text-orange-800'
+                              course.level === 'Advanced' ? 'bg-indigo-100 text-indigo-800' :
+                              'bg-sky-50 text-sky-700'
                             }`}>
                               {course.level}
                             </span>
@@ -554,7 +533,7 @@ Please try again or contact us directly:
                               style={{
                                 display: '-webkit-box',
                                 WebkitLineClamp: 3,
-                                WebkitBoxOrient: 'vertical' as any,
+                                WebkitBoxOrient: 'vertical' as CSSProperties['WebkitBoxOrient'],
                                 overflow: 'hidden'
                               }}
                             >

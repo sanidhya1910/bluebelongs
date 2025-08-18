@@ -3,27 +3,6 @@
 import { motion } from 'framer-motion';
 import { Award, Heart, Users, MapPin, Waves, Star, Fish, Anchor } from 'lucide-react';
 
-// Coral SVG Component
-const CoralIcon = ({ className }: { className?: string }) => (
-  <motion.svg
-    className={className}
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    animate={{ 
-      scale: [1, 1.05, 1]
-    }}
-    transition={{ 
-      duration: 4,
-      repeat: Infinity,
-      ease: "easeInOut"
-    }}
-  >
-    <path d="M12 2C8.5 2 8 4.5 8 6c0 1-1 2-2 3s-2 2-2 4c0 3 2 5 5 6h6c3-1 5-3 5-6 0-2-1-3-2-4s-2-2-2-3c0-1.5-.5-4-4-4z"/>
-    <path d="M10 8c-1 0-2 1-2 2s1 2 2 2 2-1 2-2-1-2-2-2z"/>
-    <path d="M14 10c-1 0-2 1-2 2s1 2 2 2 2-1 2-2-1-2-2-2z"/>
-  </motion.svg>
-);
-
 const achievements = [
   {
     icon: <Award className="h-8 w-8" />,
@@ -81,10 +60,7 @@ const values = [
 export default function AboutPage() {
   return (
     <div className="min-h-screen sand-section py-12 pt-28 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <CoralIcon className="absolute top-20 right-10 h-32 w-32 text-coral-400/10" />
-      <CoralIcon className="absolute bottom-20 left-10 h-24 w-24 text-coral-500/10" />
-      <CoralIcon className="absolute top-1/2 right-1/4 h-20 w-20 text-coral-300/10" />
+  {/* Removed coral background elements */}
       
       <div className="container mx-auto px-4 relative z-10">
         {/* Hero Section */}

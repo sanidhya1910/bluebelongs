@@ -31,9 +31,6 @@
   --sand-200: #EFE7D9;
   --sand-300: #E7DFCF;
   --sand-400: #DACFB8;
-  --coral-500: #ff7f7f;
-  --coral-400: #ffa07a;
-  --coral-300: #ffb3ba;
   
   /* Enhanced color palette inspired by the template */
   --surface-primary: rgba(248, 250, 252, 0.8);
@@ -146,10 +143,6 @@ body {
   }
 
   /* Enhanced animations */
-  .coral-animation {
-    animation: coralSway 6s ease-in-out infinite;
-  }
-
   .bubble-animation {
     animation: bubbleFloat 8s ease-in-out infinite;
   }
@@ -237,21 +230,6 @@ body {
   75% {
     background-position: 0% 100%;
     transform: scale(1.01);
-  }
-}
-
-@keyframes coralSway {
-  0%, 100% {
-    transform: rotate(0deg) scale(1);
-  }
-  25% {
-    transform: rotate(3deg) scale(1.03);
-  }
-  50% {
-    transform: rotate(0deg) scale(1.01);
-  }
-  75% {
-    transform: rotate(-3deg) scale(0.98);
   }
 }
 

@@ -6,27 +6,6 @@ import { motion, useInView, useReducedMotion } from 'framer-motion';
 import Masonry from '@/utils/masonry';
 import { useRef, useState, useEffect } from 'react';
 
-// Enhanced Coral SVG Component
-const CoralIcon = ({ className }: { className?: string }) => (
-  <motion.svg
-    className={className}
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    animate={{ 
-      scale: [1, 1.08, 1],
-      rotate: [0, 2, -2, 0]
-    }}
-    transition={{ 
-      duration: 6,
-      repeat: Infinity,
-      ease: "easeInOut"
-    }}
-  >
-    <path d="M12 2C8.5 2 8 4.5 8 6c0 1-1 2-2 3s-2 2-2 4c0 3 2 5 5 6h6c3-1 5-3 5-6 0-2-1-3-2-4s-2-2-2-3c0-1.5-.5-4-4-4z" opacity="0.8"/>
-    <path d="M10 8c-1 0-2 1-2 2s1 2 2 2 2-1 2-2-1-2-2-2z" opacity="0.6"/>
-    <path d="M14 10c-1 0-2 1-2 2s1 2 2 2 2-1 2-2-1-2-2-2z" opacity="0.6"/>
-  </motion.svg>
-);
 
 // Wave Divider Component
 const WaveDivider = ({ color = '#EFECE5', flip = false, className = '' }: { color?: string; flip?: boolean; className?: string }) => (
@@ -189,12 +168,12 @@ export default function HomePage() {
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center min-h-screen py-20">
             
-            {/* Hero Content Column */}
+            {/* Hero Content Column (simplified entry) */}
             <motion.div
               className="text-left"
-              initial={{ opacity: 0, x: -60 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 1.2, ease: "easeOut" }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
             >
               <motion.div
                 className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full mb-6 border border-white/30"
@@ -208,39 +187,29 @@ export default function HomePage() {
               
               <motion.h1
                 className="text-5xl md:text-7xl font-light mb-6 text-white leading-tight"
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5, duration: 1.2 }}
+                transition={{ delay: 0.2, duration: 0.6 }}
                 style={{ fontFamily: 'Inter, serif' }}
               >
-                <motion.span 
-                  className="block mb-2"
-                  style={{ display: 'inline-block' }}
-                >
-                  Andaman. Calm. Connected.
-                </motion.span>
-                <motion.span 
-                  className="font-bold bg-gradient-to-r from-cyan-200 to-white bg-clip-text text-transparent"
-                  style={{ display: 'inline-block' }}
-                >
-                  Dive With Confidence
-                </motion.span>
+                <span className="block mb-2">Andaman. Calm. Connected.</span>
+                <span className="font-bold bg-gradient-to-r from-cyan-200 to-white bg-clip-text text-transparent">Dive With Confidence</span>
               </motion.h1>
               
               <motion.p
                 className="text-xl text-blue-100/90 mb-8 max-w-lg font-light leading-relaxed"
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8, duration: 1.2 }}
+                transition={{ delay: 0.35, duration: 0.6 }}
               >
                 At BlueBelong, we guide you into Andaman’s blue — not to conquer it, but to reconnect. Calm. Confident. Connected.
               </motion.p>
               
               <motion.div
                 className="flex flex-col sm:flex-row gap-4"
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.1, duration: 1.2 }}
+                transition={{ delay: 0.5, duration: 0.6 }}
               >
                 <motion.div
                   whileHover={{ scale: 1.05, y: -2 }}
@@ -259,12 +228,12 @@ export default function HomePage() {
               </motion.div>
             </motion.div>
             
-            {/* Hero Visual Column */}
+            {/* Hero Visual Column (simplified entry) */}
             <motion.div
               className="relative"
-              initial={{ opacity: 0, x: 60 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.6, duration: 1.2 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.6 }}
             >
               <div className="relative">
                 {/* Shadow Effect */}
@@ -287,9 +256,7 @@ export default function HomePage() {
                     />
                     {/* Soft overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-blue-900/50 via-transparent to-transparent"></div>
-                    {/* Coral Decorations */}
-                    <CoralIcon className="absolute bottom-10 left-6 h-12 w-12 text-coral-400/40" />
-                    <CoralIcon className="absolute bottom-16 right-8 h-8 w-8 text-coral-500/30" />
+                    {/* Removed coral decorations */}
                   </div>
                 </div>
               </div>

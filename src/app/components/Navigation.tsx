@@ -6,21 +6,6 @@ import Image from 'next/image';
 import { Menu, X, User, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Coral icon (blue-tinted to match palette)
-const CoralIcon = ({ className }: { className?: string }) => (
-  <motion.svg
-    className={className}
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    animate={{ scale: [1, 1.06, 1] }}
-    transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-  >
-    <path d="M12 2C8.5 2 8 4.5 8 6c0 1-1 2-2 3s-2 2-2 4c0 3 2 5 5 6h6c3-1 5-3 5-6 0-2-1-3-2-4s-2-2-2-3c0-1.5-.5-4-4-4z" opacity="0.9"/>
-    <path d="M10 8c-1 0-2 1-2 2s1 2 2 2 2-1 2-2-1-2-2-2z" opacity="0.7"/>
-    <path d="M14 10c-1 0-2 1-2 2s1 2 2 2 2-1 2-2-1-2-2-2z" opacity="0.7"/>
-  </motion.svg>
-);
-
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<{ name: string; role: string } | null>(null);
@@ -84,8 +69,8 @@ export default function Navigation() {
           {/* Brand Logo */}
           <Link href="/" className="flex items-center space-x-3 group">
             <motion.div
-              className="relative h-10 w-10"
-              whileHover={{ scale: 1.05 }}
+              className="relative h-12 w-12 bg-white/90 rounded-xl border border-white/60 shadow-sm overflow-hidden"
+              whileHover={{ scale: 1.03 }}
             >
               <Image src="/logo.png" alt="BlueBelong Logo" fill className="object-contain" priority />
             </motion.div>
@@ -97,7 +82,6 @@ export default function Navigation() {
                 Diving School
               </span>
             </div>
-            <CoralIcon className="h-5 w-5 text-sky-500" />
           </Link>
 
           {/* Enhanced Desktop Navigation */}

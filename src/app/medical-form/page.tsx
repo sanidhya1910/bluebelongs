@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AlertTriangle, CheckCircle, FileText, Download } from 'lucide-react';
+import { AlertTriangle, CheckCircle, FileText, Download, Fish } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { downloadMedicalPDF } from '@/utils/medicalPdf';
 
@@ -141,26 +141,6 @@ const medicalData = {
   }
 };
 
-// Coral SVG Component
-const CoralIcon = ({ className }: { className?: string }) => (
-  <motion.svg
-    className={className}
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    animate={{ 
-      scale: [1, 1.05, 1]
-    }}
-    transition={{ 
-      duration: 4,
-      repeat: Infinity,
-      ease: "easeInOut"
-    }}
-  >
-    <path d="M12 2C8.5 2 8 4.5 8 6c0 1-1 2-2 3s-2 2-2 4c0 3 2 5 5 6h6c3-1 5-3 5-6 0-2-1-3-2-4s-2-2-2-3c0-1.5-.5-4-4-4z"/>
-    <path d="M10 8c-1 0-2 1-2 2s1 2 2 2 2-1 2-2-1-2-2-2z"/>
-    <path d="M14 10c-1 0-2 1-2 2s1 2 2 2 2-1 2-2-1-2-2-2z"/>
-  </motion.svg>
-);
 
 export default function MedicalFormPage() {
   const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(null);
@@ -459,7 +439,7 @@ export default function MedicalFormPage() {
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-8 text-white">
             <div className="flex items-center gap-4">
-              <CoralIcon className="h-12 w-12" />
+              <Fish className="h-10 w-10 text-blue-100" />
               <div>
                 <h1 className="text-3xl font-bold">{medicalData.title}</h1>
                 <p className="text-blue-100 mt-2">Blue Belongs Diving School</p>
