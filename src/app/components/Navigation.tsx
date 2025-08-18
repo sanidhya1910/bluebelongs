@@ -2,28 +2,22 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Waves, User, LogOut, ChevronDown } from 'lucide-react';
+import Image from 'next/image';
+import { Menu, X, User, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Enhanced Coral SVG Component
+// Coral icon (blue-tinted to match palette)
 const CoralIcon = ({ className }: { className?: string }) => (
   <motion.svg
     className={className}
     viewBox="0 0 24 24"
     fill="currentColor"
-    animate={{ 
-      scale: [1, 1.08, 1],
-      rotate: [0, 2, -2, 0]
-    }}
-    transition={{ 
-      duration: 8,
-      repeat: Infinity,
-      ease: "easeInOut"
-    }}
+    animate={{ scale: [1, 1.06, 1] }}
+    transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
   >
-    <path d="M12 2C8.5 2 8 4.5 8 6c0 1-1 2-2 3s-2 2-2 4c0 3 2 5 5 6h6c3-1 5-3 5-6 0-2-1-3-2-4s-2-2-2-3c0-1.5-.5-4-4-4z" opacity="0.8"/>
-    <path d="M10 8c-1 0-2 1-2 2s1 2 2 2 2-1 2-2-1-2-2-2z" opacity="0.6"/>
-    <path d="M14 10c-1 0-2 1-2 2s1 2 2 2 2-1 2-2-1-2-2-2z" opacity="0.6"/>
+    <path d="M12 2C8.5 2 8 4.5 8 6c0 1-1 2-2 3s-2 2-2 4c0 3 2 5 5 6h6c3-1 5-3 5-6 0-2-1-3-2-4s-2-2-2-3c0-1.5-.5-4-4-4z" opacity="0.9"/>
+    <path d="M10 8c-1 0-2 1-2 2s1 2 2 2 2-1 2-2-1-2-2-2z" opacity="0.7"/>
+    <path d="M14 10c-1 0-2 1-2 2s1 2 2 2 2-1 2-2-1-2-2-2z" opacity="0.7"/>
   </motion.svg>
 );
 
@@ -87,56 +81,23 @@ export default function Navigation() {
     >
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
-          {/* Enhanced Logo */}
+          {/* Brand Logo */}
           <Link href="/" className="flex items-center space-x-3 group">
             <motion.div
-              className="relative"
-              animate={{ 
-                scale: [1, 1.1, 1]
-              }}
-              transition={{ 
-                duration: 4,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              whileHover={{ scale: 1.15 }}
+              className="relative h-10 w-10"
+              whileHover={{ scale: 1.05 }}
             >
-              <div className="absolute inset-0 bg-sky-400/20 rounded-full blur-lg scale-150 group-hover:bg-sky-500/30 transition-colors"></div>
-              <Waves className="h-10 w-10 text-sky-500 relative z-10" />
+              <Image src="/logo.png" alt="BlueBelong Logo" fill className="object-contain" priority />
             </motion.div>
-            
             <div className="flex flex-col">
-              <motion.span 
-                className="text-2xl font-bold text-slate-800 leading-tight"
-                style={{ fontFamily: 'Inter, serif' }}
-                whileHover={{ scale: 1.02 }}
-                transition={{ type: "spring", stiffness: 400 }}
-              >
+              <span className="text-2xl font-bold text-slate-800 leading-tight" style={{ fontFamily: 'Inter, serif' }}>
                 BlueBelong
-              </motion.span>
-              <motion.span 
-                className="text-xs text-slate-500 font-medium tracking-wider uppercase leading-none"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-              >
+              </span>
+              <span className="text-xs text-slate-500 font-medium tracking-wider uppercase leading-none">
                 Diving School
-              </motion.span>
+              </span>
             </div>
-            
-            <motion.div
-              animate={{ 
-                rotate: [0, 3, -3, 0],
-                scale: [1, 1.05, 1]
-              }}
-              transition={{ 
-                duration: 6,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-            >
-              <CoralIcon className="h-6 w-6 text-coral-500" />
-            </motion.div>
+            <CoralIcon className="h-5 w-5 text-sky-500" />
           </Link>
 
           {/* Enhanced Desktop Navigation */}

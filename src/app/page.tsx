@@ -203,7 +203,7 @@ export default function HomePage() {
                 transition={{ delay: 0.3, duration: 0.8 }}
               >
                 <Waves className="h-4 w-4 text-white" />
-                <span className="text-sm font-medium text-white">DIVING SCHOOL ANDAMAN</span>
+                <span className="text-sm font-medium text-white">DIVING SCHOOL • ANDAMAN ISLANDS</span>
               </motion.div>
               
               <motion.h1
@@ -217,13 +217,13 @@ export default function HomePage() {
                   className="block mb-2"
                   style={{ display: 'inline-block' }}
                 >
-                  Finally Find Your
+                  Andaman. Calm. Connected.
                 </motion.span>
                 <motion.span 
                   className="font-bold bg-gradient-to-r from-cyan-200 to-white bg-clip-text text-transparent"
                   style={{ display: 'inline-block' }}
                 >
-                  Ocean Connection
+                  Dive With Confidence
                 </motion.span>
               </motion.h1>
               
@@ -233,8 +233,7 @@ export default function HomePage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8, duration: 1.2 }}
               >
-                Discover the underwater world of Andaman Islands with professional guidance, 
-                connecting you to the ocean&apos;s magnificent depths.
+                At BlueBelong, we guide you into Andaman’s blue — not to conquer it, but to reconnect. Calm. Confident. Connected.
               </motion.p>
               
               <motion.div
@@ -603,7 +602,7 @@ export default function HomePage() {
             >
               <p className="text-slate-600 font-light max-w-3xl mx-auto">
                 Every dive tells a story. From the vibrant coral gardens to the mysterious depths, 
-                experience the magic of Andaman&apos;s underwater world through our guided diving adventures.
+                experience the magic of the Andaman underwater world through our guided diving adventures.
               </p>
             </motion.div>
           </div>

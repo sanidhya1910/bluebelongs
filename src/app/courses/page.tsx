@@ -82,7 +82,7 @@ const courses: Course[] = [
     level: 'Beginner',
     certification: 'Try Scuba Experience',
   category: 'beginner',
-  image: 'https://source.unsplash.com/featured/1200x800?scuba,try-dive,beginner,reef,guide'
+  image: 'https://unsplash.com/photos/black-and-white-fire-extinguisher-on-brown-concrete-wall-4HOg7XW_9co/download?force=true'
   },
   {
     id: 'basic-diver',
@@ -94,7 +94,7 @@ const courses: Course[] = [
     level: 'Beginner',
     certification: 'SSI Basic Diver',
   category: 'beginner',
-  image: 'https://source.unsplash.com/featured/1200x800?scuba,training,instructor,student,shallow-reef'
+  image: 'https://images.pexels.com/photos/10467/pexels-photo-10467.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
   },
   {
     id: 'scuba-diver',
@@ -106,7 +106,7 @@ const courses: Course[] = [
     level: 'Beginner',
     certification: 'SSI Scuba Diver',
   category: 'beginner',
-  image: 'https://source.unsplash.com/featured/1200x800?scuba,beginner,reef,training,open-water'
+  image: 'https://images.pexels.com/photos/3046582/pexels-photo-3046582.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
   },
   {
     id: 'open-water',
@@ -118,7 +118,7 @@ const courses: Course[] = [
     level: 'Beginner',
     certification: 'SSI Open Water Diver',
   category: 'beginner',
-  image: 'https://source.unsplash.com/featured/1200x800?open-water,diver,training,mask,regulator,blue-water'
+  image: 'https://images.pexels.com/photos/1540297/pexels-photo-1540297.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
   },
 
   // Certification Courses (Continuing Education)
@@ -132,7 +132,7 @@ const courses: Course[] = [
     level: 'Intermediate',
     certification: 'SSI Advanced Adventurer',
   category: 'certification',
-  image: 'https://source.unsplash.com/featured/1200x800?advanced,scuba,deep,blue,skills,30m'
+  image: 'https://images.pexels.com/photos/1645028/pexels-photo-1645028.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
   },
   {
     id: 'scuba-skill-update',
@@ -144,7 +144,7 @@ const courses: Course[] = [
     level: 'Refresher',
     certification: 'Skill Update',
   category: 'certification',
-  image: 'https://source.unsplash.com/featured/1200x800?scuba,refresher,skills,pool,mask-clearing'
+  image: 'https://images.pexels.com/photos/1303651/pexels-photo-1303651.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
   },
   {
     id: 'diver-stress-rescue',
@@ -156,7 +156,7 @@ const courses: Course[] = [
     level: 'Advanced',
     certification: 'SSI Diver Stress and Rescue',
   category: 'certification',
-  image: 'https://source.unsplash.com/featured/1200x800?rescue-diver,training,tow,assist,scuba'
+  image: 'https://unsplash.com/photos/people-in-water-during-daytime-NThBgBjmgnE/download?force=true'
   },
 
   // Specialty Courses
@@ -170,7 +170,7 @@ const courses: Course[] = [
     level: 'Advanced',
     certification: 'SSI Deep Diving Specialty',
   category: 'specialty',
-  image: 'https://source.unsplash.com/featured/1200x800?scuba,deep-dive,descent-line,blue-water,40m'
+  image: 'https://images.pexels.com/photos/3410956/pexels-photo-3410956.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
   },
   {
     id: 'perfect-buoyancy',
@@ -182,7 +182,7 @@ const courses: Course[] = [
     level: 'Open Water',
     certification: 'SSI Perfect Buoyancy',
   category: 'specialty',
-  image: 'https://source.unsplash.com/featured/1200x800?scuba,perfect-buoyancy,hover,trim,frog-kick'
+  image: 'https://images.pexels.com/photos/37530/diver-scuba-underwater-swimming-37530.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
   },
   {
     id: 'nitrox',
@@ -194,7 +194,7 @@ const courses: Course[] = [
     level: 'Open Water',
     certification: 'SSI Nitrox Specialty',
   category: 'specialty',
-  image: 'https://source.unsplash.com/featured/1200x800?scuba,nitrox,EAN32,tank,analyzer'
+  image: 'https://images.pexels.com/photos/9307238/pexels-photo-9307238.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
   },
   {
     id: 'navigation',
@@ -206,7 +206,7 @@ const courses: Course[] = [
     level: 'Open Water',
     certification: 'SSI Navigation Specialty',
   category: 'specialty',
-  image: 'https://source.unsplash.com/featured/1200x800?scuba,underwater,compass,navigation,course'
+  image: 'https://images.pexels.com/photos/4553081/pexels-photo-4553081.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
   },
   {
     id: 'fish-identification',
@@ -218,7 +218,7 @@ const courses: Course[] = [
     level: 'Open Water',
     certification: 'SSI Fish Identification',
   category: 'specialty',
-  image: 'https://source.unsplash.com/featured/1200x800?scuba,reef,fish,identification,slate'
+  image: 'https://images.pexels.com/photos/3635910/pexels-photo-3635910.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
   },
   {
     id: 'wreck-diving',
@@ -230,7 +230,7 @@ const courses: Course[] = [
     level: 'Advanced',
     certification: 'SSI Wreck Diving',
   category: 'specialty',
-  image: 'https://source.unsplash.com/featured/1200x800?wreck,diving,shipwreck,penetration,scuba'
+  image: 'https://images.pexels.com/photos/3098980/pexels-photo-3098980.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
   },
   {
     id: 'night-diving',
@@ -242,7 +242,7 @@ const courses: Course[] = [
     level: 'Open Water',
     certification: 'SSI Night & Limited Visibility',
   category: 'specialty',
-  image: 'https://source.unsplash.com/featured/1200x800?night,dive,torch,limited-visibility,scuba'
+  image: 'https://images.pexels.com/photos/3098970/pexels-photo-3098970.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
   },
   {
     id: 'science-diving',
@@ -254,7 +254,7 @@ const courses: Course[] = [
     level: 'Open Water',
     certification: 'SSI Science of Diving',
   category: 'specialty',
-  image: 'https://source.unsplash.com/featured/1200x800?scuba,slate,notes,theory,underwater'
+  image: 'https://images.pexels.com/photos/1441024/pexels-photo-1441024.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
   },
   {
     id: 'boat-diving',
@@ -266,7 +266,7 @@ const courses: Course[] = [
     level: 'Open Water',
     certification: 'SSI Boat Diving',
   category: 'specialty',
-  image: 'https://source.unsplash.com/featured/1200x800?boat-diving,giant-stride,backroll,ladder,scuba'
+  image: 'https://images.pexels.com/photos/8826360/pexels-photo-8826360.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
   },
   {
     id: 'equipment-technique',
@@ -278,7 +278,7 @@ const courses: Course[] = [
     level: 'Open Water',
     certification: 'SSI Equipment Technique',
   category: 'specialty',
-  image: 'https://source.unsplash.com/featured/1200x800?regulator,BCD,octopus,scuba-gear,closeup'
+  image: 'https://images.pexels.com/photos/1276531/pexels-photo-1276531.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
   },
   {
     id: 'search-recovery',
@@ -290,7 +290,7 @@ const courses: Course[] = [
     level: 'Advanced',
     certification: 'SSI Search and Recovery',
   category: 'specialty',
-  image: 'https://source.unsplash.com/featured/1200x800?search-and-recovery,scuba,lift-bag,pattern-search'
+  image: 'https://images.pexels.com/photos/13478691/pexels-photo-13478691.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
   },
   {
     id: 'computer-diving',
@@ -528,7 +528,7 @@ Please try again or contact us directly:
                       {getCoursesForCategory(category.id).map((course, courseIndex) => (
                         <motion.div
                           key={course.id}
-                          className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                          className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full flex flex-col"
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: courseIndex * 0.1, duration: 0.4 }}
@@ -537,7 +537,7 @@ Please try again or contact us directly:
                           {course.image && (
                             <div className="h-40 w-full bg-cover bg-center" style={{ backgroundImage: `url(${course.image})` }} aria-label={`${course.title} cover image`} />
                           )}
-                          <div className="mb-4 p-6">
+                          <div className="p-6 flex flex-col gap-3">
                             <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium mb-2 ${
                               course.level === 'Beginner' || course.level === 'Kids' ? 'bg-green-100 text-green-800' :
                               course.level === 'Intermediate' || course.level === 'Open Water' ? 'bg-blue-100 text-blue-800' :
@@ -549,7 +549,17 @@ Please try again or contact us directly:
                             <h3 className="text-xl font-bold text-slate-800 mb-2">
                               {course.title}
                             </h3>
-                            <p className="text-slate-600 text-sm mb-4">{course.description}</p>
+                            <p
+                              className="text-slate-600 text-sm"
+                              style={{
+                                display: '-webkit-box',
+                                WebkitLineClamp: 3,
+                                WebkitBoxOrient: 'vertical' as any,
+                                overflow: 'hidden'
+                              }}
+                            >
+                              {course.description}
+                            </p>
                           </div>
 
                           <div className="grid grid-cols-2 gap-4 mb-4 text-sm text-slate-600 px-6">
@@ -571,8 +581,8 @@ Please try again or contact us directly:
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between px-6 pb-6">
-                            <div className="text-2xl font-bold text-sky-600">
+                          <div className="flex items-center justify-between px-6 pb-6 mt-auto">
+                            <div className="min-h-8 flex items-center text-2xl font-bold text-sky-600">
                               {course.price}
                             </div>
                             <motion.button
