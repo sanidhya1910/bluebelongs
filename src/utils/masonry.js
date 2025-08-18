@@ -219,7 +219,7 @@ const Masonry = ({
     if (!containerRef.current || !grid?.length) return;
     const maxBottom = Math.max(...grid.map((it) => it.y + it.h));
     containerRef.current.style.height = `${Math.ceil(maxBottom)}px`;
-  }, [grid]);
+  }, [grid, containerRef]);
 
   return (
     <div ref={containerRef} className="relative w-full">

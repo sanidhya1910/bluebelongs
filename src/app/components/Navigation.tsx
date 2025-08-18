@@ -67,18 +67,25 @@ export default function Navigation() {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
           {/* Brand Logo */}
-          <Link href="/" className="flex items-center space-x-3 group">
+          <Link href="/" aria-label="BlueBelong Home" className="flex items-center group">
             <motion.div
-              className="relative h-12 w-12 bg-white/90 rounded-xl border border-white/60 shadow-sm overflow-hidden"
+              className="relative h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 overflow-visible"
               whileHover={{ scale: 1.03 }}
             >
-              <Image src="/logo.png" alt="BlueBelong Logo" fill className="object-contain" priority />
+              <Image
+                src="/logo.png"
+                alt="BlueBelong Logo"
+                fill
+                className="object-contain"
+                priority
+                sizes="(max-width: 640px) 48px, (max-width: 768px) 56px, 64px"
+              />
             </motion.div>
-            <div className="flex flex-col">
-              <span className="text-2xl font-bold text-slate-800 leading-tight" style={{ fontFamily: 'Inter, serif' }}>
+            <div className="ml-3 sm:ml-4 flex flex-col">
+              <span className="text-2xl md:text-3xl font-bold text-slate-800 leading-tight" style={{ fontFamily: 'Inter, serif' }}>
                 BlueBelong
               </span>
-              <span className="text-xs text-slate-500 font-medium tracking-wider uppercase leading-none">
+              <span className="text-[10px] md:text-xs text-slate-500 font-medium tracking-wider uppercase leading-none">
                 Diving School
               </span>
             </div>

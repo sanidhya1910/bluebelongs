@@ -1,17 +1,12 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { Plane, Ship, MapPin, Clock, AlertCircle, Camera, Utensils, ThermometerSun, Cloud, Wind } from 'lucide-react';
-
-type Weather = {
-  temp: number | null;
-  wind: number | null;
-  code: number | null;
-};
-
-const islandCoords = {
-  havelock: { name: 'Havelock (Swaraj Dweep)', lat: 11.957, lon: 93.0 },
-  neil: { name: 'Neil (Shaheed Dweep)', lat: 11.83, lon: 93.03 }
-};
+import { Plane, Ship, MapPin, Clock, AlertCircle, Camera, Utensils } from 'lucide-react';
+import CTA from '@/components/ui/CTA';
+import WeatherCard from '@/components/itinerary/WeatherCard';
+import Checklist from '@/components/itinerary/Checklist';
+import InfoCard from '@/components/itinerary/InfoCard';
+import TransportCard from '@/components/itinerary/TransportCard';
+import { islandCoords, type Weather, transportOptions as baseTransport, itineraryDays, essentialInfo, packingList } from '@/data/itinerary';
 
 export default function ItineraryPage() {
   const [havelock, setHavelock] = useState<Weather>({ temp: null, wind: null, code: null });
@@ -38,105 +33,12 @@ export default function ItineraryPage() {
       .then((w) => w && setNeil(w))
       .catch(() => {});
   }, []);
-  const transportOptions = [
-    {
-      icon: <Plane className="h-8 w-8 text-sky-500" />,
-      title: "By Air (Recommended)",
-      description: "Fly directly to Port Blair from major Indian cities",
-      details: [
-        "Direct flights from Delhi, Mumbai, Chennai, Kolkata, Bangalore",
-        "Flight duration: 2-5 hours depending on origin",
-        "Airlines: Air India, IndiGo, SpiceJet, Vistara",
-        "Book in advance for better prices"
-      ],
-      tips: "Most convenient option. Airport is well-connected to the city center."
-    },
-    {
-      icon: <Ship className="h-8 w-8 text-sky-500" />,
-      title: "By Sea",
-      description: "Ferry services from Chennai, Kolkata, and Visakhapatnam",
-      details: [
-        "MV Akbar from Chennai (3-4 days)",
-        "MV Nancowry from Kolkata (3-4 days)",
-        "MV Harsha Vardhana from Visakhapatnam (2-3 days)",
-        "Book tickets well in advance"
-      ],
-      tips: "Adventure option but takes longer. Subject to weather conditions."
-    }
-  ];
+  const transportOptions = baseTransport.map((opt, i) => ({
+    ...opt,
+    icon: i === 0 ? <Plane className="h-8 w-8 text-sky-500" /> : <Ship className="h-8 w-8 text-sky-500" />,
+  }));
 
-  const itinerary = [
-    {
-      day: "Day 1",
-      title: "Arrival in Port Blair",
-      activities: [
-        "Arrive at Veer Savarkar International Airport",
-        "Check into accommodation",
-        "Visit Cellular Jail Light & Sound Show (evening)",
-        "Rest and prepare for diving adventures"
-      ]
-    },
-    {
-      day: "Day 2",
-      title: "Diving Course Begins",
-      activities: [
-        "Meet at Blue Belongs Diving Center",
-        "Complete medical forms and equipment fitting",
-        "Theory sessions and pool training",
-        "First confined water dives"
-      ]
-    },
-    {
-      day: "Day 3-4",
-      title: "Open Water Training",
-      activities: [
-        "Open water dives at pristine locations",
-        "Marine life exploration",
-        "Skill development and safety training",
-        "Underwater photography opportunities"
-      ]
-    },
-    {
-      day: "Day 5",
-      title: "Certification & Exploration",
-      activities: [
-        "Final skills assessment",
-        "Receive SSI certification",
-        "Explore Ross Island or North Bay",
-        "Celebration dinner"
-      ]
-    }
-  ];
-
-  const essentialInfo = [
-    {
-      title: "Best Time to Visit",
-      content: "October to May (dry season with calm waters)"
-    },
-    {
-      title: "Currency",
-      content: "Indian Rupee (INR). ATMs available in Port Blair"
-    },
-    {
-      title: "Language",
-      content: "Hindi, English, Bengali, and Tamil widely spoken"
-    },
-    {
-      title: "Climate",
-      content: "Tropical climate, 23-30°C year-round"
-    }
-  ];
-
-  const packingList = [
-    "Valid government photo ID (mandatory)",
-    "Swimwear and comfortable clothing",
-    "Sunscreen (reef-safe recommended)",
-    "Sunglasses and hat",
-    "Water bottle",
-    "Personal medications",
-    "Underwater camera (optional)",
-    "Light jacket for air-conditioned spaces"
-  ];
+  // Data moved to src/data/itinerary.ts
 
   return (
     <div className="min-h-screen sand-section py-12 pt-28">
@@ -155,61 +57,16 @@ export default function ItineraryPage() {
         <section className="mb-12">
           <h2 className="text-3xl font-bold text-slate-800 mb-6 text-center">Havelock & Neil Islands</h2>
           <div className="grid md:grid-cols-2 gap-6">
-            {/* Havelock */}
-            <div className="card">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <MapPin className="h-6 w-6 text-sky-600" />
-                  <h3 className="text-xl font-semibold text-slate-800">{islandCoords.havelock.name}</h3>
-                </div>
-                <span className="text-sm text-slate-500">Live Weather</span>
-              </div>
-              <div className="grid grid-cols-3 gap-4 items-center">
-                <div className="flex items-center gap-2">
-                  <ThermometerSun className="h-5 w-5 text-sky-600" />
-                  <span className="text-slate-700">{havelock.temp !== null ? `${havelock.temp}°C` : '—'}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Wind className="h-5 w-5 text-sky-600" />
-                  <span className="text-slate-700">{havelock.wind !== null ? `${havelock.wind} km/h` : '—'}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Cloud className="h-5 w-5 text-sky-600" />
-                  <span className="text-slate-700">{havelock.code !== null ? 'Conditions updated' : '—'}</span>
-                </div>
-              </div>
-              <div className="mt-4 text-slate-600 text-sm">
-                Usual climate: Oct–May calm seas, 26–30°C; Jun–Sep monsoon with variable visibility.
-              </div>
-            </div>
-
-            {/* Neil */}
-            <div className="card">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <MapPin className="h-6 w-6 text-sky-600" />
-                  <h3 className="text-xl font-semibold text-slate-800">{islandCoords.neil.name}</h3>
-                </div>
-                <span className="text-sm text-slate-500">Live Weather</span>
-              </div>
-              <div className="grid grid-cols-3 gap-4 items-center">
-                <div className="flex items-center gap-2">
-                  <ThermometerSun className="h-5 w-5 text-sky-600" />
-                  <span className="text-slate-700">{neil.temp !== null ? `${neil.temp}°C` : '—'}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Wind className="h-5 w-5 text-sky-600" />
-                  <span className="text-slate-700">{neil.wind !== null ? `${neil.wind} km/h` : '—'}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Cloud className="h-5 w-5 text-sky-600" />
-                  <span className="text-slate-700">{neil.code !== null ? 'Conditions updated' : '—'}</span>
-                </div>
-              </div>
-              <div className="mt-4 text-slate-600 text-sm">
-                Usual climate: Similar to Havelock; gentle reefs, great for relaxed diving and macro.
-              </div>
-            </div>
+            <WeatherCard
+              title={islandCoords.havelock.name}
+              weather={havelock}
+              climateNote="Usual climate: Oct–May calm seas, 26–30°C; Jun–Sep monsoon with variable visibility."
+            />
+            <WeatherCard
+              title={islandCoords.neil.name}
+              weather={neil}
+              climateNote="Usual climate: Similar to Havelock; gentle reefs, great for relaxed diving and macro."
+            />
           </div>
         </section>
 
@@ -244,28 +101,7 @@ export default function ItineraryPage() {
           </h2>
           <div className="grid md:grid-cols-2 gap-8">
             {transportOptions.map((option, index) => (
-              <div key={index} className="card">
-                <div className="flex items-center mb-4">
-                  {option.icon}
-                  <h3 className="text-xl font-semibold text-slate-800 ml-3">
-                    {option.title}
-                  </h3>
-                </div>
-                <p className="text-slate-600 mb-4">{option.description}</p>
-                <ul className="space-y-2 mb-4">
-                  {option.details.map((detail, idx) => (
-                    <li key={idx} className="flex items-start text-sm text-slate-600">
-                      <div className="w-2 h-2 bg-sky-500 rounded-full mr-3 mt-2"></div>
-                      {detail}
-                    </li>
-                  ))}
-                </ul>
-                <div className="sand-gradient p-3 rounded-lg border border-slate-200">
-                  <p className="text-sm text-slate-700">
-                    <strong>Tip:</strong> {option.tips}
-                  </p>
-                </div>
-              </div>
+              <TransportCard key={index} option={option} icon={option.icon} />
             ))}
           </div>
         </section>
@@ -276,7 +112,7 @@ export default function ItineraryPage() {
             Sample Itinerary
           </h2>
           <div className="grid md:grid-cols-2 gap-6">
-            {itinerary.map((day, index) => (
+            {itineraryDays.map((day, index) => (
               <div key={index} className="card">
                 <div className="flex items-center mb-4">
                   <div className="w-12 h-12 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">
@@ -307,10 +143,7 @@ export default function ItineraryPage() {
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {essentialInfo.map((info, index) => (
-              <div key={index} className="card text-center">
-                <h3 className="font-semibold text-slate-800 mb-2">{info.title}</h3>
-                <p className="text-sm text-slate-600">{info.content}</p>
-              </div>
+              <InfoCard key={index} title={info.title}>{info.content}</InfoCard>
             ))}
           </div>
         </section>
@@ -318,19 +151,7 @@ export default function ItineraryPage() {
         {/* Packing List */}
         <section className="mb-12">
           <div className="grid lg:grid-cols-2 gap-8">
-            <div className="card">
-              <h2 className="text-2xl font-bold text-slate-800 mb-6">
-                Packing Checklist
-              </h2>
-              <div className="space-y-3">
-                {packingList.map((item, index) => (
-                  <label key={index} className="flex items-center">
-                    <input type="checkbox" className="mr-3 rounded text-sky-500" />
-                    <span className="text-slate-700">{item}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
+            <Checklist title="Packing Checklist" items={packingList} />
 
             <div className="card">
               <h2 className="text-2xl font-bold text-slate-800 mb-6">
@@ -371,23 +192,12 @@ export default function ItineraryPage() {
 
         {/* Contact for Travel Assistance */}
         <section className="text-center">
-          <div className="card bg-gradient-to-r from-sky-50 to-cyan-50 border-sky-200">
-            <h2 className="text-2xl font-bold text-slate-800 mb-4">
-              Need Travel Assistance?
-            </h2>
-            <p className="text-slate-600 mb-6">
-              Our team can help you plan your journey and recommend the best travel options, 
-              accommodations, and local experiences to make your diving trip unforgettable.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="tel:+919876543210" className="btn-primary">
-                Call Us: +91 98765 43210
-              </a>
-              <a href="mailto:info@bluebelongs.com" className="btn-secondary">
-                Email: info@bluebelongs.com
-              </a>
-            </div>
-          </div>
+          <CTA
+            title="Need Travel Assistance?"
+            description="Our team can help you plan your journey and recommend the best travel options, accommodations, and local experiences to make your diving trip unforgettable."
+            primary={{ label: 'Call Us: +91 98765 43210', href: 'tel:+919876543210' }}
+            secondary={{ label: 'Email: info@bluebelongs.com', href: 'mailto:info@bluebelongs.com' }}
+          />
         </section>
       </div>
     </div>

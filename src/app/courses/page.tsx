@@ -1,294 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { CSSProperties } from 'react';
-import { Clock, Award, MapPin, Waves, Fish, Anchor, ChevronDown } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-
-
-interface Course {
-  id: string;
-  title: string;
-  description: string;
-  duration: string;
-  dives: number;
-  price: string;
-  level: string;
-  certification: string;
-  category: 'beginner' | 'certification' | 'specialty';
-  image?: string;
-}
-
-interface CourseCategory {
-  id: string;
-  name: string;
-  description: string;
-  icon: React.ReactNode;
-  color: string;
-}
-
-const categories: CourseCategory[] = [
-  {
-    id: 'beginner',
-    name: 'Entry Level Programs',
-    description: 'Perfect for first-time divers and those new to scuba diving - from Try Scuba to Open Water certification',
-    icon: <Fish className="h-8 w-8" />,
-  color: 'from-sky-400 to-cyan-500'
-  },
-  {
-    id: 'certification',
-    name: 'Continuing Education',
-    description: 'Advanced training for certified divers seeking skill enhancement and rescue capabilities',
-    icon: <Award className="h-8 w-8" />,
-  color: 'from-blue-500 to-indigo-600'
-  },
-  {
-    id: 'specialty',
-    name: 'Specialty Courses',
-    description: 'Specialized training for unique diving experiences - from Deep Diving to Wreck Exploration',
-    icon: <Anchor className="h-8 w-8" />,
-  color: 'from-cyan-500 to-sky-600'
-  }
-];
-
-const courses: Course[] = [
-  // Beginner Courses (Entry Level Programs)
-  {
-    id: 'try-scuba',
-    title: 'Try Scuba',
-    description: 'Safe and exhilarating introduction to scuba diving, perfect for non-swimmers. Test the waters before you commit!',
-    duration: '3 hours',
-    dives: 1,
-    price: '₹4,500',
-    level: 'Beginner',
-    certification: 'Try Scuba Experience',
-  category: 'beginner',
-  image: 'https://unsplash.com/photos/black-and-white-fire-extinguisher-on-brown-concrete-wall-4HOg7XW_9co/download?force=true'
-  },
-  {
-    id: 'basic-diver',
-    title: 'SSI Basic Diver',
-    description: 'Gateway to exploring depths of up to 12 meters with an experienced SSI Professional. Credits towards further certifications.',
-    duration: '4 hours',
-    dives: 1,
-    price: '₹7,500',
-    level: 'Beginner',
-    certification: 'SSI Basic Diver',
-  category: 'beginner',
-  image: 'https://images.pexels.com/photos/10467/pexels-photo-10467.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
-  },
-  {
-    id: 'scuba-diver',
-    title: 'SSI Scuba Diver',
-    description: 'Excellent starting point combining online learning with practical dives. Dive up to 12 meters deep.',
-    duration: '2 days',
-    dives: 2,
-    price: '₹15,000',
-    level: 'Beginner',
-    certification: 'SSI Scuba Diver',
-  category: 'beginner',
-  image: 'https://images.pexels.com/photos/3046582/pexels-photo-3046582.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
-  },
-  {
-    id: 'open-water',
-    title: 'SSI Open Water Diver',
-    description: 'Globally recognized certification program. Your gateway to lifelong diving adventures up to 18 meters deep.',
-    duration: '4 days',
-    dives: 4,
-    price: '₹35,000',
-    level: 'Beginner',
-    certification: 'SSI Open Water Diver',
-  category: 'beginner',
-  image: 'https://images.pexels.com/photos/1540297/pexels-photo-1540297.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
-  },
-
-  // Certification Courses (Continuing Education)
-  {
-    id: 'advanced-adventurer',
-    title: 'SSI Advanced Adventurer',
-    description: 'Sample five SSI specialties through Adventure Dives. Certifies you to dive up to 30 meters deep.',
-    duration: '3 days',
-    dives: 5,
-    price: '₹25,000',
-    level: 'Intermediate',
-    certification: 'SSI Advanced Adventurer',
-  category: 'certification',
-  image: 'https://images.pexels.com/photos/1645028/pexels-photo-1645028.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
-  },
-  {
-    id: 'scuba-skill-update',
-    title: 'SSI Scuba Skill Update',
-    description: 'Refresh your skills after inactivity. Perfect for divers who haven\'t been in water for a while.',
-    duration: '1 day',
-    dives: 0,
-    price: '₹8,000',
-    level: 'Refresher',
-    certification: 'Skill Update',
-  category: 'certification',
-  image: 'https://images.pexels.com/photos/1303651/pexels-photo-1303651.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
-  },
-  {
-    id: 'diver-stress-rescue',
-    title: 'SSI Diver Stress and Rescue',
-    description: 'Comprehensive course to manage emergencies effectively. Learn to identify stress signals and prevent accidents.',
-    duration: '3-4 days',
-    dives: 4,
-    price: 'Contact for pricing',
-    level: 'Advanced',
-    certification: 'SSI Diver Stress and Rescue',
-  category: 'certification',
-  image: 'https://unsplash.com/photos/people-in-water-during-daytime-NThBgBjmgnE/download?force=true'
-  },
-
-  // Specialty Courses
-  {
-    id: 'deep-diving',
-    title: 'SSI Deep Diving Specialty',
-    description: 'Prepare for dives ranging from 18 to 40 meters deep. Learn dive computers and gas consumption.',
-    duration: '2 days',
-    dives: 4,
-    price: 'Contact for pricing',
-    level: 'Advanced',
-    certification: 'SSI Deep Diving Specialty',
-  category: 'specialty',
-  image: 'https://images.pexels.com/photos/3410956/pexels-photo-3410956.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
-  },
-  {
-    id: 'perfect-buoyancy',
-    title: 'SSI Perfect Buoyancy',
-    description: 'Master buoyancy control underwater. Learn to swim like a fish and be balanced like a turtle.',
-    duration: '1-2 days',
-    dives: 2,
-    price: 'Contact for pricing',
-    level: 'Open Water',
-    certification: 'SSI Perfect Buoyancy',
-  category: 'specialty',
-  image: 'https://images.pexels.com/photos/37530/diver-scuba-underwater-swimming-37530.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
-  },
-  {
-    id: 'nitrox',
-    title: 'SSI Nitrox Specialty',
-    description: 'Learn enriched air nitrox diving for longer bottom times and shorter surface intervals.',
-    duration: '1 day',
-    dives: 2,
-    price: 'Contact for pricing',
-    level: 'Open Water',
-    certification: 'SSI Nitrox Specialty',
-  category: 'specialty',
-  image: 'https://images.pexels.com/photos/9307238/pexels-photo-9307238.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
-  },
-  {
-    id: 'navigation',
-    title: 'SSI Navigation Specialty',
-    description: 'Master underwater navigation with compass and natural techniques. Never get lost underwater again!',
-    duration: '2 days',
-    dives: 3,
-    price: 'Contact for pricing',
-    level: 'Open Water',
-    certification: 'SSI Navigation Specialty',
-  category: 'specialty',
-  image: 'https://images.pexels.com/photos/4553081/pexels-photo-4553081.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
-  },
-  {
-    id: 'fish-identification',
-    title: 'SSI Fish Identification',
-    description: 'Learn to identify fish species, their behaviors, and habitats. Know what you\'re seeing underwater!',
-    duration: '2 days',
-    dives: 2,
-    price: 'Contact for pricing',
-    level: 'Open Water',
-    certification: 'SSI Fish Identification',
-  category: 'specialty',
-  image: 'https://images.pexels.com/photos/3635910/pexels-photo-3635910.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
-  },
-  {
-    id: 'wreck-diving',
-    title: 'SSI Wreck Diving (Havelock Only)',
-    description: 'Explore and navigate wreck dive sites safely. Discover underwater history like the Titanic!',
-    duration: '2 days',
-    dives: 4,
-    price: 'Contact for pricing',
-    level: 'Advanced',
-    certification: 'SSI Wreck Diving',
-  category: 'specialty',
-  image: 'https://images.pexels.com/photos/3098980/pexels-photo-3098980.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
-  },
-  {
-    id: 'night-diving',
-    title: 'SSI Night & Limited Visibility (Havelock Only)',
-    description: 'Safely navigate underwater environments in low light. Discover nocturnal marine life behaviors.',
-    duration: '2 days',
-    dives: 3,
-    price: 'Contact for pricing',
-    level: 'Open Water',
-    certification: 'SSI Night & Limited Visibility',
-  category: 'specialty',
-  image: 'https://images.pexels.com/photos/3098970/pexels-photo-3098970.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
-  },
-  {
-    id: 'science-diving',
-    title: 'SSI Science of Diving (Theory)',
-    description: 'Comprehensive understanding of diving physics, physiology, and decompression theory.',
-    duration: '1 day',
-    dives: 0,
-    price: 'Contact for pricing',
-    level: 'Open Water',
-    certification: 'SSI Science of Diving',
-  category: 'specialty',
-  image: 'https://images.pexels.com/photos/1441024/pexels-photo-1441024.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
-  },
-  {
-    id: 'boat-diving',
-    title: 'SSI Boat Diving Specialty',
-    description: 'Learn boat diving logistics, entry/exit techniques, and safety protocols for diving from boats.',
-    duration: '1 day',
-    dives: 2,
-    price: 'Contact for pricing',
-    level: 'Open Water',
-    certification: 'SSI Boat Diving',
-  category: 'specialty',
-  image: 'https://images.pexels.com/photos/8826360/pexels-photo-8826360.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
-  },
-  {
-    id: 'equipment-technique',
-    title: 'SSI Equipment Technique',
-    description: 'Master dive equipment maintenance, care, and troubleshooting. Make the right equipment choices.',
-    duration: '1 day',
-    dives: 0,
-    price: 'Contact for pricing',
-    level: 'Open Water',
-    certification: 'SSI Equipment Technique',
-  category: 'specialty',
-  image: 'https://images.pexels.com/photos/1276531/pexels-photo-1276531.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
-  },
-  {
-    id: 'search-recovery',
-    title: 'SSI Search and Recovery',
-    description: 'Learn to locate and retrieve objects underwater. Find that lost wedding ring!',
-    duration: '2 days',
-    dives: 4,
-    price: 'Contact for pricing',
-    level: 'Advanced',
-    certification: 'SSI Search and Recovery',
-  category: 'specialty',
-  image: 'https://images.pexels.com/photos/13478691/pexels-photo-13478691.jpeg?auto=compress&cs=tinysrgb&w=1400&q=80'
-  },
-  {
-    id: 'computer-diving',
-    title: 'SSI Computer Diving',
-    description: 'Master dive computer operation for safer diving. Learn algorithms and dive profile optimization.',
-    duration: '1 day',
-    dives: 2,
-    price: 'Contact for pricing',
-    level: 'Open Water',
-    certification: 'SSI Computer Diving',
-  category: 'specialty',
-  image: 'https://source.unsplash.com/featured/1200x800?dive-computer,wrist,scubadiving,gauge'
-  }
-];
+import { motion } from 'framer-motion';
+import CourseCategory from '@/components/courses/CourseCategory';
+import { categories, courses, type Course as TCourse } from '@/data/courses';
+import Section from '@/components/ui/Section';
 
 export default function CoursesPage() {
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<TCourse | null>(null);
   const [expandedCategory, setExpandedCategory] = useState<string | null>('beginner');
   const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -313,7 +32,7 @@ export default function CoursesPage() {
     }
   }, []);
 
-  const handleBooking = (course: Course) => {
+  const handleBooking = (course: TCourse) => {
     // Check if user is logged in
     if (!user) {
       alert('Please log in to book a course. You will be redirected to the login page.');
@@ -430,158 +149,32 @@ Please try again or contact us directly:
     setExpandedCategory(expandedCategory === categoryId ? null : categoryId);
   };
 
-  const getCoursesForCategory = (categoryId: string) => {
-    return courses.filter(course => course.category === categoryId);
-  };
+  const getCoursesForCategory = (categoryId: string) => courses.filter(c => c.category === categoryId);
 
   return (
   <div className="min-h-screen sand-section py-12 pt-28 relative overflow-hidden">
-  {/* Removed coral background elements */}
-      
-      <div className="container mx-auto px-4 relative z-10">
-        <motion.div
-          className="text-center mb-12"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <h1 className="text-4xl md:text-5xl font-bold text-slate-800 mb-4 underwater-text">
-            Diving Courses
-          </h1>
-          <p className="text-xl text-slate-600 max-w-3xl mx-auto">
-            Choose from our range of SSI certified diving courses, designed for all skill levels. 
-            From complete beginners to advanced divers, we have the perfect course for you.
-          </p>
-        </motion.div>
-
-        {/* Course Categories */}
+      {/* Removed coral background elements */}
+      <Section
+        title="Diving Courses"
+        subtitle="Choose from our range of SSI certified diving courses, designed for all skill levels. From complete beginners to advanced divers, we have the perfect course for you."
+        className="pt-0"
+        containerClassName="relative z-10"
+      >
         <div className="space-y-6 mb-12">
-          {categories.map((category, index) => (
-                        <motion.div
+          {categories.map((category) => (
+            <CourseCategory
               key={category.id}
-                          className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.2, duration: 0.6 }}
-            >
-              {/* Category Header */}
-              <motion.div
-                className={`bg-gradient-to-r ${category.color} p-6 cursor-pointer`}
-                onClick={() => toggleCategory(category.id)}
-                whileHover={{ scale: 1.01 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <div className="flex items-center justify-between text-white">
-                  <div className="flex items-center space-x-4">
-                    <motion.div
-                      animate={{ scale: [1, 1.1, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      {category.icon}
-                    </motion.div>
-                    <div>
-                      <h2 className="text-2xl font-bold">{category.name}</h2>
-                      <p className="text-white/90">{category.description}</p>
-                    </div>
-                  </div>
-                  <motion.div
-                    animate={{ rotate: expandedCategory === category.id ? 180 : 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <ChevronDown className="h-6 w-6" />
-                  </motion.div>
-                </div>
-              </motion.div>
-
-              {/* Category Courses */}
-              <AnimatePresence>
-                {expandedCategory === category.id && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.4, ease: "easeInOut" }}
-                    className="overflow-hidden"
-                  >
-                    <div className="p-6 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {getCoursesForCategory(category.id).map((course, courseIndex) => (
-                        <motion.div
-                          key={course.id}
-                          className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full flex flex-col"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: courseIndex * 0.1, duration: 0.4 }}
-                          whileHover={{ scale: 1.02 }}
-                        >
-                          {course.image && (
-                            <div className="h-40 w-full bg-cover bg-center" style={{ backgroundImage: `url(${course.image})` }} aria-label={`${course.title} cover image`} />
-                          )}
-                          <div className="p-6 flex flex-col gap-3">
-                            <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium mb-2 ${
-                              course.level === 'Beginner' || course.level === 'Kids' ? 'bg-sky-100 text-sky-800' :
-                              course.level === 'Intermediate' || course.level === 'Open Water' ? 'bg-blue-100 text-blue-800' :
-                              course.level === 'Advanced' ? 'bg-indigo-100 text-indigo-800' :
-                              'bg-sky-50 text-sky-700'
-                            }`}>
-                              {course.level}
-                            </span>
-                            <h3 className="text-xl font-bold text-slate-800 mb-2">
-                              {course.title}
-                            </h3>
-                            <p
-                              className="text-slate-600 text-sm"
-                              style={{
-                                display: '-webkit-box',
-                                WebkitLineClamp: 3,
-                                WebkitBoxOrient: 'vertical' as CSSProperties['WebkitBoxOrient'],
-                                overflow: 'hidden'
-                              }}
-                            >
-                              {course.description}
-                            </p>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4 mb-4 text-sm text-slate-600 px-6">
-                            <div className="flex items-center">
-                              <Clock className="h-4 w-4 mr-2 text-sky-500" />
-                              {course.duration}
-                            </div>
-                            <div className="flex items-center">
-                              <Waves className="h-4 w-4 mr-2 text-sky-500" />
-                              {course.dives} dives
-                            </div>
-                            <div className="flex items-center">
-                              <Award className="h-4 w-4 mr-2 text-sky-500" />
-                              {course.certification}
-                            </div>
-                            <div className="flex items-center">
-                              <MapPin className="h-4 w-4 mr-2 text-sky-500" />
-                              Andaman Waters
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between px-6 pb-6 mt-auto">
-                            <div className="min-h-8 flex items-center text-2xl font-bold text-sky-600">
-                              {course.price}
-                            </div>
-                            <motion.button
-                              onClick={() => handleBooking(course)}
-                              className="btn-primary text-sm px-4 py-2"
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                            >
-                              {isHydrated && !user ? 'Login to Book' : 'Book Now'}
-                            </motion.button>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
+              category={category}
+              courses={getCoursesForCategory(category.id)}
+              expanded={expandedCategory === category.id}
+              onToggle={toggleCategory}
+              onBook={handleBooking}
+              isHydrated={isHydrated}
+              userPresent={!!user}
+            />
           ))}
         </div>
+      </Section>
 
         {/* Booking Modal */}
         {selectedCourse && (
@@ -714,7 +307,6 @@ Please try again or contact us directly:
             </motion.div>
           </motion.div>
         )}
-      </div>
-    </div>
+  </div>
   );
 }

@@ -1,99 +1,24 @@
-'use client';
+"use client";
 
 import { motion, useInView } from 'framer-motion';
-import { useRef } from 'react';
-import { Calendar, User, ArrowRight, Fish, Waves, Anchor } from 'lucide-react';
-import Link from 'next/link';
+import { useMemo, useRef, useState } from 'react';
+import { Fish, Waves, Anchor } from 'lucide-react';
+import BlogCard from '@/components/blogs/BlogCard';
+import { blogPosts as posts } from '@/data/blogs';
 
-interface BlogPost {
-  id: string;
-  title: string;
-  excerpt: string;
-  author: string;
-  date: string;
-  category: string;
-  readTime: string;
-  image: string;
-  featured: boolean;
-}
-
-const blogPosts: BlogPost[] = [
-  {
-    id: '1',
-    title: 'Marine Life Conservation in Andaman Waters',
-    excerpt: 'Discover the incredible biodiversity of Andaman seas and how Blue Belong is contributing to marine conservation efforts through responsible diving practices.',
-    author: 'Dr. Priya Sharma',
-    date: '2024-01-15',
-    category: 'Conservation',
-    readTime: '8 min read',
-    image: 'https://images.unsplash.com/photo-1583212292454-1fe6229603b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
-    featured: true
-  },
-  {
-    id: '2',
-    title: 'Best Diving Spots Around Havelock Island',
-    excerpt: 'Explore the top underwater destinations near Havelock Island, from vibrant coral reefs to mysterious underwater caves that will take your breath away.',
-    author: 'Captain Mike Rodriguez',
-    date: '2024-01-10',
-    category: 'Diving Spots',
-    readTime: '6 min read',
-    image: 'https://images.unsplash.com/photo-1582967788606-a171c1080cb0?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
-    featured: false
-  },
-  {
-    id: '3',
-    title: 'Night Diving: A Different World Underwater',
-    excerpt: 'Experience the magic of night diving in Andaman waters. Learn about the unique marine life that emerges after sunset and safety tips for night dives.',
-    author: 'Sarah Chen',
-    date: '2024-01-08',
-    category: 'Techniques',
-    readTime: '5 min read',
-    image: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
-    featured: false
-  },
-  {
-    id: '4',
-    title: 'Underwater Photography Tips for Beginners',
-    excerpt: 'Master the art of underwater photography with these essential tips. From camera settings to composition techniques for capturing stunning marine life.',
-    author: 'Alex Thompson',
-    date: '2024-01-05',
-    category: 'Photography',
-    readTime: '7 min read',
-    image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
-    featured: false
-  },
-  {
-    id: '5',
-    title: 'The Coral Restoration Project: Making a Difference',
-    excerpt: 'Learn about our ongoing coral restoration initiatives and how every diver can contribute to preserving the underwater ecosystem for future generations.',
-    author: 'Dr. Raj Patel',
-    date: '2024-01-02',
-    category: 'Conservation',
-    readTime: '10 min read',
-    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
-    featured: true
-  },
-  {
-    id: '6',
-    title: 'Monsoon Diving: What You Need to Know',
-    excerpt: 'Diving during monsoon season offers unique experiences and challenges. Get expert advice on safety, visibility, and the best practices for monsoon diving.',
-    author: 'Captain Arjun Kumar',
-    date: '2023-12-28',
-    category: 'Safety',
-    readTime: '6 min read',
-    image: 'https://images.unsplash.com/photo-1588481123261-9b6a0cb5f584?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
-    featured: false
-  }
-];
-
-const categories = ['All', 'Conservation', 'Diving Spots', 'Techniques', 'Photography', 'Safety'];
+const allCategories = ['All', 'Conservation', 'Diving Spots', 'Techniques', 'Photography', 'Safety'] as const;
 
 export default function BlogsPage() {
   const heroRef = useRef(null);
   const postsRef = useRef(null);
+  const [activeCategory, setActiveCategory] = useState<(typeof allCategories)[number]>('All');
   
   const heroInView = useInView(heroRef, { once: true });
   const postsInView = useInView(postsRef, { once: true });
+  const filtered = useMemo(
+    () => (activeCategory === 'All' ? posts : posts.filter(p => p.category === activeCategory)),
+    [activeCategory]
+  );
 
   return (
     <div className="min-h-screen sand-section">
@@ -174,7 +99,7 @@ export default function BlogsPage() {
       </div>
 
       {/* Categories Filter */}
-      <section className="py-8 bg-white border-b border-slate-200">
+  <section className="py-8 bg-white border-b border-slate-200">
         <div className="container mx-auto px-4">
           <motion.div
             className="flex flex-wrap justify-center gap-4"
@@ -182,11 +107,11 @@ export default function BlogsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            {categories.map((category, index) => (
+    {allCategories.map((category, index) => (
               <motion.button
                 key={category}
                 className={`px-6 py-2 rounded-full transition-all duration-300 ${
-                  category === 'All' 
+      activeCategory === category 
                     ? 'bg-sky-500 text-white shadow-lg' 
                     : 'bg-slate-100 text-slate-600 hover:bg-sky-100 hover:text-sky-600'
                 }`}
@@ -195,6 +120,7 @@ export default function BlogsPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1, duration: 0.5 }}
+        onClick={() => setActiveCategory(category)}
               >
                 {category}
               </motion.button>
@@ -216,58 +142,8 @@ export default function BlogsPage() {
           </motion.h2>
           
           <div className="grid lg:grid-cols-2 gap-8 mb-16">
-            {blogPosts.filter(post => post.featured).map((post, index) => (
-              <motion.article
-                key={post.id}
-                className="card group cursor-pointer"
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.2, duration: 0.8 }}
-                whileHover={{ scale: 1.02 }}
-              >
-                <div className="relative mb-6 overflow-hidden rounded-lg">
-                  <motion.div
-                    className="h-64 bg-cover bg-center bg-no-repeat relative"
-                    style={{
-                      backgroundImage: `url(${post.image})`
-                    }}
-                    whileHover={{ scale: 1.1 }}
-                    transition={{ duration: 0.6 }}
-                  >
-                    {/* Gradient overlay for better text readability */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20"></div>
-                  </motion.div>
-                  <div className="absolute top-4 left-4">
-                    <span className="bg-sky-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                      {post.category}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="flex items-center text-sm text-slate-500 mb-3">
-                  <User className="h-4 w-4 mr-2" />
-                  <span className="mr-4">{post.author}</span>
-                  <Calendar className="h-4 w-4 mr-2" />
-                  <span className="mr-4">{new Date(post.date).toLocaleDateString()}</span>
-                  <span>{post.readTime}</span>
-                </div>
-                
-                <h3 className="text-xl font-bold text-slate-800 mb-3 group-hover:text-sky-600 transition-colors">
-                  {post.title}
-                </h3>
-                
-                <p className="text-slate-600 mb-4">
-                  {post.excerpt}
-                </p>
-                
-                <Link
-                  href={`/blogs/${post.id}`}
-                  className="inline-flex items-center text-sky-600 font-medium hover:text-sky-700 transition-colors"
-                >
-                  Read More
-                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </motion.article>
+            {posts.filter(post => post.featured).map((post, index) => (
+              <BlogCard key={post.id} post={post} featured index={index} />
             ))}
           </div>
         </div>
@@ -286,67 +162,15 @@ export default function BlogsPage() {
           </motion.h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {blogPosts.filter(post => !post.featured).map((post, index) => (
-              <motion.article
-                key={post.id}
-                className="card group cursor-pointer"
-                initial={{ opacity: 0, y: 50 }}
-                animate={postsInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: index * 0.1, duration: 0.8 }}
-                whileHover={{ scale: 1.05, y: -5 }}
-              >
-                <div className="relative mb-4 overflow-hidden rounded-lg">
-                  <motion.div
-                    className="h-48 bg-cover bg-center bg-no-repeat relative"
-                    style={{
-                      backgroundImage: `url(${post.image})`
-                    }}
-                    whileHover={{ scale: 1.1 }}
-                    transition={{ duration: 0.6 }}
-                  >
-                    {/* Gradient overlay for better text readability */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10"></div>
-                  </motion.div>
-                  <div className="absolute top-3 left-3">
-                    <span className="bg-sky-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-                      {post.category}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="flex items-center text-xs text-slate-500 mb-2">
-                  <User className="h-3 w-3 mr-1" />
-                  <span className="mr-3">{post.author}</span>
-                  <Calendar className="h-3 w-3 mr-1" />
-                  <span>{new Date(post.date).toLocaleDateString()}</span>
-                </div>
-                
-                <h3 className="text-lg font-bold text-slate-800 mb-2 group-hover:text-sky-600 transition-colors">
-                  {post.title}
-                </h3>
-                
-                <p className="text-slate-600 text-sm mb-4 line-clamp-3">
-                  {post.excerpt}
-                </p>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-500">{post.readTime}</span>
-                  <Link
-                    href={`/blogs/${post.id}`}
-                    className="inline-flex items-center text-sky-600 font-medium hover:text-sky-700 transition-colors text-sm"
-                  >
-                    Read More
-                    <ArrowRight className="ml-1 h-3 w-3 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </div>
-              </motion.article>
+            {filtered.filter(post => !post.featured).map((post, index) => (
+              <BlogCard key={post.id} post={post} index={index} />
             ))}
           </div>
         </div>
       </section>
 
       {/* Newsletter Subscription */}
-      <section className="py-16 bg-slate-800 text-white relative overflow-hidden">
+  <section className="py-16 bg-slate-800 text-white relative overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0">
           <motion.div
@@ -363,7 +187,7 @@ export default function BlogsPage() {
           <div className="absolute bottom-10 right-10 h-24 w-24 rounded-full bg-white/10 blur-xl" />
         </div>
         
-        <div className="container mx-auto px-4 text-center relative z-10">
+  <div className="container mx-auto px-4 text-center relative z-10">
           <motion.h2
             className="text-3xl font-bold mb-4"
             initial={{ opacity: 0, y: 30 }}
