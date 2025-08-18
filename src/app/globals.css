@@ -18,12 +18,19 @@
 
 :root {
   --foreground: #1e293b;
-  --background: #f8fafc;
+  /* Sand-forward background to pair with ocean blues */
+  --background: #F7F3EA; /* cream/sand */
   --primary-blue: #0ea5e9;
   --secondary-blue: #0284c7;
   --dark-blue: #0c4a6e;
   --light-blue: #e0f2fe;
   --ocean-blue: #0891b2;
+  /* Sand palette */
+  --sand-50: #FBF8F1;
+  --sand-100: #F7F3EA;
+  --sand-200: #EFE7D9;
+  --sand-300: #E7DFCF;
+  --sand-400: #DACFB8;
   --coral-500: #ff7f7f;
   --coral-400: #ffa07a;
   --coral-300: #ffb3ba;
@@ -78,6 +85,14 @@ body {
 }
 
 @layer components {
+  /* Sand utilities */
+  .sand-section {
+    background-color: var(--sand-100);
+  }
+  .sand-gradient {
+    background: linear-gradient(180deg, var(--sand-50) 0%, var(--sand-100) 40%, var(--sand-200) 100%);
+  }
+
   /* Enhanced button styles inspired by the template */
   .btn-primary {
     @apply relative bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 px-6 rounded-2xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl;
@@ -185,6 +200,12 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+  /* Sand background utilities for theme parity */
+  .bg-sand-50 { background-color: var(--sand-50); }
+  .bg-sand-100 { background-color: var(--sand-100); }
+  .bg-sand-200 { background-color: var(--sand-200); }
+  .hover\:bg-sand-50:hover { background-color: var(--sand-50); }
+  .hover\:bg-sand-100:hover { background-color: var(--sand-100); }
   
   .perspective-1000 {
     perspective: 1000px;

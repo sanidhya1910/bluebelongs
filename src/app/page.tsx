@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { ArrowRight, Award, Users, MapPin, Star, Fish, Waves, Heart, Eye, Shield } from 'lucide-react';
-import { motion, useInView } from 'framer-motion';
+import { motion, useInView, useReducedMotion } from 'framer-motion';
+import Masonry from '@/utils/masonry';
 import { useRef, useState, useEffect } from 'react';
 
 // Enhanced Coral SVG Component
@@ -27,6 +28,23 @@ const CoralIcon = ({ className }: { className?: string }) => (
   </motion.svg>
 );
 
+// Wave Divider Component
+const WaveDivider = ({ color = '#EFECE5', flip = false, className = '' }: { color?: string; flip?: boolean; className?: string }) => (
+  <div className={`w-full overflow-hidden leading-none ${className}`} aria-hidden="true">
+    <svg
+      viewBox="0 0 1440 100"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`block w-full h-[80px] ${flip ? 'rotate-180' : ''}`}
+      preserveAspectRatio="none"
+    >
+      <path
+        d="M0,32 C120,52 240,72 360,72 C480,72 600,52 720,40 C840,28 960,24 1080,32 C1200,40 1320,60 1440,72 L1440,100 L0,100 Z"
+        fill={color}
+      />
+    </svg>
+  </div>
+);
+
 // Enhanced Bubble Animation
 const Bubble = ({ delay, position, size = 'small' }: { delay: number; position: number; size?: 'small' | 'medium' | 'large' }) => {
   const sizeClasses = {
@@ -40,13 +58,13 @@ const Bubble = ({ delay, position, size = 'small' }: { delay: number; position: 
       className={`absolute ${sizeClasses[size]} bg-white/25 rounded-full backdrop-blur-sm`}
       initial={{ y: 100, opacity: 0, scale: 0 }}
       animate={{ 
-        y: [-100, -200, -300], 
-        opacity: [0, 0.8, 0],
-        scale: [0, 1, 0.8, 0],
-        x: [0, 40, -30, 20, 0]
+        y: [-60, -140, -220], 
+        opacity: [0, 0.7, 0],
+        scale: [0, 1, 0.85, 0],
+        x: [0, 20, -15, 10, 0]
       }}
       transition={{ 
-        duration: 12,
+        duration: 20,
         delay,
         repeat: Infinity,
         ease: "easeInOut"
@@ -60,9 +78,9 @@ const Bubble = ({ delay, position, size = 'small' }: { delay: number; position: 
 };
 
 // Fish Animation
-const SwimmingFish = () => (
+const SwimmingFish = ({ count = 2, reduced = false }: { count?: number; reduced?: boolean }) => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none">
-    {[...Array(3)].map((_, i) => (
+    {reduced ? null : [...Array(count)].map((_, i) => (
       <motion.div
         key={i}
         className="absolute"
@@ -72,7 +90,7 @@ const SwimmingFish = () => (
           y: [`${50 + i * 5}%`, `${45 + i * 5}%`, `${55 + i * 5}%`, `${48 + i * 5}%`, `${50 + i * 5}%`]
         }}
         transition={{
-          duration: 25 + i * 3,
+          duration: 36 + i * 6,
           delay: i * 4,
           repeat: Infinity,
           ease: "linear"
@@ -85,6 +103,7 @@ const SwimmingFish = () => (
 );
 
 export default function HomePage() {
+  const prefersReducedMotion = useReducedMotion();
   const featuresRef = useRef(null);
   const aboutRef = useRef(null);
   const testimonialsRef = useRef(null);
@@ -94,8 +113,9 @@ export default function HomePage() {
   const [bubblePositions, setBubblePositions] = useState<number[]>([]);
   
   useEffect(() => {
-    setBubblePositions(Array.from({ length: 25 }, () => Math.random() * 100));
-  }, []);
+    const count = prefersReducedMotion ? 0 : 14;
+    setBubblePositions(Array.from({ length: count }, () => Math.random() * 100));
+  }, [prefersReducedMotion]);
   
   const featuresInView = useInView(featuresRef, { once: true });
   const aboutInView = useInView(aboutRef, { once: true });
@@ -142,7 +162,7 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-screen relative overflow-hidden" style={{ backgroundColor: 'rgb(225, 217, 203)' }}>
+  <div className="min-h-screen relative overflow-hidden sand-section">
       
       {/* HERO SECTION - Framer Style */}
       <section className="relative min-h-screen flex items-center overflow-hidden pt-20" id="hero">
@@ -154,7 +174,7 @@ export default function HomePage() {
         
         {/* Floating Elements */}
         <div className="absolute inset-0">
-          <SwimmingFish />
+          <SwimmingFish reduced={!!prefersReducedMotion} />
           {bubblePositions.map((position, i) => (
             <Bubble 
               key={i} 
@@ -249,20 +269,25 @@ export default function HomePage() {
             >
               <div className="relative">
                 {/* Shadow Effect */}
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-cyan-900/30 rounded-t-full transform translate-y-4 blur-lg scale-105"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-cyan-900/30 rounded-3xl transform translate-y-4 blur-lg scale-105"></div>
                 
                 {/* Archway Border Container */}
-                <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-t-full border-2 border-white/20 overflow-hidden">
+                <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-3xl border-2 border-white/20 overflow-hidden">
                   {/* Background Layer */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/20 to-blue-600/20 rounded-t-full"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/20 to-blue-600/20 rounded-3xl"></div>
                   
                   {/* Main Visual */}
-                  <div className="relative aspect-[4/5] max-w-md mx-auto rounded-t-full overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-sky-400/30 via-cyan-500/20 to-blue-600/30"></div>
-                    {/* Placeholder for diving image */}
-                    <div className="absolute inset-0 flex items-center justify-center text-white/60 text-6xl">
-                      <Fish className="animate-pulse" />
-                    </div>
+                  <div className="relative aspect-[4/5] max-w-md mx-auto rounded-3xl overflow-hidden">
+                    {/* Hero Diving Photo */}
+                    <div 
+                      className="absolute inset-0 bg-cover bg-center"
+                      style={{
+                        backgroundImage: 'url(https://images.unsplash.com/photo-1534088568595-a066f410bcda?q=80&w=1600&auto=format&fit=crop)'
+                      }}
+                      aria-label="Scuba diver exploring coral reef"
+                    />
+                    {/* Soft overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-blue-900/50 via-transparent to-transparent"></div>
                     {/* Coral Decorations */}
                     <CoralIcon className="absolute bottom-10 left-6 h-12 w-12 text-coral-400/40" />
                     <CoralIcon className="absolute bottom-16 right-8 h-8 w-8 text-coral-500/30" />
@@ -274,11 +299,14 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Wave divider to transition into next section (sand color) */}
+      <WaveDivider color="rgb(225, 217, 203)" />
+
       {/* MAIN CONTENT */}
       <main>
         
         {/* BENEFITS SECTION - Framer Style */}
-        <section ref={featuresRef} className="py-24 relative" style={{ backgroundColor: 'rgb(225, 217, 203)' }}>
+  <section ref={featuresRef} className="py-24 relative sand-section">
           <div className="container mx-auto px-4">
             <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
               {benefits.map((benefit, index) => (
@@ -316,7 +344,7 @@ export default function HomePage() {
 
         {/* ABOUT SECTION - Framer Style */}
         <section ref={aboutRef} className="py-24 relative" id="about">
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-50 via-blue-50/30 to-slate-50"></div>
+          <div className="absolute inset-0 sand-gradient"></div>
           
           <div className="container mx-auto px-4 relative z-10">
             <div className="grid lg:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
@@ -329,15 +357,16 @@ export default function HomePage() {
                 transition={{ duration: 1.2 }}
               >
                 <div className="relative">
-                  {/* Large Border Frame - Framer Style */}
-                  <div className="border-2 border-sky-300 rounded-t-full rounded-b-lg overflow-hidden shadow-xl">
-                    <div className="border border-sky-200 rounded-t-full rounded-b-lg overflow-hidden">
-                      <div className="aspect-[4/5] bg-gradient-to-br from-sky-100 to-cyan-100 flex items-center justify-center">
-                        {/* Placeholder for instructor/diving image */}
-                        <div className="text-sky-400 text-8xl">
-                          <Users />
-                        </div>
-                      </div>
+                  {/* Large Border Frame with Underwater Instructor Photo */}
+                  <div className="border-2 border-sky-300 rounded-3xl overflow-hidden shadow-xl">
+                    <div className="border border-sky-200 rounded-3xl overflow-hidden">
+                      <div 
+                        className="aspect-[4/5] bg-cover bg-center"
+                        style={{
+                          backgroundImage: 'url(https://images.unsplash.com/photo-1518599807935-37015b9cefcb?q=80&w=1200&auto=format&fit=crop)'
+                        }}
+                        aria-label="Instructor guiding student underwater"
+                      />
                     </div>
                   </div>
                 </div>
@@ -449,10 +478,10 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* GALLERY SECTION - Auto-scrolling */}
-        <section className="py-16 relative overflow-hidden" style={{ backgroundColor: 'rgb(239, 236, 229)' }}>
+    {/* GALLERY SECTION - Masonry */}
+  <section className="py-16 relative overflow-hidden sand-section">
           <div className="container mx-auto px-4">
-            <motion.div
+              <motion.div
               className="text-center mb-12"
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -479,145 +508,88 @@ export default function HomePage() {
             </motion.div>
           </div>
           
-          {/* Auto-scrolling gallery */}
-          <div className="relative">
-            <div className="overflow-hidden">
-              <motion.div
-                className="flex gap-6 w-max"
-                animate={{
-                  x: [0, -1600]
-                }}
-                transition={{
-                  duration: 30,
-                  repeat: Infinity,
-                  ease: "linear"
-                }}
-              >
-                {/* Gallery Items */}
-                {[
-                  { 
-                    id: 1, 
-                    title: "Coral Gardens", 
-                    desc: "Vibrant coral formations in crystal clear waters", 
-                    color: "from-cyan-400 to-blue-500",
-                    image: "https://images.unsplash.com/photo-1583212292454-1fe6229603b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                  },
-                  { 
-                    id: 2, 
-                    title: "Tropical Fish", 
-                    desc: "Schools of colorful tropical fish", 
-                    color: "from-sky-400 to-cyan-500",
-                    image: "https://images.unsplash.com/photo-1544552866-d3ed42536cfd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                  },
-                  { 
-                    id: 3, 
-                    title: "Sea Turtle", 
-                    desc: "Gentle giants of the ocean", 
-                    color: "from-blue-400 to-indigo-500",
-                    image: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                  },
-                  { 
-                    id: 4, 
-                    title: "Reef Diving", 
-                    desc: "Exploring pristine coral reefs", 
-                    color: "from-teal-400 to-cyan-500",
-                    image: "https://images.unsplash.com/photo-1582967788606-a171c1080cb0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                  },
-                  { 
-                    id: 5, 
-                    title: "Deep Blue", 
-                    desc: "Crystal clear underwater views", 
-                    color: "from-indigo-500 to-blue-600",
-                    image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                  },
-                  { 
-                    id: 6, 
-                    title: "Scuba Adventure", 
-                    desc: "Professional diving experiences", 
-                    color: "from-sky-500 to-blue-600",
-                    image: "https://images.unsplash.com/photo-1582845512264-dbb30cd05e8e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                  },
-                  { 
-                    id: 7, 
-                    title: "Marine Life", 
-                    desc: "Diverse underwater ecosystem", 
-                    color: "from-cyan-500 to-teal-500",
-                    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                  },
-                  { 
-                    id: 8, 
-                    title: "Underwater World", 
-                    desc: "Magical underwater landscapes", 
-                    color: "from-blue-500 to-cyan-600",
-                    image: "https://images.unsplash.com/photo-1588481123261-9b6a0cb5f584?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                  },
-                  // Duplicate for seamless loop
-                  { 
-                    id: 9, 
-                    title: "Coral Gardens", 
-                    desc: "Vibrant coral formations in crystal clear waters", 
-                    color: "from-cyan-400 to-blue-500",
-                    image: "https://images.unsplash.com/photo-1583212292454-1fe6229603b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                  },
-                  { 
-                    id: 10, 
-                    title: "Tropical Fish", 
-                    desc: "Schools of colorful tropical fish", 
-                    color: "from-sky-400 to-cyan-500",
-                    image: "https://images.unsplash.com/photo-1544552866-d3ed42536cfd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                  },
-                  { 
-                    id: 11, 
-                    title: "Sea Turtle", 
-                    desc: "Gentle giants of the ocean", 
-                    color: "from-blue-400 to-indigo-500",
-                    image: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                  },
-                  { 
-                    id: 12, 
-                    title: "Reef Diving", 
-                    desc: "Exploring pristine coral reefs", 
-                    color: "from-teal-400 to-cyan-500",
-                    image: "https://images.unsplash.com/photo-1582967788606-a171c1080cb0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                  },
-                ].map((item, index) => (
-                  <motion.div
-                    key={`${item.id}-${index}`}
-                    className="flex-shrink-0 w-80 h-64 rounded-2xl overflow-hidden relative group cursor-pointer shadow-xl"
-                    whileHover={{ scale: 1.05, y: -8 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {/* Background Image */}
-                    <div 
-                      className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                      style={{
-                        backgroundImage: `url(${item.image})`
-                      }}
-                    ></div>
-                    
-                    {/* Gradient Overlays */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-40`}></div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20"></div>
-                    
-                    {/* Content overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
-                      <h3 className="text-xl font-semibold text-white mb-2 drop-shadow-lg">{item.title}</h3>
-                      <p className="text-white/90 text-sm font-light drop-shadow-md">{item.desc}</p>
-                    </div>
-                    
-                    {/* Hover effect overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-sky-600/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20"></div>
-                    
-                    {/* Decorative corner accent */}
-                    <div className="absolute top-4 right-4 w-2 h-2 bg-white/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30"></div>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </div>
-            
-            {/* Gradient overlays for fade effect */}
-            <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-[rgb(239,236,229)] to-transparent pointer-events-none z-10"></div>
-            <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-[rgb(239,236,229)] to-transparent pointer-events-none z-10"></div>
+          {/* Masonry gallery */}
+          <div className="relative container mx-auto px-4">
+            {(() => {
+              const items = [
+                {
+                  id: 1,
+                  title: "Coral Gardens",
+                  desc: "Vibrant coral formations in crystal clear waters",
+                  img: "https://images.unsplash.com/photo-1583212292454-1fe6229603b7?auto=format&fit=crop&w=1200&q=80",
+                  height: 520,
+                  url: "#",
+                },
+                {
+                  id: 2,
+                  title: "Tropical Fish",
+                  desc: "Schools of colorful tropical fish",
+                  img: "https://images.unsplash.com/photo-1544552866-d3ed42536cfd?auto=format&fit=crop&w=1200&q=80",
+                  height: 420,
+                  url: "#",
+                },
+                {
+                  id: 3,
+                  title: "Sea Turtle",
+                  desc: "Gentle giants of the ocean",
+                  img: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?auto=format&fit=crop&w=1200&q=80",
+                  height: 640,
+                  url: "#",
+                },
+                {
+                  id: 4,
+                  title: "Reef Diving",
+                  desc: "Exploring pristine coral reefs",
+                  img: "https://images.unsplash.com/photo-1582967788606-a171c1080cb0?auto=format&fit=crop&w=1200&q=80",
+                  height: 460,
+                  url: "#",
+                },
+                {
+                  id: 5,
+                  title: "Deep Blue",
+                  desc: "Crystal clear underwater views",
+                  img: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80",
+                  height: 380,
+                  url: "#",
+                },
+                {
+                  id: 6,
+                  title: "Scuba Adventure",
+                  desc: "Professional diving experiences",
+                  img: "https://images.unsplash.com/photo-1582845512264-dbb30cd05e8e?auto=format&fit=crop&w=1200&q=80",
+                  height: 500,
+                  url: "#",
+                },
+                {
+                  id: 7,
+                  title: "Marine Life",
+                  desc: "Diverse underwater ecosystem",
+                  img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80",
+                  height: 420,
+                  url: "#",
+                },
+                {
+                  id: 8,
+                  title: "Underwater World",
+                  desc: "Magical underwater landscapes",
+                  img: "https://images.unsplash.com/photo-1588481123261-9b6a0cb5f584?auto=format&fit=crop&w=1200&q=80",
+                  height: 560,
+                  url: "#",
+                },
+              ];
+              return (
+                <Masonry
+                  items={items}
+                  animateFrom="bottom"
+                  stagger={0.06}
+                  duration={0.6}
+                  blurToFocus
+                  scaleOnHover
+                  hoverScale={0.97}
+                  colorShiftOnHover
+                />
+              );
+            })()}
           </div>
           
           {/* Gallery description */}
@@ -637,8 +609,11 @@ export default function HomePage() {
           </div>
         </section>
 
+  {/* Wave divider between gallery and testimonials */}
+  <WaveDivider color="rgb(239, 236, 229)" />
+
         {/* TESTIMONIALS SECTION - Framer Style */}
-        <section ref={testimonialsRef} className="py-24 relative" style={{ backgroundColor: 'rgb(239, 236, 229)' }}>
+  <section ref={testimonialsRef} className="py-24 relative sand-section">
           <div className="container mx-auto px-4">
             <motion.div
               className="text-center mb-16"
@@ -697,7 +672,7 @@ export default function HomePage() {
         </section>
 
         {/* CTA SECTION - Framer Style */}
-        <section ref={ctaRef} className="py-24 relative overflow-hidden">
+  <section ref={ctaRef} className="py-24 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-sky-500 via-blue-600 to-cyan-600"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-blue-900/30 via-transparent to-sky-300/20"></div>
           
@@ -795,6 +770,9 @@ export default function HomePage() {
             </motion.div>
           </div>
         </section>
+
+  {/* Wave divider into footer background */}
+  <WaveDivider color="#f8fafc" flip className="-mt-[1px]" />
       </main>
     </div>
   );

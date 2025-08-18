@@ -80,7 +80,7 @@ const values = [
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-12 pt-28 relative overflow-hidden">
+    <div className="min-h-screen sand-section py-12 pt-28 relative overflow-hidden">
       {/* Animated Background Elements */}
       <CoralIcon className="absolute top-20 right-10 h-32 w-32 text-coral-400/10" />
       <CoralIcon className="absolute bottom-20 left-10 h-24 w-24 text-coral-500/10" />
@@ -164,9 +164,16 @@ export default function AboutPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.6, duration: 0.6 }}
               >
-                <div className="w-80 h-80 mx-auto rounded-full bg-gradient-to-br from-blue-400 to-cyan-500 p-2">
-                  <div className="w-full h-full rounded-full bg-slate-100 flex items-center justify-center">
-                    <div className="text-6xl">🤿</div>
+                <div className="w-80 h-80 mx-auto rounded-full bg-gradient-to-br from-blue-400 to-cyan-500 p-2 overflow-hidden">
+                  <div className="w-full h-full rounded-full overflow-hidden">
+                    <div
+                      className="w-full h-full bg-cover bg-center"
+                      style={{
+                        backgroundImage:
+                          'url(https://images.unsplash.com/photo-1582845512264-dbb30cd05e8e?auto=format&fit=crop&w=1200&q=80)'
+                      }}
+                      aria-label="Diver underwater"
+                    />
                   </div>
                 </div>
                 <motion.div
@@ -176,21 +183,15 @@ export default function AboutPage() {
                 >
                   <Fish className="h-6 w-6 text-white" />
                 </motion.div>
-                <motion.div
-                  className="absolute -bottom-4 -left-4 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full p-3"
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ duration: 2, repeat: Infinity, delay: 1 }}
-                >
-                  <Waves className="h-6 w-6 text-white" />
-                </motion.div>
+                {/* Removed wave accent to keep theme consistent */}
               </motion.div>
             </div>
           </div>
         </motion.div>
 
         {/* Achievements Grid */}
-        <motion.div
-          className="mb-16"
+  <motion.div
+    className="mb-16"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.8 }}
@@ -209,7 +210,7 @@ export default function AboutPage() {
                 whileHover={{ scale: 1.05 }}
               >
                 <motion.div
-                  className={`w-16 h-16 rounded-full bg-gradient-to-r ${achievement.color} mx-auto mb-4 flex items-center justify-center text-white`}
+      className={`w-16 h-16 rounded-full bg-gradient-to-r ${achievement.color} mx-auto mb-4 flex items-center justify-center text-white`}
                   animate={{ scale: [1, 1.05, 1] }}
                   transition={{ duration: 3, repeat: Infinity, delay: index * 0.5 }}
                 >
@@ -271,7 +272,7 @@ export default function AboutPage() {
             {certifications.map((cert, index) => (
               <motion.div
                 key={cert}
-                className="flex items-center p-4 bg-gradient-to-r from-slate-50 to-blue-50 rounded-lg"
+                className="flex items-center p-4 sand-gradient rounded-lg"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 1 + index * 0.1, duration: 0.5 }}
@@ -290,20 +291,14 @@ export default function AboutPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1, duration: 0.8 }}
         >
-          <div className="bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500 rounded-2xl p-8 text-white">
+          <div className="bg-gradient-to-r from-blue-600 via-cyan-600 to-sky-600 rounded-2xl p-8 text-white">
             <h2 className="text-3xl font-bold mb-6">Our Mission</h2>
             <p className="text-xl leading-relaxed">
               &ldquo;To provide safe, professional, and inspiring diving experiences that foster 
               a deep connection with the ocean while promoting marine conservation and 
               responsible diving practices in the pristine waters of the Andaman Islands.&rdquo;
             </p>
-            <motion.div
-              className="mt-8"
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              <div className="text-4xl">🌊</div>
-            </motion.div>
+            {/* Removed wave emoji for a cleaner footer */}
           </div>
         </motion.div>
       </div>
