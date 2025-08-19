@@ -27,12 +27,13 @@
     "jspdf": "^3.0.1",
     "lucide-react": "^0.532.0",
     "next": "15.4.4",
-    "next-auth": "^4.24.11",
+    "next-auth": "^4.24.7",
     "prisma": "^6.12.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.61.1",
     "react-intersection-observer": "^9.16.0",
+    "wrangler": "^4.31.0",
     "zod": "^4.0.11"
   },
   "devDependencies": {

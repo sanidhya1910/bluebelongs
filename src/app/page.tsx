@@ -87,11 +87,37 @@ export default function HomePage() {
   const aboutRef = useRef(null);
   const testimonialsRef = useRef(null);
   const ctaRef = useRef(null);
+  // Hero image handling: default + optional localStorage override, with Unsplash normalization
+  const defaultHero = 'https://images.unsplash.com/photo-1545762374-d18079617da8?q=80&w=1548&auto=format&fit=crop';
+  const [heroImageUrl, setHeroImageUrl] = useState<string>(defaultHero);
+  // About image handling: default + optional localStorage override
+  const defaultAbout = 'https://images.unsplash.com/photo-1496161341410-90ce6ad8b390?q=80&w=1548&auto=format&fit=crop';
+  const [aboutImageUrl, setAboutImageUrl] = useState<string>(defaultAbout);
+
+  // Normalize image URLs (handles Unsplash page URLs)
+  const normalizeImageUrl = (url: string | null | undefined, fallback: string): string => {
+    try {
+      if (!url) return fallback;
+      const u = new URL(url);
+      // If it's an Unsplash photo page, convert to a direct source URL using the photo ID at the end
+      if (u.hostname.includes('unsplash.com') && u.pathname.includes('/photos/')) {
+        const parts = u.pathname.split('/');
+        const last = parts[parts.length - 1];
+        const id = (last?.split('-').pop() || last || '').replace(/[^A-Za-z0-9_-]/g, '');
+        if (id) {
+          // Prefer direct CDN URL to avoid redirect-based ORB blocks
+          return `https://images.unsplash.com/photo-${id}?q=80&w=1600&auto=format&fit=crop`;
+        }
+      }
+      return url;
+    } catch {
+      return fallback;
+    }
+  };
   // Default masonry items
   const defaultMasonryItems = [
     { id: 1, title: 'Coral Gardens', desc: 'Vibrant coral formations in crystal clear waters', img: 'https://images.unsplash.com/photo-1583212292454-1fe6229603b7?auto=format&fit=crop&w=1200&q=80', height: 520, url: '#' },
     { id: 2, title: 'Tropical Fish', desc: 'Schools of colorful tropical fish', img: 'https://images.unsplash.com/photo-1544552866-d3ed42536cfd?auto=format&fit=crop&w=1200&q=80', height: 420, url: '#' },
-    { id: 3, title: 'Sea Turtle', desc: 'Gentle giants of the ocean', img: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?auto=format&fit=crop&w=1200&q=80', height: 640, url: '#' },
     { id: 4, title: 'Reef Diving', desc: 'Exploring pristine coral reefs', img: 'https://images.unsplash.com/photo-1582967788606-a171c1080cb0?auto=format&fit=crop&w=1200&q=80', height: 460, url: '#' },
     { id: 5, title: 'Deep Blue', desc: 'Crystal clear underwater views', img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80', height: 380, url: '#' },
     { id: 6, title: 'Scuba Adventure', desc: 'Professional diving experiences', img: 'https://images.unsplash.com/photo-1582845512264-dbb30cd05e8e?auto=format&fit=crop&w=1200&q=80', height: 500, url: '#' },
@@ -99,14 +125,30 @@ export default function HomePage() {
     { id: 8, title: 'Underwater World', desc: 'Magical underwater landscapes', img: 'https://images.unsplash.com/photo-1588481123261-9b6a0cb5f584?auto=format&fit=crop&w=1200&q=80', height: 560, url: '#' },
   ];
   const [masonryItems, setMasonryItems] = useState(defaultMasonryItems);
-  
   // Generate bubble positions
   const [bubblePositions, setBubblePositions] = useState<number[]>([]);
-  
+
+  // Load optional About image override from localStorage
   useEffect(() => {
-    const count = prefersReducedMotion ? 0 : 14;
-    setBubblePositions(Array.from({ length: count }, () => Math.random() * 100));
-  }, [prefersReducedMotion]);
+    try {
+      const raw = typeof window !== 'undefined' ? localStorage.getItem('aboutImageUrl') : null;
+      if (raw) setAboutImageUrl(normalizeImageUrl(raw, defaultAbout));
+    } catch {}
+  }, []);
+  
+  // Generate bubble positions for floating bubbles in hero
+  useEffect(() => {
+    const count = 18;
+    setBubblePositions(Array.from({ length: count }, () => Math.floor(Math.random() * 100)));
+  }, []);
+
+  // Load optional Hero image override from localStorage
+  useEffect(() => {
+    try {
+      const raw = typeof window !== 'undefined' ? localStorage.getItem('heroImageUrl') : null;
+      if (raw) setHeroImageUrl(normalizeImageUrl(raw, defaultHero));
+    } catch {}
+  }, []);
 
   // Load masonry items from API with localStorage fallback
   useEffect(() => {
@@ -243,7 +285,7 @@ export default function HomePage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.35, duration: 0.6 }}
               >
-                At BlueBelong, we guide you into Andaman’s blue — not to conquer it, but to reconnect. Calm. Confident. Connected.
+                At BlueBelong, we guide you into Andaman&apos;s blue — not to conquer it, but to reconnect. Calm. Confident. Connected.
               </motion.p>
               
               <motion.div
@@ -290,9 +332,7 @@ export default function HomePage() {
                     {/* Hero Diving Photo */}
                     <div 
                       className="absolute inset-0 bg-cover bg-center"
-                      style={{
-                        backgroundImage: 'url(https://images.unsplash.com/photo-1534088568595-a066f410bcda?q=80&w=1600&auto=format&fit=crop)'
-                      }}
+                      style={{ backgroundImage: `url(${heroImageUrl})` }}
                       aria-label="Scuba diver exploring coral reef"
                     />
                     {/* Soft overlay */}
@@ -369,9 +409,7 @@ export default function HomePage() {
                     <div className="border border-sky-200 rounded-3xl overflow-hidden">
                       <div 
                         className="aspect-[4/5] bg-cover bg-center"
-                        style={{
-                          backgroundImage: 'url(https://images.unsplash.com/photo-1518599807935-37015b9cefcb?q=80&w=1200&auto=format&fit=crop)'
-                        }}
+                        style={{ backgroundImage: `url(${aboutImageUrl})` }}
                         aria-label="Instructor guiding student underwater"
                       />
                     </div>

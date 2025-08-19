@@ -79,6 +79,14 @@ body {
   p {
     @apply leading-relaxed;
   }
+
+  /* Improve default readability of form controls */
+  input, select, textarea {
+    @apply text-slate-800 placeholder-slate-500;
+  }
+  ::placeholder {
+    @apply text-slate-500 opacity-100; /* ensure visible placeholder */
+  }
 }
 
 @layer components {
@@ -405,4 +413,16 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #0284c7, #0369a1);
+}
+
+/* Accessibility: improve readability of form controls across the app */
+input, select, textarea {
+  color: #0f172a; /* slate-900-ish */
+}
+::placeholder {
+  color: #475569; /* slate-600 */
+  opacity: 1; /* ensure visible */
+}
+select option {
+  color: #0f172a;
 }
