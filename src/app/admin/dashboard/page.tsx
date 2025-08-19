@@ -199,19 +199,64 @@ export default function AdminDashboard() {
     }
   };
 
-  const saveGalleryItem = (item: Omit<GalleryItem, 'id'> & { id?: string | number }) => {
-    const id = item.id ?? Date.now();
-    const updated = [...galleryItems.filter(g => g.id !== id), { ...item, id }];
-    setGalleryItems(updated);
-    localStorage.setItem('masonryGallery', JSON.stringify(updated));
-    setEditingGallery(null);
-    setShowGalleryForm(false);
+  const saveGalleryItem = async (item: Omit<GalleryItem, 'id'> & { id?: string | number }) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) throw new Error('Not authenticated');
+
+      const isUpdate = Boolean(item.id);
+      const url = isUpdate
+        ? `https://bluebelong-api.blackburn1910.workers.dev/api/admin/gallery/${String(item.id)}`
+        : 'https://bluebelong-api.blackburn1910.workers.dev/api/admin/gallery';
+      const method = isUpdate ? 'PUT' : 'POST';
+      const body = JSON.stringify({
+        title: item.title,
+        desc: item.desc,
+        img: item.img,
+        height: item.height,
+        url: item.url || undefined,
+      });
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body,
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || err.message || 'Failed to save gallery item');
+      }
+
+      // Refresh from server to get canonical list and IDs
+      await loadGallery();
+      setEditingGallery(null);
+      setShowGalleryForm(false);
+    } catch (e: any) {
+      alert(e?.message || 'Failed to save gallery item');
+    }
   };
 
-  const deleteGalleryItem = (id: GalleryItem['id']) => {
-    const updated = galleryItems.filter(g => g.id !== id);
-    setGalleryItems(updated);
-    localStorage.setItem('masonryGallery', JSON.stringify(updated));
+  const deleteGalleryItem = async (id: GalleryItem['id']) => {
+    if (!confirm('Delete this gallery item?')) return;
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) throw new Error('Not authenticated');
+      const res = await fetch(`https://bluebelong-api.blackburn1910.workers.dev/api/admin/gallery/${String(id)}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || err.message || 'Failed to delete gallery item');
+      }
+      await loadGallery();
+    } catch (e: any) {
+      alert(e?.message || 'Failed to delete gallery item');
+    }
   };
 
   const loadCourses = async () => {
@@ -1559,7 +1604,7 @@ export default function AdminDashboard() {
                 <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
                   <h3 className="text-lg font-semibold text-slate-800 mb-4">{editingGallery ? 'Edit' : 'Add'} Gallery Item</h3>
                   <form
-                    onSubmit={(e) => {
+                    onSubmit={async (e) => {
                       e.preventDefault();
                       const fd = new FormData(e.currentTarget as HTMLFormElement);
                       const payload = {
@@ -1570,7 +1615,7 @@ export default function AdminDashboard() {
                         height: Number(fd.get('height') || 400),
                         url: String(fd.get('url') || ''),
                       } as GalleryItem;
-                      saveGalleryItem(payload);
+                      await saveGalleryItem(payload);
                     }}
                     className="grid grid-cols-1 md:grid-cols-2 gap-4"
                   >
