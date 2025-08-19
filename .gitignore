@@ -43,3 +43,6 @@ next-env.d.ts
 page.html
 
 /.wrangler
+
+# deployment scripts
+deploy.sh

@@ -87,6 +87,18 @@ export default function HomePage() {
   const aboutRef = useRef(null);
   const testimonialsRef = useRef(null);
   const ctaRef = useRef(null);
+  // Default masonry items
+  const defaultMasonryItems = [
+    { id: 1, title: 'Coral Gardens', desc: 'Vibrant coral formations in crystal clear waters', img: 'https://images.unsplash.com/photo-1583212292454-1fe6229603b7?auto=format&fit=crop&w=1200&q=80', height: 520, url: '#' },
+    { id: 2, title: 'Tropical Fish', desc: 'Schools of colorful tropical fish', img: 'https://images.unsplash.com/photo-1544552866-d3ed42536cfd?auto=format&fit=crop&w=1200&q=80', height: 420, url: '#' },
+    { id: 3, title: 'Sea Turtle', desc: 'Gentle giants of the ocean', img: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?auto=format&fit=crop&w=1200&q=80', height: 640, url: '#' },
+    { id: 4, title: 'Reef Diving', desc: 'Exploring pristine coral reefs', img: 'https://images.unsplash.com/photo-1582967788606-a171c1080cb0?auto=format&fit=crop&w=1200&q=80', height: 460, url: '#' },
+    { id: 5, title: 'Deep Blue', desc: 'Crystal clear underwater views', img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80', height: 380, url: '#' },
+    { id: 6, title: 'Scuba Adventure', desc: 'Professional diving experiences', img: 'https://images.unsplash.com/photo-1582845512264-dbb30cd05e8e?auto=format&fit=crop&w=1200&q=80', height: 500, url: '#' },
+    { id: 7, title: 'Marine Life', desc: 'Diverse underwater ecosystem', img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80', height: 420, url: '#' },
+    { id: 8, title: 'Underwater World', desc: 'Magical underwater landscapes', img: 'https://images.unsplash.com/photo-1588481123261-9b6a0cb5f584?auto=format&fit=crop&w=1200&q=80', height: 560, url: '#' },
+  ];
+  const [masonryItems, setMasonryItems] = useState(defaultMasonryItems);
   
   // Generate bubble positions
   const [bubblePositions, setBubblePositions] = useState<number[]>([]);
@@ -95,6 +107,35 @@ export default function HomePage() {
     const count = prefersReducedMotion ? 0 : 14;
     setBubblePositions(Array.from({ length: count }, () => Math.random() * 100));
   }, [prefersReducedMotion]);
+
+  // Load masonry items from API with localStorage fallback
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('https://bluebelong-api.blackburn1910.workers.dev/api/gallery', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          const apiItems = Array.isArray(data.items) ? data.items : [];
+          if (!cancelled && apiItems.length) {
+            setMasonryItems(apiItems);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('masonryGallery', JSON.stringify(apiItems));
+            }
+            return;
+          }
+        }
+      } catch {}
+      if (typeof window !== 'undefined') {
+        try {
+          const raw = localStorage.getItem('masonryGallery');
+          const parsed = raw ? JSON.parse(raw) : [];
+          if (!cancelled && Array.isArray(parsed) && parsed.length) setMasonryItems(parsed);
+        } catch {}
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
   
   const featuresInView = useInView(featuresRef, { once: true });
   const aboutInView = useInView(aboutRef, { once: true });
@@ -476,58 +517,16 @@ export default function HomePage() {
           
           {/* Masonry gallery */}
           <div className="relative container mx-auto px-4">
-            {(() => {
-              const defaultItems = [
-                { id: 1, title: 'Coral Gardens', desc: 'Vibrant coral formations in crystal clear waters', img: 'https://images.unsplash.com/photo-1583212292454-1fe6229603b7?auto=format&fit=crop&w=1200&q=80', height: 520, url: '#' },
-                { id: 2, title: 'Tropical Fish', desc: 'Schools of colorful tropical fish', img: 'https://images.unsplash.com/photo-1544552866-d3ed42536cfd?auto=format&fit=crop&w=1200&q=80', height: 420, url: '#' },
-                { id: 3, title: 'Sea Turtle', desc: 'Gentle giants of the ocean', img: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?auto=format&fit=crop&w=1200&q=80', height: 640, url: '#' },
-                { id: 4, title: 'Reef Diving', desc: 'Exploring pristine coral reefs', img: 'https://images.unsplash.com/photo-1582967788606-a171c1080cb0?auto=format&fit=crop&w=1200&q=80', height: 460, url: '#' },
-                { id: 5, title: 'Deep Blue', desc: 'Crystal clear underwater views', img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80', height: 380, url: '#' },
-                { id: 6, title: 'Scuba Adventure', desc: 'Professional diving experiences', img: 'https://images.unsplash.com/photo-1582845512264-dbb30cd05e8e?auto=format&fit=crop&w=1200&q=80', height: 500, url: '#' },
-                { id: 7, title: 'Marine Life', desc: 'Diverse underwater ecosystem', img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80', height: 420, url: '#' },
-                { id: 8, title: 'Underwater World', desc: 'Magical underwater landscapes', img: 'https://images.unsplash.com/photo-1588481123261-9b6a0cb5f584?auto=format&fit=crop&w=1200&q=80', height: 560, url: '#' },
-              ];
-              const [items, setItems] = useState(defaultItems);
-              useEffect(() => {
-                let cancelled = false;
-                (async () => {
-                  try {
-                    const res = await fetch('https://bluebelong-api.blackburn1910.workers.dev/api/gallery', { cache: 'no-store' });
-                    if (res.ok) {
-                      const data = await res.json();
-                      const apiItems = Array.isArray(data.items) ? data.items : [];
-                      if (!cancelled && apiItems.length) {
-                        setItems(apiItems);
-                        if (typeof window !== 'undefined') {
-                          localStorage.setItem('masonryGallery', JSON.stringify(apiItems));
-                        }
-                        return;
-                      }
-                    }
-                  } catch {}
-                  if (typeof window !== 'undefined') {
-                    try {
-                      const raw = localStorage.getItem('masonryGallery');
-                      const parsed = raw ? JSON.parse(raw) : [];
-                      if (!cancelled && Array.isArray(parsed) && parsed.length) setItems(parsed);
-                    } catch {}
-                  }
-                })();
-                return () => { cancelled = true; };
-              }, []);
-              return (
-                <Masonry
-                  items={items}
-                  animateFrom="bottom"
-                  stagger={0.06}
-                  duration={0.6}
-                  blurToFocus
-                  scaleOnHover
-                  hoverScale={0.97}
-                  colorShiftOnHover
-                />
-              );
-            })()}
+            <Masonry
+              items={masonryItems}
+              animateFrom="bottom"
+              stagger={0.06}
+              duration={0.6}
+              blurToFocus
+              scaleOnHover
+              hoverScale={0.97}
+              colorShiftOnHover
+            />
           </div>
           
           {/* Gallery description */}

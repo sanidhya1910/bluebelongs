@@ -1432,11 +1432,15 @@ export default function AdminDashboard() {
                       {blogs.map((blog) => (
             <tr key={blog.id} className="border-b border-slate-100 hover:bg-sand-50">
                           <td className="p-4">
-                            <img
-                              src={blog.image}
-                              alt={blog.title}
-                              className="w-16 h-12 object-cover rounded"
-                            />
+                            <div className="relative w-16 h-12">
+                              <Image
+                                src={blog.image}
+                                alt={blog.title}
+                                fill
+                                sizes="64px"
+                                className="object-cover rounded"
+                              />
+                            </div>
                           </td>
                           <td className="p-4">
                             <div>
