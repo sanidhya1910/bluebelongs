@@ -134,7 +134,10 @@ const Masonry = ({
     return items.map((child) => {
       const col = colHeights.indexOf(Math.min(...colHeights));
       const x = col * (columnWidth + gap);
-      const height = child.height / 2;
+      const rawHeight = Number(child?.height);
+      const height = Number.isFinite(rawHeight) && rawHeight > 0
+        ? rawHeight / 2
+        : Math.max(220, Math.round(columnWidth * 0.75)); // Fallback ~4:3 ratio
       const y = colHeights[col];
 
       colHeights[col] += height + gap;
@@ -217,18 +220,24 @@ const Masonry = ({
   // Adjust container height to fit positioned children
   useLayoutEffect(() => {
     if (!containerRef.current || !grid?.length) return;
-    const maxBottom = Math.max(...grid.map((it) => it.y + it.h));
+    const maxBottom = Math.max(
+      ...grid.map((it) => {
+        const y = Number.isFinite(it?.y) ? it.y : 0;
+        const h = Number.isFinite(it?.h) && it.h > 0 ? it.h : Math.round(((it?.w || 200) * 3) / 4);
+        return y + h;
+      })
+    );
     containerRef.current.style.height = `${Math.ceil(maxBottom)}px`;
   }, [grid, containerRef]);
 
   return (
     <div ref={containerRef} className="relative w-full">
-      {grid.map((item) => (
+      {grid.map((item, idx) => (
         <div
           key={item.id}
           data-key={item.id}
           className="absolute box-content cursor-pointer"
-          style={{ willChange: "transform, width, height, opacity" }}
+          style={{ willChange: "transform, width, height, opacity", zIndex: idx + 1 }}
           onClick={() => item.url && window.open(item.url, "_blank", "noopener")}
           onMouseEnter={(e) => handleMouseEnter(item.id, e.currentTarget)}
           onMouseLeave={(e) => handleMouseLeave(item.id, e.currentTarget)}

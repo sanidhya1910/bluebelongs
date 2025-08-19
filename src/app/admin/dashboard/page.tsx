@@ -77,6 +77,11 @@ type GalleryItem = {
   url?: string;
 };
 
+type ViewModalState =
+  | { type: 'booking'; data: Booking }
+  | { type: 'user'; data: User }
+  | { type: null; data: null };
+
 export default function AdminDashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -96,6 +101,8 @@ export default function AdminDashboard() {
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [editingGallery, setEditingGallery] = useState<GalleryItem | null>(null);
   const [showGalleryForm, setShowGalleryForm] = useState(false);
+  // Modal state for replacing browser alerts on "View" actions
+  const [viewModal, setViewModal] = useState<ViewModalState>({ type: null, data: null });
   const router = useRouter();
 
   const categoryOptions = [
@@ -684,6 +691,48 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen sand-section">
+      {/* View Details Modal */}
+      {viewModal.type && viewModal.data && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="view-modal-title">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setViewModal({ type: null, data: null })} />
+          <div className="relative z-10 w-full max-w-lg mx-4 rounded-2xl bg-white shadow-2xl border border-slate-200">
+            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+              <h3 id="view-modal-title" className="text-lg font-semibold text-slate-800">{viewModal.type === 'booking' ? 'Booking Details' : 'User Details'}</h3>
+              <button aria-label="Close" className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100" onClick={() => setViewModal({ type: null, data: null })}>✕</button>
+            </div>
+            <div className="px-6 py-5 text-slate-800">
+              {viewModal.type === 'booking' && (
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between"><span className="text-slate-600">Customer</span><span className="font-medium">{viewModal.data.name}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-600">Email</span><span className="font-medium break-all">{viewModal.data.email}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-600">Phone</span><span className="font-medium">{viewModal.data.phone || '—'}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-600">Course</span><span className="font-medium">{viewModal.data.course_name}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-600">Price</span><span className="font-medium">{viewModal.data.course_price}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-600">Preferred Date</span><span className="font-medium">{new Date(viewModal.data.preferred_date).toLocaleDateString()}</span></div>
+                  <div><div className="text-slate-600">Experience</div><div className="font-medium">{viewModal.data.experience || 'None specified'}</div></div>
+                  <div><div className="text-slate-600">Notes</div><div className="font-medium whitespace-pre-wrap">{viewModal.data.notes || 'None'}</div></div>
+                  <div className="flex justify-between"><span className="text-slate-600">Booking Date</span><span className="font-medium">{new Date(viewModal.data.created_at).toLocaleDateString()}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-600">Payment Status</span><span className="font-medium capitalize">{viewModal.data.payment_status}</span></div>
+                </div>
+              )}
+              {viewModal.type === 'user' && (
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between"><span className="text-slate-600">Name</span><span className="font-medium">{viewModal.data.name}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-600">Email</span><span className="font-medium break-all">{viewModal.data.email}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-600">Phone</span><span className="font-medium">{viewModal.data.phone || '—'}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-600">Role</span><span className="font-medium capitalize">{viewModal.data.role}</span></div>
+                  {viewModal.data.created_at && (
+                    <div className="flex justify-between"><span className="text-slate-600">Joined</span><span className="font-medium">{new Date(viewModal.data.created_at).toLocaleDateString()}</span></div>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-slate-200 flex justify-end">
+              <button className="btn-secondary" onClick={() => setViewModal({ type: null, data: null })}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1217,10 +1266,7 @@ export default function AdminDashboard() {
                                 <option value="completed">Completed</option>
                               </select>
                               <button
-                                onClick={() => {
-                                  // View booking details
-                                  alert(`Booking Details:\n\nCustomer: ${booking.name}\nEmail: ${booking.email}\nPhone: ${booking.phone}\nCourse: ${booking.course_name}\nPrice: ${booking.course_price}\nPreferred Date: ${new Date(booking.preferred_date).toLocaleDateString()}\nExperience: ${booking.experience || 'None specified'}\nNotes: ${booking.notes || 'None'}\nBooking Date: ${new Date(booking.created_at).toLocaleDateString()}\nPayment Status: ${booking.payment_status}`);
-                                }}
+                                onClick={() => setViewModal({ type: 'booking', data: booking })}
                                 className="text-blue-600 hover:text-blue-900 text-xs"
                               >
                                 View
@@ -1334,31 +1380,11 @@ export default function AdminDashboard() {
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div className="flex items-center gap-2">
                               <button
-                                onClick={() => {
-                                  // View user details
-                                  alert(`User Details:\n\nName: ${user.name}\nEmail: ${user.email}\nPhone: ${user.phone || 'Not provided'}\nRole: ${user.role}\nCertification Level: ${user.certification_level || 'None'}\nTotal Dives: ${user.total_dives || 0}\nJoined: ${new Date(user.created_at).toLocaleDateString()}`);
-                                }}
+                                onClick={() => setViewModal({ type: 'user', data: user })}
                                 className="text-blue-600 hover:text-blue-900 text-xs"
                               >
                                 View
                               </button>
-                              <select
-                                value={user.role}
-                                onChange={(e) => {
-                                  // Update user role
-                                  const newRole = e.target.value;
-                                  setUsers(users.map(u => 
-                                    u.id === user.id ? { ...u, role: newRole } : u
-                                  ));
-                                  // Here you would typically make an API call to update the role
-                                  console.log(`Updated user ${user.id} role to ${newRole}`);
-                                }}
-                                className="text-xs px-2 py-1 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                              >
-                                <option value="user">User</option>
-                                <option value="instructor">Instructor</option>
-                                <option value="admin">Admin</option>
-                              </select>
                             </div>
                           </td>
                         </tr>
