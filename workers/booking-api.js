@@ -29,6 +29,8 @@ export default {
         response = await handleRegister(request, env);
       } else if (path === '/api/auth/forgot-password' && request.method === 'POST') {
         response = await handleForgotPassword(request, env);
+      } else if (path === '/api/auth/change-password' && request.method === 'POST') {
+        response = await handleChangePassword(request, env);
       } else if (path === '/api/reset-password' && request.method === 'POST') {
         response = await handleResetPassword(request, env);
       } else if (path === '/api/auth/profile' && request.method === 'GET') {
@@ -72,6 +74,18 @@ export default {
       } else if (path.startsWith('/api/admin/users/') && request.method === 'PATCH') {
         const userId = path.split('/')[4];
         response = await handleAdminUserUpdate(userId, request, env);
+      } else if (path === '/api/gallery' && request.method === 'GET') {
+        response = await handleGalleryGet(env);
+      } else if (path === '/api/admin/gallery' && request.method === 'GET') {
+        response = await handleAdminGalleryGet(request, env);
+      } else if (path === '/api/admin/gallery' && request.method === 'POST') {
+        response = await handleAdminGalleryCreate(request, env);
+      } else if (path.startsWith('/api/admin/gallery/') && request.method === 'PUT') {
+        const id = path.split('/')[4];
+        response = await handleAdminGalleryUpdate(id, request, env);
+      } else if (path.startsWith('/api/admin/gallery/') && request.method === 'DELETE') {
+        const id = path.split('/')[4];
+        response = await handleAdminGalleryDelete(id, request, env);
       } else if (path === '/api/contact' && request.method === 'POST') {
         response = await handleContactForm(request, env);
       } else if (path === '/api/medical-form' && request.method === 'POST') {
@@ -223,6 +237,197 @@ async function handleBookingCreate(request, env) {
       details: error.message,
       debug: env.ENVIRONMENT === 'development' ? error.stack : undefined
     }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+// Public gallery fetch (homepage)
+async function handleGalleryGet(env) {
+  try {
+    const { results } = await env.DB.prepare(`
+      SELECT id, title, description as desc, image_url as img, height, link_url as url
+      FROM gallery_items
+      ORDER BY created_at DESC
+    `).all();
+    const items = results || [];
+    if (items.length === 0) {
+      const defaults = [
+        { id: 1, title: 'Coral Gardens', desc: 'Vibrant coral formations in crystal clear waters', img: 'https://images.unsplash.com/photo-1583212292454-1fe6229603b7?auto=format&fit=crop&w=1200&q=80', height: 520, url: '#' },
+        { id: 2, title: 'Tropical Fish', desc: 'Schools of colorful tropical fish', img: 'https://images.unsplash.com/photo-1544552866-d3ed42536cfd?auto=format&fit=crop&w=1200&q=80', height: 420, url: '#' },
+        { id: 3, title: 'Sea Turtle', desc: 'Gentle giants of the ocean', img: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?auto=format&fit=crop&w=1200&q=80', height: 640, url: '#' },
+        { id: 4, title: 'Reef Diving', desc: 'Exploring pristine coral reefs', img: 'https://images.unsplash.com/photo-1582967788606-a171c1080cb0?auto=format&fit=crop&w=1200&q=80', height: 460, url: '#' },
+        { id: 5, title: 'Deep Blue', desc: 'Crystal clear underwater views', img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80', height: 380, url: '#' },
+        { id: 6, title: 'Scuba Adventure', desc: 'Professional diving experiences', img: 'https://images.unsplash.com/photo-1582845512264-dbb30cd05e8e?auto=format&fit=crop&w=1200&q=80', height: 500, url: '#' },
+        { id: 7, title: 'Marine Life', desc: 'Diverse underwater ecosystem', img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80', height: 420, url: '#' },
+        { id: 8, title: 'Underwater World', desc: 'Magical underwater landscapes', img: 'https://images.unsplash.com/photo-1588481123261-9b6a0cb5f584?auto=format&fit=crop&w=1200&q=80', height: 560, url: '#' },
+      ];
+      return new Response(JSON.stringify({ items: defaults }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    return new Response(JSON.stringify({ items }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Gallery get error:', error);
+    return new Response(JSON.stringify({ items: [] }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  }
+}
+
+// Admin gallery: list
+async function handleAdminGalleryGet(request, env) {
+  const authHeader = request.headers.get('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Authentication required' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+  }
+  const token = authHeader.substring(7);
+  const decoded = await verifyJWT(token);
+  if (!decoded || decoded.role !== 'admin') {
+    return new Response(JSON.stringify({ error: 'Admin access required' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+  }
+  return handleGalleryGet(env);
+}
+
+// Admin gallery: create
+async function handleAdminGalleryCreate(request, env) {
+  const authHeader = request.headers.get('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Authentication required' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+  }
+  const token = authHeader.substring(7);
+  const decoded = await verifyJWT(token);
+  if (!decoded || decoded.role !== 'admin') {
+    return new Response(JSON.stringify({ error: 'Admin access required' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+  }
+
+  const { title, desc, img, height, url } = await request.json();
+  if (!title || !img) {
+    return new Response(JSON.stringify({ error: 'title and img are required' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+  }
+  const stmt = env.DB.prepare(`
+    INSERT INTO gallery_items (title, description, image_url, height, link_url, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+  `);
+  const result = await stmt.bind(title, desc || '', img, height || 420, url || null).run();
+  return new Response(JSON.stringify({ success: true, id: result.meta.last_row_id }), { status: 201, headers: { 'Content-Type': 'application/json' } });
+}
+
+// Admin gallery: update
+async function handleAdminGalleryUpdate(id, request, env) {
+  const authHeader = request.headers.get('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Authentication required' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+  }
+  const token = authHeader.substring(7);
+  const decoded = await verifyJWT(token);
+  if (!decoded || decoded.role !== 'admin') {
+    return new Response(JSON.stringify({ error: 'Admin access required' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+  }
+
+  const { title, desc, img, height, url } = await request.json();
+  const stmt = env.DB.prepare(`
+    UPDATE gallery_items
+    SET title = COALESCE(?, title),
+        description = COALESCE(?, description),
+        image_url = COALESCE(?, image_url),
+        height = COALESCE(?, height),
+        link_url = COALESCE(?, link_url),
+        updated_at = datetime('now')
+    WHERE id = ?
+  `);
+  const res = await stmt.bind(title || null, desc || null, img || null, height || null, url || null, id).run();
+  if (res.changes === 0) {
+    return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
+  }
+  return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+}
+
+// Admin gallery: delete
+async function handleAdminGalleryDelete(id, request, env) {
+  const authHeader = request.headers.get('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Authentication required' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+  }
+  const token = authHeader.substring(7);
+  const decoded = await verifyJWT(token);
+  if (!decoded || decoded.role !== 'admin') {
+    return new Response(JSON.stringify({ error: 'Admin access required' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+  }
+  const res = await env.DB.prepare('DELETE FROM gallery_items WHERE id = ?').bind(id).run();
+  if (res.changes === 0) {
+    return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
+  }
+  return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+}
+
+// Authenticated change password
+async function handleChangePassword(request, env) {
+  try {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = await verifyJWT(token);
+    if (!decoded || !decoded.userId) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const { currentPassword, newPassword } = await request.json();
+    if (!currentPassword || !newPassword) {
+      return new Response(JSON.stringify({ error: 'currentPassword and newPassword are required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    if (newPassword.length < 6) {
+      return new Response(JSON.stringify({ error: 'Password must be at least 6 characters long' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Load user
+    const userStmt = env.DB.prepare('SELECT id, password_hash FROM users WHERE id = ?');
+    const user = await userStmt.bind(decoded.userId).first();
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'User not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Verify current password
+    const valid = await verifyPassword(currentPassword, user.password_hash);
+    if (!valid) {
+      return new Response(JSON.stringify({ error: 'Current password is incorrect' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Hash new password and update
+    const newHash = await hashPassword(newPassword);
+    const update = env.DB.prepare('UPDATE users SET password_hash = ?, updated_at = datetime("now") WHERE id = ?');
+    await update.bind(newHash, decoded.userId).run();
+
+    return new Response(JSON.stringify({ success: true, message: 'Password updated successfully' }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Change password error:', error);
+    return new Response(JSON.stringify({ error: 'Failed to change password' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
@@ -1433,6 +1638,24 @@ async function verifyJWT(token) {
 // Admin Bookings Management
 async function handleAdminBookingsGet(request, env) {
   try {
+    // Verify admin authentication
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = await verifyJWT(token);
+    if (!decoded || decoded.role !== 'admin') {
+      return new Response(JSON.stringify({ error: 'Admin access required' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     const query = `
       SELECT 
         b.*,
@@ -1443,7 +1666,7 @@ async function handleAdminBookingsGet(request, env) {
       ORDER BY b.created_at DESC
     `;
     
-    const result = await env.BOOKING_DB.prepare(query).all();
+    const result = await env.DB.prepare(query).all();
     
     return new Response(JSON.stringify({
       success: true,
@@ -1466,6 +1689,24 @@ async function handleAdminBookingsGet(request, env) {
 
 async function handleAdminBookingUpdate(bookingId, request, env) {
   try {
+    // Verify admin authentication
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = await verifyJWT(token);
+    if (!decoded || decoded.role !== 'admin') {
+      return new Response(JSON.stringify({ error: 'Admin access required' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     const { status, payment_status } = await request.json();
     
     const query = `
@@ -1474,7 +1715,7 @@ async function handleAdminBookingUpdate(bookingId, request, env) {
       WHERE id = ?
     `;
     
-    await env.BOOKING_DB.prepare(query).bind(
+    await env.DB.prepare(query).bind(
       status || null,
       payment_status || null,
       bookingId
@@ -1502,6 +1743,24 @@ async function handleAdminBookingUpdate(bookingId, request, env) {
 // Admin Users Management
 async function handleAdminUsersGet(request, env) {
   try {
+    // Verify admin authentication
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = await verifyJWT(token);
+    if (!decoded || decoded.role !== 'admin') {
+      return new Response(JSON.stringify({ error: 'Admin access required' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     const query = `
       SELECT 
         id,
@@ -1516,7 +1775,7 @@ async function handleAdminUsersGet(request, env) {
       ORDER BY created_at DESC
     `;
     
-    const result = await env.BOOKING_DB.prepare(query).all();
+    const result = await env.DB.prepare(query).all();
     
     return new Response(JSON.stringify({
       success: true,
@@ -1539,6 +1798,24 @@ async function handleAdminUsersGet(request, env) {
 
 async function handleAdminUserUpdate(userId, request, env) {
   try {
+    // Verify admin authentication
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = await verifyJWT(token);
+    if (!decoded || decoded.role !== 'admin') {
+      return new Response(JSON.stringify({ error: 'Admin access required' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     const { role, phone, certification_level, total_dives } = await request.json();
     
     const query = `
@@ -1550,7 +1827,7 @@ async function handleAdminUserUpdate(userId, request, env) {
       WHERE id = ?
     `;
     
-    await env.BOOKING_DB.prepare(query).bind(
+    await env.DB.prepare(query).bind(
       role || null,
       phone || null,
       certification_level || null,

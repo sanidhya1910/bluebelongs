@@ -22,6 +22,16 @@ export default function CourseCard({ course, onBook, isHydrated, userPresent }: 
     ? 'indigo'
     : 'cyan';
 
+  // Admin override support via localStorage
+  let displayImage = course.image;
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('courseImageOverrides');
+      const map = raw ? JSON.parse(raw) as Record<string, string> : {};
+      if (map[course.id]) displayImage = map[course.id];
+    } catch {}
+  }
+
   return (
     <motion.div
       className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full flex flex-col"
@@ -31,10 +41,10 @@ export default function CourseCard({ course, onBook, isHydrated, userPresent }: 
       transition={{ duration: 0.4 }}
       whileHover={{ scale: 1.02 }}
     >
-      {course.image && (
+    {displayImage && (
         <div
           className="h-40 w-full bg-cover bg-center"
-          style={{ backgroundImage: `url(${course.image})` }}
+      style={{ backgroundImage: `url(${displayImage})` }}
           aria-label={`${course.title} cover image`}
         />
       )}

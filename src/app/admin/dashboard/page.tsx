@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Plus, Edit, Trash2, Save, X, Clock, Award, MapPin, Waves, Users, BookOpen, Calendar, Settings, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,6 +17,7 @@ interface Course {
   certification: string;
   category: 'beginner' | 'certification' | 'specialty';
   available: boolean;
+  image?: string;
 }
 
 interface User {
@@ -66,6 +68,15 @@ interface BlogPost {
   published: boolean;
 }
 
+type GalleryItem = {
+  id: string | number;
+  title: string;
+  desc: string;
+  img: string;
+  height: number;
+  url?: string;
+};
+
 export default function AdminDashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -73,7 +84,7 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<User[]>([]);
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [stats, setStats] = useState<AdminStats | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'bookings' | 'users' | 'blogs'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'bookings' | 'users' | 'blogs' | 'gallery'>('overview');
   const [editingBlog, setEditingBlog] = useState<BlogPost | null>(null);
   const [showBlogForm, setShowBlogForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -81,6 +92,10 @@ export default function AdminDashboard() {
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState<Partial<Course>>({});
+  const [courseImageOverrides, setCourseImageOverrides] = useState<Record<string, string>>({});
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
+  const [editingGallery, setEditingGallery] = useState<GalleryItem | null>(null);
+  const [showGalleryForm, setShowGalleryForm] = useState(false);
   const router = useRouter();
 
   const categoryOptions = [
@@ -97,6 +112,11 @@ export default function AdminDashboard() {
     checkAuth();
     loadCourses();
     loadAdminStats();
+    // Load local overrides on mount/tab changes
+    loadCourseImageOverrides();
+    if (activeTab === 'gallery') {
+      loadGallery();
+    }
     if (activeTab === 'bookings') {
       loadBookings();
     } else if (activeTab === 'users') {
@@ -123,6 +143,68 @@ export default function AdminDashboard() {
     }
     
     setUser(parsedUser);
+  };
+
+  const loadCourseImageOverrides = () => {
+    try {
+      const raw = localStorage.getItem('courseImageOverrides');
+      setCourseImageOverrides(raw ? JSON.parse(raw) : {});
+    } catch {
+      setCourseImageOverrides({});
+    }
+  };
+
+  const saveCourseImageOverride = (courseId: string, url: string) => {
+    const next = { ...courseImageOverrides, [courseId]: url };
+    setCourseImageOverrides(next);
+    localStorage.setItem('courseImageOverrides', JSON.stringify(next));
+  };
+
+  const clearCourseImageOverride = (courseId: string) => {
+    const next = { ...courseImageOverrides };
+    delete next[courseId];
+    setCourseImageOverrides(next);
+    localStorage.setItem('courseImageOverrides', JSON.stringify(next));
+  };
+
+  const loadGallery = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const res = await fetch('https://bluebelong-api.blackburn1910.workers.dev/api/admin/gallery', {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const items: GalleryItem[] = data.items || [];
+        if (items.length > 0) {
+          setGalleryItems(items);
+          localStorage.setItem('masonryGallery', JSON.stringify(items));
+          return;
+        }
+      }
+    } catch {}
+    // Fallback to localStorage/default seeds
+    try {
+      const raw = localStorage.getItem('masonryGallery');
+      setGalleryItems(raw ? JSON.parse(raw) : []);
+    } catch {
+      setGalleryItems([]);
+    }
+  };
+
+  const saveGalleryItem = (item: Omit<GalleryItem, 'id'> & { id?: string | number }) => {
+    const id = item.id ?? Date.now();
+    const updated = [...galleryItems.filter(g => g.id !== id), { ...item, id }];
+    setGalleryItems(updated);
+    localStorage.setItem('masonryGallery', JSON.stringify(updated));
+    setEditingGallery(null);
+    setShowGalleryForm(false);
+  };
+
+  const deleteGalleryItem = (id: GalleryItem['id']) => {
+    const updated = galleryItems.filter(g => g.id !== id);
+    setGalleryItems(updated);
+    localStorage.setItem('masonryGallery', JSON.stringify(updated));
   };
 
   const loadCourses = async () => {
@@ -451,10 +533,12 @@ export default function AdminDashboard() {
 
       const updateBookingStatus = async (id: number, status: Booking['status']) => {
     try {
-      const response = await fetch(`https://bluebelong-api.blackburn1910.workers.dev/api/admin/bookings/${id}`, {
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(`https://bluebelong-api.blackburn1910.workers.dev/api/admin/bookings/${id}`, {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ status })
       });
@@ -708,6 +792,16 @@ export default function AdminDashboard() {
             >
               Blog Management
             </button>
+            <button
+              onClick={() => setActiveTab('gallery')}
+              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'gallery'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Gallery Management
+            </button>
           </div>
         </div>
 
@@ -887,7 +981,7 @@ export default function AdminDashboard() {
           )}
         </AnimatePresence>
 
-        {/* Courses List */}
+  {/* Courses List */}
         <div className="grid gap-4">
           {courses.map((course) => (
             <motion.div
@@ -924,6 +1018,34 @@ export default function AdminDashboard() {
                   </div>
                   
                   <p className="text-slate-600 mb-3">{course.description}</p>
+
+                  {/* Image override controls */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Course Image URL (override)</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        defaultValue={courseImageOverrides[course.id] || ''}
+                        placeholder="https://example.com/image.jpg"
+                        className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        onBlur={(e) => {
+                          const url = e.target.value.trim();
+                          if (url) saveCourseImageOverride(course.id, url);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => clearCourseImageOverride(course.id)}
+                        className="px-3 py-2 text-sm rounded-lg border border-slate-300 hover:bg-slate-50"
+                        title="Clear override"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                    {courseImageOverrides[course.id] && (
+                      <div className="mt-2 text-xs text-slate-500">Override set. Public courses page will use this image.</div>
+                    )}
+                  </div>
                   
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-slate-600">
                     <div className="flex items-center">
@@ -1164,12 +1286,12 @@ export default function AdminDashboard() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Role
                         </th>
-                        <th className="px-6 py-3 text-left text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                          Certification
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                          Total Dives
-                        </th>
+                        {false && (
+                          <>
+                            <th className="px-6 py-3 text-left text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Certification</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Total Dives</th>
+                          </>
+                        )}
                         <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Joined
                         </th>
@@ -1200,12 +1322,12 @@ export default function AdminDashboard() {
                               {user.role}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
-                            {user.certification_level || 'None'}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
-                            {user.total_dives || 0}
-                          </td>
+                          {false && (
+                            <>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{user.certification_level || 'None'}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{user.total_dives || 0}</td>
+                            </>
+                          )}
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
                             {new Date(user.created_at).toLocaleDateString()}
                           </td>
@@ -1381,6 +1503,100 @@ export default function AdminDashboard() {
                     </div>
                   )}
                 </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'gallery' && (
+            <motion.div
+              key="gallery"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold text-slate-800">Masonry Gallery</h2>
+                <button
+                  onClick={() => { setEditingGallery(null); setShowGalleryForm(true); }}
+                  className="btn-primary flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" /> Add Item
+                </button>
+              </div>
+
+              {/* Gallery Form */}
+              {showGalleryForm && (
+                <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+                  <h3 className="text-lg font-semibold text-slate-800 mb-4">{editingGallery ? 'Edit' : 'Add'} Gallery Item</h3>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const fd = new FormData(e.currentTarget as HTMLFormElement);
+                      const payload = {
+                        id: editingGallery?.id,
+                        title: String(fd.get('title') || ''),
+                        desc: String(fd.get('desc') || ''),
+                        img: String(fd.get('img') || ''),
+                        height: Number(fd.get('height') || 400),
+                        url: String(fd.get('url') || ''),
+                      } as GalleryItem;
+                      saveGalleryItem(payload);
+                    }}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                  >
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Title</label>
+                      <input name="title" defaultValue={editingGallery?.title || ''} className="w-full px-3 py-2 border border-slate-300 rounded-lg" required />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Link URL (optional)</label>
+                      <input name="url" defaultValue={editingGallery?.url || ''} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                      <input name="desc" defaultValue={editingGallery?.desc || ''} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Image URL</label>
+                      <input name="img" type="url" defaultValue={editingGallery?.img || ''} className="w-full px-3 py-2 border border-slate-300 rounded-lg" required />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Display Height (px)</label>
+                      <input name="height" type="number" min="200" max="800" defaultValue={editingGallery?.height || 420} className="w-full px-3 py-2 border border-slate-300 rounded-lg" required />
+                    </div>
+                    <div className="flex items-end gap-3">
+                      <button type="submit" className="btn-primary">Save Item</button>
+                      <button type="button" className="btn-secondary" onClick={() => { setShowGalleryForm(false); setEditingGallery(null); }}>Cancel</button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {/* Gallery Items List */}
+              <div className="grid gap-4">
+                {galleryItems.map(item => (
+                  <div key={item.id} className="bg-white rounded-lg shadow-sm border p-4 flex items-center gap-4">
+                    <div className="relative w-24 h-16 overflow-hidden rounded">
+                      <Image src={item.img} alt={item.title} fill className="object-cover" sizes="96px" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-slate-800">{item.title}</div>
+                      <div className="text-sm text-slate-500">{item.desc}</div>
+                      <div className="text-xs text-slate-400">Height: {item.height}px {item.url ? `• Link: ${item.url}` : ''}</div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" onClick={() => { setEditingGallery(item); setShowGalleryForm(true); }} title="Edit">
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg" onClick={() => deleteGalleryItem(item.id)} title="Delete">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {galleryItems.length === 0 && (
+                  <div className="text-center py-12 text-slate-500">No gallery items yet. Add your first one.</div>
+                )}
               </div>
             </motion.div>
           )}
