@@ -9,9 +9,7 @@ import {
   Users, 
   Clock, 
   CheckCircle, 
-  LogOut,
   Settings,
-  Bell,
   Activity,
   Waves,
   Fish,
@@ -26,6 +24,7 @@ interface User {
   role: string;
   certification_level?: string;
   total_dives: number;
+  phone?: string;
 }
 
 interface Booking {
@@ -54,6 +53,9 @@ export default function DashboardPage() {
   const [userBookings, setUserBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirm: '' });
+  const [pwLoading, setPwLoading] = useState(false);
+  const [pwMessage, setPwMessage] = useState<string | null>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -106,11 +108,7 @@ export default function DashboardPage() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
-    window.location.href = '/login';
-  };
+  // Logout handled globally via main navigation
 
   if (loading) {
     return (
@@ -173,50 +171,8 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen sand-section pt-20">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-sky-100">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Waves className="h-8 w-8 text-sky-600" />
-                <h1 className="text-2xl font-bold text-sky-900">Blue Belongs</h1>
-              </div>
-              <span className="text-sky-600">|</span>
-              <h2 className="text-xl text-sky-700">Dashboard</h2>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <User className="h-5 w-5 text-sky-600" />
-                <span className="text-sky-900 font-medium">{user.name}</span>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
-                  user.role === 'instructor' ? 'bg-blue-100 text-blue-800' :
-                  'bg-green-100 text-green-800'
-                }`}>
-                  {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                </span>
-              </div>
-              
-              <button className="p-2 rounded-lg hover:bg-sky-50 text-sky-600">
-                <Bell className="h-5 w-5" />
-              </button>
-              
-              <button 
-                onClick={handleLogout}
-                className="flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors"
-              >
-                <LogOut className="h-4 w-4" />
-                <span>Logout</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen sand-section pt-24">
+      <div className="container mx-auto px-4 py-6">
         {/* Navigation Tabs */}
         <div className="flex space-x-1 mb-8 bg-white rounded-lg p-1 shadow-sm">
           <button
@@ -454,12 +410,12 @@ export default function DashboardPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
                   />
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Account Type</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
                   <input
                     type="text"
-                    value={user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                    value={user.phone ?? 'Not provided'}
                     disabled
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
                   />
@@ -467,28 +423,85 @@ export default function DashboardPage() {
               </div>
               
               <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Total Dives</label>
-                  <input
-                    type="text"
-                    value={user.total_dives}
-                    disabled
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Certification Level</label>
-                  <input
-                    type="text"
-                    value={user.certification_level || 'Not specified'}
-                    disabled
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                  />
-                </div>
+                {/* Removed Total Dives and Certification Level per requirement */}
                 
                 <div className="pt-4">
-                  <button className="btn-primary">Update Profile</button>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">Change Password</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                      <input
+                        type="password"
+                        value={pwForm.currentPassword}
+                        onChange={(e) => setPwForm({ ...pwForm, currentPassword: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        placeholder="Enter current password"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                      <input
+                        type="password"
+                        value={pwForm.newPassword}
+                        onChange={(e) => setPwForm({ ...pwForm, newPassword: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        placeholder="Enter new password"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                      <input
+                        type="password"
+                        value={pwForm.confirm}
+                        onChange={(e) => setPwForm({ ...pwForm, confirm: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        placeholder="Retype new password"
+                      />
+                    </div>
+                    <div className="md:col-span-2 flex items-center gap-3">
+                      <button
+                        onClick={async () => {
+                          setPwMessage(null);
+                          if (!pwForm.currentPassword || !pwForm.newPassword) {
+                            setPwMessage('Please fill all password fields');
+                            return;
+                          }
+                          if (pwForm.newPassword !== pwForm.confirm) {
+                            setPwMessage('New passwords do not match');
+                            return;
+                          }
+                          try {
+                            setPwLoading(true);
+                            const token = localStorage.getItem('authToken');
+                            const res = await fetch('https://bluebelong-api.blackburn1910.workers.dev/api/auth/change-password', {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                              },
+                              body: JSON.stringify({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword })
+                            });
+                            const data = await res.json();
+                            if (res.ok && data.success) {
+                              setPwMessage('Password updated successfully');
+                              setPwForm({ currentPassword: '', newPassword: '', confirm: '' });
+                            } else {
+                              setPwMessage(data.error || 'Failed to change password');
+                            }
+                          } catch (e) {
+                            setPwMessage('Network error. Please try again.');
+                          } finally {
+                            setPwLoading(false);
+                          }
+                        }}
+                        className="btn-primary"
+                        disabled={pwLoading}
+                      >
+                        {pwLoading ? 'Updating...' : 'Change Password'}
+                      </button>
+                      {pwMessage && <span className={`text-sm ${pwMessage.includes('success') ? 'text-green-600' : 'text-red-600'}`}>{pwMessage}</span>}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

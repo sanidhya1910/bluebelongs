@@ -1,3 +1,17 @@
+-- Gallery items for homepage masonry
+CREATE TABLE IF NOT EXISTS gallery_items (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  description TEXT DEFAULT '',
+  image_url TEXT NOT NULL,
+  height INTEGER DEFAULT 420,
+  link_url TEXT,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_gallery_items_created_at ON gallery_items (created_at DESC);
+
 -- Blue Belongs Diving School Database Schema
 -- For use with Cloudflare D1 or any SQLite database
 

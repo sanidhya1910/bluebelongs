@@ -39,6 +39,7 @@ export default function Navigation() {
     window.location.reload();
   };
 
+  const dashboardHref = user?.role === 'admin' ? '/admin/dashboard' : '/dashboard';
   const navItems = [
     { href: '/', label: 'Home' },
     { href: '/about', label: 'About' },
@@ -47,7 +48,7 @@ export default function Navigation() {
     ...(isHydrated && user ? [{ href: '/medical-form', label: 'Medical Form' }] : []),
     { href: '/itinerary', label: 'Itinerary' },
     ...(user ? [
-      { href: '/dashboard', label: 'Dashboard' }
+      { href: dashboardHref, label: 'Dashboard' }
     ] : [
       { href: '/login', label: 'Login' }
     ])
