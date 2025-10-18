@@ -135,7 +135,7 @@ const ScrollExpandMedia = ({
 
       {/* Content Section */}
       <motion.div 
-        className="relative z-20 bg-white dark:bg-gray-900 min-h-screen py-20"
+        className="relative z-20 bg-gradient-to-b from-sky-50 to-white min-h-screen py-20"
         style={{ y: contentTranslateY }}
       >
         <div className="container mx-auto px-4">

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { ArrowRight, Award, MapPin, Star, Fish, Heart, Shield } from 'lucide-react';
 import { motion, useInView } from 'framer-motion';
-import Masonry from '@/utils/masonry';
+import MasonryGallery from '@/components/MasonryGallery';
 import BluesBelongHero from '@/components/BluesBelongHero';
 import { useRef, useState, useEffect, useMemo } from 'react';
 
@@ -370,16 +370,7 @@ export default function HomePage() {
           
           {/* Masonry gallery */}
           <div className="relative container mx-auto px-4">
-            <Masonry
-              items={masonryItems}
-              animateFrom="bottom"
-              stagger={0.06}
-              duration={0.6}
-              blurToFocus
-              scaleOnHover
-              hoverScale={0.97}
-              colorShiftOnHover
-            />
+            <MasonryGallery items={masonryItems} />
           </div>
           
           {/* Gallery description */}
