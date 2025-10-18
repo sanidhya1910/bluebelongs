@@ -251,22 +251,9 @@ async function handleGalleryGet(env) {
       ORDER BY created_at DESC
     `).all();
     const items = results || [];
-    if (items.length === 0) {
-      const defaults = [
-        { id: 1, title: 'Coral Gardens', desc: 'Vibrant coral formations in crystal clear waters', img: 'https://images.unsplash.com/photo-1583212292454-1fe6229603b7?auto=format&fit=crop&w=1200&q=80', height: 520, url: '#' },
-        { id: 2, title: 'Tropical Fish', desc: 'Schools of colorful tropical fish', img: 'https://images.unsplash.com/photo-1544552866-d3ed42536cfd?auto=format&fit=crop&w=1200&q=80', height: 420, url: '#' },
-        { id: 3, title: 'Sea Turtle', desc: 'Gentle giants of the ocean', img: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?auto=format&fit=crop&w=1200&q=80', height: 640, url: '#' },
-        { id: 4, title: 'Reef Diving', desc: 'Exploring pristine coral reefs', img: 'https://images.unsplash.com/photo-1582967788606-a171c1080cb0?auto=format&fit=crop&w=1200&q=80', height: 460, url: '#' },
-        { id: 5, title: 'Deep Blue', desc: 'Crystal clear underwater views', img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80', height: 380, url: '#' },
-        { id: 6, title: 'Scuba Adventure', desc: 'Professional diving experiences', img: 'https://images.unsplash.com/photo-1582845512264-dbb30cd05e8e?auto=format&fit=crop&w=1200&q=80', height: 500, url: '#' },
-        { id: 7, title: 'Marine Life', desc: 'Diverse underwater ecosystem', img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80', height: 420, url: '#' },
-        { id: 8, title: 'Underwater World', desc: 'Magical underwater landscapes', img: 'https://images.unsplash.com/photo-1588481123261-9b6a0cb5f584?auto=format&fit=crop&w=1200&q=80', height: 560, url: '#' },
-      ];
-      return new Response(JSON.stringify({ items: defaults }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
+    
+    // Always return actual database items, even if empty
+    // Don't mix real database items with hardcoded defaults
     return new Response(JSON.stringify({ items }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }

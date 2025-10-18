@@ -93,7 +93,7 @@ export default function Navigation() {
           </Link>
 
           {/* Enhanced Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-1">
+          <div className="hidden lg:flex items-center space-x-2">
             {navItems.map((item, index) => (
               <motion.div
                 key={item.href}
@@ -103,20 +103,18 @@ export default function Navigation() {
               >
                 <Link
                   href={item.href}
-                  className="relative px-6 py-3 text-slate-700 hover:text-sky-600 font-medium transition-all duration-300 rounded-2xl group overflow-hidden"
+                  className="relative px-4 py-2.5 text-slate-700 hover:text-sky-600 font-medium transition-all duration-300 rounded-xl group overflow-hidden block min-w-fit"
                 >
-                  <span className="relative z-10">{item.label}</span>
+                  <span className="relative z-10 whitespace-nowrap">{item.label}</span>
                   
                   {/* Sophisticated hover effect */}
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-sky-50 to-cyan-50 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 border border-sky-100/50 group-hover:border-sky-200"
-                    initial={false}
+                  <div
+                    className="absolute inset-0 bg-gradient-to-r from-sky-50 to-cyan-50 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 border border-transparent group-hover:border-sky-200/60 scale-95 group-hover:scale-100"
                   />
                   
                   {/* Animated underline */}
-                  <motion.div
-                    className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-1 bg-gradient-to-r from-sky-500 to-cyan-500 group-hover:w-10 transition-all duration-300 rounded-full"
-                    initial={false}
+                  <div
+                    className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-sky-500 to-cyan-500 group-hover:w-8 transition-all duration-300 rounded-full"
                   />
                 </Link>
               </motion.div>

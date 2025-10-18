@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { Plus, Edit, Trash2, Save, X, Clock, Award, MapPin, Waves, Users, BookOpen, Calendar, Settings, Eye, EyeOff } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Clock, Award, MapPin, Waves, Users, BookOpen, Calendar, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Course {
@@ -88,7 +87,7 @@ export default function AdminDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
-  const [stats, setStats] = useState<AdminStats | null>(null);
+  // Removed unused stats state
   const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'bookings' | 'users' | 'blogs' | 'gallery'>('overview');
   const [editingBlog, setEditingBlog] = useState<BlogPost | null>(null);
   const [showBlogForm, setShowBlogForm] = useState(false);
@@ -103,7 +102,7 @@ export default function AdminDashboard() {
   const [showGalleryForm, setShowGalleryForm] = useState(false);
   // Modal state for replacing browser alerts on "View" actions
   const [viewModal, setViewModal] = useState<ViewModalState>({ type: null, data: null });
-  const router = useRouter();
+  // router not used
 
   const categoryOptions = [
     { value: 'beginner', label: 'Entry Level Programs' },
@@ -183,17 +182,22 @@ export default function AdminDashboard() {
       if (res.ok) {
         const data = await res.json();
         const items: GalleryItem[] = data.items || [];
-        if (items.length > 0) {
-          setGalleryItems(items);
-          localStorage.setItem('masonryGallery', JSON.stringify(items));
-          return;
-        }
+        setGalleryItems(items);
+        // Update localStorage with actual DB items
+        localStorage.setItem('masonryGallery', JSON.stringify(items));
+        return;
+      } else {
+        console.error('Failed to load gallery:', res.status, res.statusText);
       }
-    } catch {}
-    // Fallback to localStorage/default seeds
+    } catch (err) {
+      console.error('Error loading gallery:', err);
+    }
+    
+    // Fallback to localStorage only if API fails completely
     try {
       const raw = localStorage.getItem('masonryGallery');
-      setGalleryItems(raw ? JSON.parse(raw) : []);
+      const fallbackItems = raw ? JSON.parse(raw) : [];
+      setGalleryItems(Array.isArray(fallbackItems) ? fallbackItems : []);
     } catch {
       setGalleryItems([]);
     }
@@ -235,8 +239,9 @@ export default function AdminDashboard() {
       await loadGallery();
       setEditingGallery(null);
       setShowGalleryForm(false);
-    } catch (e: any) {
-      alert(e?.message || 'Failed to save gallery item');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to save gallery item';
+      alert(msg);
     }
   };
 
@@ -254,8 +259,9 @@ export default function AdminDashboard() {
         throw new Error(err.error || err.message || 'Failed to delete gallery item');
       }
       await loadGallery();
-    } catch (e: any) {
-      alert(e?.message || 'Failed to delete gallery item');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete gallery item';
+      alert(msg);
     }
   };
 
@@ -272,8 +278,8 @@ export default function AdminDashboard() {
         const data = await response.json();
         setCourses(data.courses || []);
       }
-    } catch (error) {
-      console.error('Error loading courses:', error);
+    } catch (err) {
+      console.error('Error loading courses:', err);
     } finally {
       setIsLoading(false);
     }
@@ -292,8 +298,8 @@ export default function AdminDashboard() {
         const data = await response.json();
         setAdminStats(data.stats || { totalBookings: 0, totalUsers: 0, totalCourses: 0, activeBookings: 0 });
       }
-    } catch (error) {
-      console.error('Error loading admin stats:', error);
+    } catch (err) {
+      console.error('Error loading admin stats:', err);
     }
   };
 
@@ -310,8 +316,8 @@ export default function AdminDashboard() {
         const data = await response.json();
         setBookings(data.bookings || []);
       }
-    } catch (error) {
-      console.error('Error loading bookings:', error);
+    } catch (err) {
+      console.error('Error loading bookings:', err);
     }
   };
 
@@ -328,8 +334,8 @@ export default function AdminDashboard() {
         const data = await response.json();
         setUsers(data.users || []);
       }
-    } catch (error) {
-      console.error('Error loading users:', error);
+    } catch (err) {
+      console.error('Error loading users:', err);
     }
   };
 
@@ -372,8 +378,8 @@ export default function AdminDashboard() {
         setBlogs(defaultBlogs);
         localStorage.setItem('blogs', JSON.stringify(defaultBlogs));
       }
-    } catch (error) {
-      console.error('Error loading blogs:', error);
+    } catch (err) {
+      console.error('Error loading blogs:', err);
     }
   };
 
@@ -398,8 +404,8 @@ export default function AdminDashboard() {
       setEditingBlog(null);
       setShowBlogForm(false);
       return true;
-    } catch (error) {
-      console.error('Error saving blog:', error);
+    } catch (err) {
+      console.error('Error saving blog:', err);
       return false;
     }
   };
@@ -410,8 +416,8 @@ export default function AdminDashboard() {
       setBlogs(updatedBlogs);
       localStorage.setItem('blogs', JSON.stringify(updatedBlogs));
       return true;
-    } catch (error) {
-      console.error('Error deleting blog:', error);
+    } catch (err) {
+      console.error('Error deleting blog:', err);
       return false;
     }
   };
@@ -603,7 +609,8 @@ export default function AdminDashboard() {
       } else {
         alert('Failed to update booking status');
       }
-    } catch (error) {
+    } catch (err) {
+      console.error('Error updating booking status:', err);
       alert('Error updating booking status');
     }
   };
@@ -657,8 +664,8 @@ export default function AdminDashboard() {
         const error = await response.json();
         alert(error.message || 'Failed to save course');
       }
-    } catch (error) {
-      console.error('Error saving course:', error);
+    } catch (err) {
+      console.error('Error saving course:', err);
       alert('Failed to save course');
     }
   };
@@ -683,13 +690,15 @@ export default function AdminDashboard() {
         const error = await response.json();
         alert(error.message || 'Failed to delete course');
       }
-    } catch (error) {
-      console.error('Error deleting course:', error);
+    } catch (err) {
+      console.error('Error deleting course:', err);
       alert('Failed to delete course');
     }
   };
 
-  const handleToggleAvailability = async (courseId: string, currentStatus: boolean) => {
+  const handleToggleAvailability = async (courseId: string, _currentStatus: boolean) => {
+  // Mark unused param as intentionally unused to satisfy lint rules
+  void _currentStatus;
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch(`https://bluebelong-api.blackburn1910.workers.dev/api/admin/courses/${courseId}/toggle`, {
@@ -705,8 +714,8 @@ export default function AdminDashboard() {
         const error = await response.json();
         alert(error.message || 'Failed to toggle course availability');
       }
-    } catch (error) {
-      console.error('Error toggling course availability:', error);
+    } catch (err) {
+      console.error('Error toggling course availability:', err);
       alert('Failed to toggle course availability');
     }
   };

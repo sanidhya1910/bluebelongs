@@ -51,17 +51,27 @@ const useMeasure = () => {
   return [ref, size];
 };
 
-const preloadImages = async (urls) => {
-  await Promise.all(
-    urls.map(
-      (src) =>
-        new Promise((resolve) => {
-          const img = new Image();
-          img.src = src;
-          img.onload = img.onerror = () => resolve();
-        })
-    )
+const loadImageDimensions = async (items) => {
+  const promises = items.map(
+    (item) =>
+      new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          // Calculate height based on aspect ratio and column width
+          const aspectRatio = img.height / img.width;
+          // Ensure aspect ratio is within reasonable bounds
+          const clampedRatio = Math.max(0.3, Math.min(aspectRatio, 2.0));
+          resolve({ ...item, aspectRatio: clampedRatio });
+        };
+        img.onerror = () => {
+          // Fallback aspect ratio for failed images
+          resolve({ ...item, aspectRatio: 0.75 });
+        };
+        img.src = item.img;
+      })
   );
+  
+  return await Promise.all(promises);
 };
 
 const Masonry = ({
@@ -87,7 +97,23 @@ const Masonry = ({
   );
 
   const [containerRef, { width }] = useMeasure();
+  const [imagesWithDimensions, setImagesWithDimensions] = useState([]);
   const [imagesReady, setImagesReady] = useState(false);
+
+  // Load image dimensions when items change
+  useEffect(() => {
+    if (items.length === 0) {
+      setImagesWithDimensions([]);
+      setImagesReady(true);
+      return;
+    }
+
+    setImagesReady(false);
+    loadImageDimensions(items).then((itemsWithDimensions) => {
+      setImagesWithDimensions(itemsWithDimensions);
+      setImagesReady(true);
+    });
+  }, [items]);
 
   const getInitialPosition = (item) => {
     const containerRect = containerRef.current?.getBoundingClientRect();
@@ -120,30 +146,35 @@ const Masonry = ({
     }
   };
 
-  useEffect(() => {
-    preloadImages(items.map((i) => i.img)).then(() => setImagesReady(true));
-  }, [items]);
-
   const grid = useMemo(() => {
-    if (!width) return [];
+    if (!width || !imagesReady || !imagesWithDimensions.length) return [];
+    
     const colHeights = new Array(columns).fill(0);
     const gap = 16;
     const totalGaps = (columns - 1) * gap;
     const columnWidth = (width - totalGaps) / columns;
 
-    return items.map((child) => {
+    return imagesWithDimensions.map((child, index) => {
       const col = colHeights.indexOf(Math.min(...colHeights));
       const x = col * (columnWidth + gap);
-      const rawHeight = Number(child?.height);
-      const height = Number.isFinite(rawHeight) && rawHeight > 0
-        ? rawHeight / 2
-        : Math.max(220, Math.round(columnWidth * 0.75)); // Fallback ~4:3 ratio
+      
+      // Calculate height using aspect ratio for automatic sizing with minimum height
+      const calculatedHeight = Math.round(columnWidth * (child.aspectRatio || 0.75));
+      const height = Math.max(calculatedHeight, 200); // Ensure minimum height of 200px
       const y = colHeights[col];
 
       colHeights[col] += height + gap;
-      return { ...child, x, y, w: columnWidth, h: height };
+      
+      return { 
+        ...child, 
+        x, 
+        y, 
+        w: columnWidth, 
+        h: height,
+        renderOrder: index 
+      };
     });
-  }, [columns, items, width]);
+  }, [columns, imagesWithDimensions, width, imagesReady]);
 
   const hasMounted = useRef(false);
 
@@ -220,24 +251,32 @@ const Masonry = ({
   // Adjust container height to fit positioned children
   useLayoutEffect(() => {
     if (!containerRef.current || !grid?.length) return;
+    
+    // Calculate the maximum bottom position of all items with proper gap
     const maxBottom = Math.max(
-      ...grid.map((it) => {
-        const y = Number.isFinite(it?.y) ? it.y : 0;
-        const h = Number.isFinite(it?.h) && it.h > 0 ? it.h : Math.round(((it?.w || 200) * 3) / 4);
+      ...grid.map((item) => {
+        const y = Number.isFinite(item?.y) ? item.y : 0;
+        const h = Number.isFinite(item?.h) && item.h > 0 ? item.h : 300;
         return y + h;
       })
     );
-    containerRef.current.style.height = `${Math.ceil(maxBottom)}px`;
-  }, [grid, containerRef]);
+    
+    // Add some bottom padding and ensure minimum height
+    const containerHeight = Math.max(maxBottom + 32, 400);
+    containerRef.current.style.height = `${Math.ceil(containerHeight)}px`;
+  }, [grid]);
 
   return (
     <div ref={containerRef} className="relative w-full">
-      {grid.map((item, idx) => (
+      {grid.map((item) => (
         <div
           key={item.id}
           data-key={item.id}
           className="absolute box-content cursor-pointer"
-          style={{ willChange: "transform, width, height, opacity", zIndex: idx + 1 }}
+          style={{ 
+            willChange: "transform, width, height, opacity", 
+            zIndex: 1 // Consistent z-index for all items to prevent stacking issues
+          }}
           onClick={() => item.url && window.open(item.url, "_blank", "noopener")}
           onMouseEnter={(e) => handleMouseEnter(item.id, e.currentTarget)}
           onMouseLeave={(e) => handleMouseLeave(item.id, e.currentTarget)}

@@ -488,7 +488,7 @@ export default function DashboardPage() {
                             } else {
                               setPwMessage(data.error || 'Failed to change password');
                             }
-                          } catch (e) {
+                          } catch {
                             setPwMessage('Network error. Please try again.');
                           } finally {
                             setPwLoading(false);
