@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Award, MapPin, Star, Fish, Waves, Heart, Eye, Shield } from 'lucide-react';
-import { motion, useInView, useReducedMotion } from 'framer-motion';
+import { ArrowRight, Award, MapPin, Star, Fish, Heart, Shield } from 'lucide-react';
+import { motion, useInView } from 'framer-motion';
 import Masonry from '@/utils/masonry';
-import { useRef, useState, useEffect } from 'react';
+import BluesBelongHero from '@/components/BluesBelongHero';
+import { useRef, useState, useEffect, useMemo } from 'react';
 
 
 // Wave Divider Component
@@ -24,72 +25,12 @@ const WaveDivider = ({ color = '#EFECE5', flip = false, className = '' }: { colo
   </div>
 );
 
-// Enhanced Bubble Animation
-const Bubble = ({ delay, position, size = 'small' }: { delay: number; position: number; size?: 'small' | 'medium' | 'large' }) => {
-  const sizeClasses = {
-    small: 'w-3 h-3',
-    medium: 'w-5 h-5',
-    large: 'w-7 h-7'
-  };
-  
-  return (
-    <motion.div
-      className={`absolute ${sizeClasses[size]} bg-white/25 rounded-full backdrop-blur-sm`}
-      initial={{ y: 100, opacity: 0, scale: 0 }}
-      animate={{ 
-        y: [-60, -140, -220], 
-        opacity: [0, 0.7, 0],
-        scale: [0, 1, 0.85, 0],
-        x: [0, 20, -15, 10, 0]
-      }}
-      transition={{ 
-        duration: 20,
-        delay,
-        repeat: Infinity,
-        ease: "easeInOut"
-      }}
-      style={{
-        left: `${position}%`,
-        filter: 'blur(0.5px)'
-      }}
-    />
-  );
-};
-
-// Fish Animation
-const SwimmingFish = ({ count = 2, reduced = false }: { count?: number; reduced?: boolean }) => (
-  <div className="absolute inset-0 overflow-hidden pointer-events-none">
-    {reduced ? null : [...Array(count)].map((_, i) => (
-      <motion.div
-        key={i}
-        className="absolute"
-        initial={{ x: "-10vw", y: "50%" }}
-        animate={{
-          x: ["0vw", "110vw"],
-          y: [`${50 + i * 5}%`, `${45 + i * 5}%`, `${55 + i * 5}%`, `${48 + i * 5}%`, `${50 + i * 5}%`]
-        }}
-        transition={{
-          duration: 36 + i * 6,
-          delay: i * 4,
-          repeat: Infinity,
-          ease: "linear"
-        }}
-      >
-        <Fish className={`h-6 w-6 text-cyan-200/40 ${i === 1 ? 'scale-110' : i === 2 ? 'scale-90' : ''}`} />
-      </motion.div>
-    ))}
-  </div>
-);
-
 export default function HomePage() {
-  const prefersReducedMotion = useReducedMotion();
   const featuresRef = useRef(null);
   const aboutRef = useRef(null);
   const testimonialsRef = useRef(null);
   const ctaRef = useRef(null);
-  // Hero image handling: default + optional localStorage override, with Unsplash normalization
-  const defaultHero = 'https://images.unsplash.com/photo-1545762374-d18079617da8?q=80&w=1548&auto=format&fit=crop';
-  const [heroImageUrl, setHeroImageUrl] = useState<string>(defaultHero);
+  
   // About image handling: default + optional localStorage override
   const defaultAbout = 'https://images.unsplash.com/photo-1496161341410-90ce6ad8b390?q=80&w=1548&auto=format&fit=crop';
   const [aboutImageUrl, setAboutImageUrl] = useState<string>(defaultAbout);
@@ -114,39 +55,23 @@ export default function HomePage() {
       return fallback;
     }
   };
-  // Default masonry items
-  const defaultMasonryItems = [
-    { id: 1, title: 'Coral Gardens', desc: 'Vibrant coral formations in crystal clear waters', img: 'https://images.unsplash.com/photo-1583212292454-1fe6229603b7?auto=format&fit=crop&w=1200&q=80', height: 520, url: '#' },
-    { id: 2, title: 'Tropical Fish', desc: 'Schools of colorful tropical fish', img: 'https://images.unsplash.com/photo-1544552866-d3ed42536cfd?auto=format&fit=crop&w=1200&q=80', height: 420, url: '#' },
-    { id: 4, title: 'Reef Diving', desc: 'Exploring pristine coral reefs', img: 'https://images.unsplash.com/photo-1582967788606-a171c1080cb0?auto=format&fit=crop&w=1200&q=80', height: 460, url: '#' },
-    { id: 5, title: 'Deep Blue', desc: 'Crystal clear underwater views', img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80', height: 380, url: '#' },
-    { id: 6, title: 'Scuba Adventure', desc: 'Professional diving experiences', img: 'https://images.unsplash.com/photo-1582845512264-dbb30cd05e8e?auto=format&fit=crop&w=1200&q=80', height: 500, url: '#' },
-    { id: 7, title: 'Marine Life', desc: 'Diverse underwater ecosystem', img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80', height: 420, url: '#' },
-    { id: 8, title: 'Underwater World', desc: 'Magical underwater landscapes', img: 'https://images.unsplash.com/photo-1588481123261-9b6a0cb5f584?auto=format&fit=crop&w=1200&q=80', height: 560, url: '#' },
-  ];
+  // Default masonry items - memoized to prevent useEffect dependency issues
+  const defaultMasonryItems = useMemo(() => [
+    { id: 1, title: 'Coral Gardens', desc: 'Vibrant coral formations in crystal clear waters', img: 'https://images.unsplash.com/photo-1583212292454-1fe6229603b7?auto=format&fit=crop&w=1200&q=80', url: '#' },
+    { id: 2, title: 'Tropical Fish', desc: 'Schools of colorful tropical fish', img: 'https://images.unsplash.com/photo-1544552866-d3ed42536cfd?auto=format&fit=crop&w=1200&q=80', url: '#' },
+    { id: 4, title: 'Reef Diving', desc: 'Exploring pristine coral reefs', img: 'https://images.unsplash.com/photo-1582967788606-a171c1080cb0?auto=format&fit=crop&w=1200&q=80', url: '#' },
+    { id: 5, title: 'Deep Blue', desc: 'Crystal clear underwater views', img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80', url: '#' },
+    { id: 6, title: 'Scuba Adventure', desc: 'Professional diving experiences', img: 'https://images.unsplash.com/photo-1582845512264-dbb30cd05e8e?auto=format&fit=crop&w=1200&q=80', url: '#' },
+    { id: 7, title: 'Marine Life', desc: 'Diverse underwater ecosystem', img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80', url: '#' },
+    { id: 8, title: 'Underwater World', desc: 'Magical underwater landscapes', img: 'https://images.unsplash.com/photo-1588481123261-9b6a0cb5f584?auto=format&fit=crop&w=1200&q=80', url: '#' },
+  ], []);
   const [masonryItems, setMasonryItems] = useState(defaultMasonryItems);
-  // Generate bubble positions
-  const [bubblePositions, setBubblePositions] = useState<number[]>([]);
-
+  
   // Load optional About image override from localStorage
   useEffect(() => {
     try {
       const raw = typeof window !== 'undefined' ? localStorage.getItem('aboutImageUrl') : null;
       if (raw) setAboutImageUrl(normalizeImageUrl(raw, defaultAbout));
-    } catch {}
-  }, []);
-  
-  // Generate bubble positions for floating bubbles in hero
-  useEffect(() => {
-    const count = 18;
-    setBubblePositions(Array.from({ length: count }, () => Math.floor(Math.random() * 100)));
-  }, []);
-
-  // Load optional Hero image override from localStorage
-  useEffect(() => {
-    try {
-      const raw = typeof window !== 'undefined' ? localStorage.getItem('heroImageUrl') : null;
-      if (raw) setHeroImageUrl(normalizeImageUrl(raw, defaultHero));
     } catch {}
   }, []);
 
@@ -159,25 +84,36 @@ export default function HomePage() {
         if (res.ok) {
           const data = await res.json();
           const apiItems = Array.isArray(data.items) ? data.items : [];
-          if (!cancelled && apiItems.length) {
-            setMasonryItems(apiItems);
+          if (!cancelled) {
+            // Always use API response, even if empty - don't fallback to defaults if API is working
+            setMasonryItems(apiItems.length > 0 ? apiItems : defaultMasonryItems);
             if (typeof window !== 'undefined') {
               localStorage.setItem('masonryGallery', JSON.stringify(apiItems));
             }
             return;
           }
         }
-      } catch {}
+      } catch (err) {
+        console.error('Failed to load gallery from API:', err);
+      }
+      
+      // Only use localStorage/defaults if API call completely failed
       if (typeof window !== 'undefined') {
         try {
           const raw = localStorage.getItem('masonryGallery');
           const parsed = raw ? JSON.parse(raw) : [];
-          if (!cancelled && Array.isArray(parsed) && parsed.length) setMasonryItems(parsed);
-        } catch {}
+          if (!cancelled && Array.isArray(parsed) && parsed.length) {
+            setMasonryItems(parsed);
+          } else if (!cancelled) {
+            setMasonryItems(defaultMasonryItems);
+          }
+        } catch {
+          if (!cancelled) setMasonryItems(defaultMasonryItems);
+        }
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [defaultMasonryItems]);
   
   const featuresInView = useInView(featuresRef, { once: true });
   const aboutInView = useInView(aboutRef, { once: true });
@@ -224,133 +160,12 @@ export default function HomePage() {
   ];
 
   return (
-  <div className="min-h-screen relative overflow-hidden sand-section">
-      
-      {/* HERO SECTION - Framer Style */}
-      <section className="relative min-h-screen flex items-center overflow-hidden pt-20" id="hero">
-        {/* Hero Gradient Wrapper */}
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-sky-400 via-blue-500 to-cyan-600"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-blue-900/20 via-transparent to-sky-300/10"></div>
-        </div>
-        
-        {/* Floating Elements */}
-        <div className="absolute inset-0">
-          <SwimmingFish reduced={!!prefersReducedMotion} />
-          {bubblePositions.map((position, i) => (
-            <Bubble 
-              key={i} 
-              delay={i * 0.3} 
-              position={position} 
-              size={i % 3 === 0 ? 'large' : i % 2 === 0 ? 'medium' : 'small'} 
-            />
-          ))}
-        </div>
-
-        {/* Hero Container */}
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center min-h-screen py-20">
-            
-            {/* Hero Content Column (simplified entry) */}
-            <motion.div
-              className="text-left"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-            >
-              <motion.div
-                className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full mb-6 border border-white/30"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3, duration: 0.8 }}
-              >
-                <Waves className="h-4 w-4 text-white" />
-                <span className="text-sm font-medium text-white">DIVING SCHOOL • ANDAMAN ISLANDS</span>
-              </motion.div>
-              
-              <motion.h1
-                className="text-5xl md:text-7xl font-light mb-6 text-white leading-tight"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.6 }}
-                style={{ fontFamily: 'Inter, serif' }}
-              >
-                <span className="block mb-2">Andaman. Calm. Connected.</span>
-                <span className="font-bold bg-gradient-to-r from-cyan-200 to-white bg-clip-text text-transparent">Dive With Confidence</span>
-              </motion.h1>
-              
-              <motion.p
-                className="text-xl text-blue-100/90 mb-8 max-w-lg font-light leading-relaxed"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.35, duration: 0.6 }}
-              >
-                At BlueBelong, we guide you into Andaman&apos;s blue — not to conquer it, but to reconnect. Calm. Confident. Connected.
-              </motion.p>
-              
-              <motion.div
-                className="flex flex-col sm:flex-row gap-4"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5, duration: 0.6 }}
-              >
-                <motion.div
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="group"
-                >
-                  <Link 
-                    href="/courses" 
-                    className="inline-flex items-center gap-3 bg-white text-sky-600 hover:text-sky-700 font-semibold text-lg px-8 py-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300"
-                  >
-                    <Eye className="h-5 w-5" />
-                    Book My First Dive
-                    <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </motion.div>
-              </motion.div>
-            </motion.div>
-            
-            {/* Hero Visual Column (simplified entry) */}
-            <motion.div
-              className="relative"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
-            >
-              <div className="relative">
-                {/* Shadow Effect */}
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-cyan-900/30 rounded-3xl transform translate-y-4 blur-lg scale-105"></div>
-                
-                {/* Archway Border Container */}
-                <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-3xl border-2 border-white/20 overflow-hidden">
-                  {/* Background Layer */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/20 to-blue-600/20 rounded-3xl"></div>
-                  
-                  {/* Main Visual */}
-                  <div className="relative aspect-[4/5] max-w-md mx-auto rounded-3xl overflow-hidden">
-                    {/* Hero Diving Photo */}
-                    <div 
-                      className="absolute inset-0 bg-cover bg-center"
-                      style={{ backgroundImage: `url(${heroImageUrl})` }}
-                      aria-label="Scuba diver exploring coral reef"
-                    />
-                    {/* Soft overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-blue-900/50 via-transparent to-transparent"></div>
-                    {/* Removed coral decorations */}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Wave divider to transition into next section (sand color) */}
-      <WaveDivider color="rgb(225, 217, 203)" />
+    <div className="min-h-screen relative overflow-hidden">
+      {/* NEW HERO SECTION - Scroll Expansion Hero */}
+      <BluesBelongHero />
 
       {/* MAIN CONTENT */}
-      <main>
+      <main className="sand-section">
         
         {/* BENEFITS SECTION - Framer Style */}
   <section ref={featuresRef} className="py-24 relative sand-section">
@@ -646,37 +461,13 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* CTA SECTION - Framer Style */}
+        {/* CTA SECTION - Framer Style with Ocean Background */}
   <section ref={ctaRef} className="py-24 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-sky-500 via-blue-600 to-cyan-600"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-blue-900/30 via-transparent to-sky-300/20"></div>
+          {/* Ocean gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-sky-600 via-blue-700 to-cyan-600 z-0"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-sky-600/40 via-blue-700/30 to-cyan-600/40 z-10"></div>
           
-          {/* Floating Elements */}
-          <div className="absolute inset-0">
-            {[...Array(8)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-2 h-2 bg-white/20 rounded-full"
-                animate={{
-                  y: [0, -30, 0],
-                  opacity: [0.3, 1, 0.3],
-                  scale: [1, 1.5, 1]
-                }}
-                transition={{
-                  duration: 4 + i,
-                  delay: i * 0.5,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                style={{
-                  left: `${10 + i * 12}%`,
-                  top: `${20 + (i % 3) * 30}%`
-                }}
-              />
-            ))}
-          </div>
-          
-          <div className="container mx-auto px-4 text-center relative z-10">
+          <div className="container mx-auto px-4 text-center relative z-20">
             <motion.div
               initial={{ opacity: 0, y: 60 }}
               animate={ctaInView ? { opacity: 1, y: 0 } : {}}

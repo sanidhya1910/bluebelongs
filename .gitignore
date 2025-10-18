@@ -46,3 +46,6 @@ page.html
 
 # deployment scripts
 deploy.sh
+ADMIN_TEST_GUIDE.md
+BACKEND_INTEGRATION.md
+course-images.txt
