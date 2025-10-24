@@ -1,75 +1,52 @@
-# Blue Belongs - Diving School Website
+# BlueBelong Diving School
 
-A comprehensive full-stack diving school website for Andaman Islands, featuring SSI course booking, medical questionnaires, travel information, and complete backend integration.
+Full-stack website for a diving school in Andaman Islands. Built with Next.js, deployed on Cloudflare.
 
-## 🌊 Mission Statement
+## What's This About
 
-At BlueBelong, we guide people into the ocean — not to conquer it, but to reconnect with themselves through it. Whether you're a first-time diver, a soul seeking stillness, or a dreamer chasing deeper waters, our mission is to help you discover that the blue has always belonged to you.
+BlueBelong is a diving school teaching SSI-certified courses in the Andaman Islands. This website handles course listings, bookings, medical forms, and all the info divers need before their trip.
 
-**Calm. Confident. Connected.** That's how we dive.
-**BlueBelong - you are the ocean**
+*Calm. Confident. Connected.* That's the vibe.
 
-## ✨ Features
+## Features
 
-- **SSI Certified Courses**: Complete catalog of 13+ diving courses from beginner to specialty
-- **Full-Stack Booking System**: Real-time course booking with email confirmations
-- **Medical Questionnaire**: Comprehensive medical form for diving safety compliance
-- **Travel Itinerary**: Complete guide for reaching Andaman Islands
-- **User Authentication**: Secure login/signup system
-- **Responsive Design**: Mobile-first approach with blue ocean theme
-- **Face-to-face Payment**: Local payment processing for course bookings
-- **Email Integration**: Automated booking confirmations and notifications
-- **Admin Dashboard**: Course management and booking oversight
+- 19 SSI-certified courses from beginner to specialty
+- Online booking system (payment on arrival)
+- Medical questionnaire for safety compliance
+- Travel guide for getting to Andaman
+- User login/signup
+- Admin dashboard for managing bookings
+- Marine life encyclopedia (24 species)
+- Safety guidelines page
+- FAQ section
+- PWA support with offline access
 
-## 🚀 Tech Stack
+## Tech Stack
 
-### Frontend
-- **Framework**: Next.js 15 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS with custom blue theme
-- **Animations**: Framer Motion
-- **Icons**: Lucide React
-- **Forms**: React Hook Form with Zod validation
+- Next.js 15 (App Router) + TypeScript
+- Tailwind CSS + HeroUI + shadcn/ui
+- Framer Motion for animations
+- Cloudflare Pages (hosting)
+- Cloudflare Workers (API)
+- Cloudflare D1 (database)
 
-### Backend (Cloudflare Integration)
-- **Hosting**: Cloudflare Pages (Static)
-- **API**: Cloudflare Workers (Serverless)
-- **Database**: Cloudflare D1 (SQLite)
-- **Email**: SendGrid/Resend Integration
-- **CDN**: Cloudflare Global Network
+## Getting Started
 
-## 🏁 Quick Start
+```bash
+# Install
+npm install
 
-### Development Setup
-1. **Clone and install dependencies**:
-   ```bash
-   git clone <repository-url>
-   cd bluebelongs
-   npm install
-   ```
+# Run locally
+npm run dev
 
-2. **Run development server**:
-   ```bash
-   npm run dev
-   ```
+# Build
+npm run build
 
-3. **Open your browser**: Navigate to [http://localhost:3000](http://localhost:3000)
+# Deploy to Cloudflare
+npm run deploy
+```
 
-### Production Deployment
-1. **Deploy to Cloudflare**:
-   ```bash
-   npm run deploy:full
-   ```
-
-2. **Set up database**:
-   ```bash
-   npm run db:migrate
-   ```
-
-3. **Deploy backend**:
-   ```bash
-   npm run worker:deploy
-   ```
+Visit http://localhost:3000
 
 ## 📁 Project Structure
 

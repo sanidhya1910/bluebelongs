@@ -12,6 +12,14 @@ export interface Course {
   certification: string;
   category: CourseCategoryId;
   image?: string;
+  // Special Offer fields
+  offerActive?: boolean;
+  offerTitle?: string;
+  offerDescription?: string;
+  offerDiscountPercent?: number;
+  offerDiscountAmount?: number;
+  offerExpiryDate?: string; // ISO date string
+  offerCode?: string;
 }
 
 export interface CourseCategory {
@@ -35,7 +43,7 @@ export const categories: CourseCategory[] = [
     name: 'Continuing Education',
     description: 'Advanced training for certified divers seeking skill enhancement and rescue capabilities',
     iconId: 'award',
-    color: 'from-blue-500 to-indigo-600'
+    color: 'from-blue-400 to-cyan-600'
   },
   {
     id: 'specialty',

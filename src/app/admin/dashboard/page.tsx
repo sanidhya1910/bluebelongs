@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Plus, Edit, Trash2, Save, X, Clock, Award, MapPin, Waves, Users, BookOpen, Calendar, Eye, EyeOff } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Clock, Award, MapPin, Waves, Users, BookOpen, Calendar, Eye, EyeOff, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Card, CardBody, CardHeader, Button, Chip, Input, Textarea, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from '@heroui/react';
 
 interface Course {
   id: string;
@@ -17,6 +18,26 @@ interface Course {
   category: 'beginner' | 'certification' | 'specialty';
   available: boolean;
   image?: string;
+  slots?: CourseSlot[];
+  // Special Offer fields
+  offerActive?: boolean;
+  offerTitle?: string;
+  offerDescription?: string;
+  offerDiscountPercent?: number;
+  offerDiscountAmount?: number;
+  offerExpiryDate?: string;
+  offerCode?: string;
+}
+
+interface CourseSlot {
+  id: string;
+  courseId: string;
+  date: string;
+  time: string;
+  capacity: number;
+  booked: number;
+  available: boolean;
+  instructor?: string;
 }
 
 interface User {
@@ -67,6 +88,28 @@ interface BlogPost {
   published: boolean;
 }
 
+interface Announcement {
+  id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'warning' | 'success' | 'announcement';
+  priority: 'low' | 'medium' | 'high';
+  active: boolean;
+  createdAt: string;
+  expiresAt?: string;
+  replies?: AnnouncementReply[];
+}
+
+interface AnnouncementReply {
+  id: string;
+  announcementId: string;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  message: string;
+  createdAt: string;
+}
+
 type GalleryItem = {
   id: string | number;
   title: string;
@@ -87,8 +130,9 @@ export default function AdminDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   // Removed unused stats state
-  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'bookings' | 'users' | 'blogs' | 'gallery'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'bookings' | 'users' | 'blogs' | 'gallery' | 'messages'>('overview');
   const [editingBlog, setEditingBlog] = useState<BlogPost | null>(null);
   const [showBlogForm, setShowBlogForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -97,6 +141,10 @@ export default function AdminDashboard() {
   const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState<Partial<Course>>({});
   const [courseImageOverrides, setCourseImageOverrides] = useState<Record<string, string>>({});
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [showUserForm, setShowUserForm] = useState(false);
+  const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
+  const [showAnnouncementForm, setShowAnnouncementForm] = useState(false);
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [editingGallery, setEditingGallery] = useState<GalleryItem | null>(null);
   const [showGalleryForm, setShowGalleryForm] = useState(false);
@@ -129,6 +177,8 @@ export default function AdminDashboard() {
       loadUsers();
     } else if (activeTab === 'blogs') {
       loadBlogs();
+    } else if (activeTab === 'messages') {
+      loadAnnouncements();
     }
   }, [activeTab]);
 
@@ -339,6 +389,89 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleUpdateUser = async (userId: number, updates: Partial<User>) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`https://bluebelong-api.blackburn1910.workers.dev/api/admin/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updates)
+      });
+
+      if (response.ok) {
+        alert('User updated successfully!');
+        setShowUserForm(false);
+        setEditingUser(null);
+        loadUsers();
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Failed to update user');
+      }
+    } catch (err) {
+      console.error('Error updating user:', err);
+      alert('Failed to update user');
+    }
+  };
+
+  const handleDeleteUser = async (userId: number) => {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`https://bluebelong-api.blackburn1910.workers.dev/api/admin/users/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        alert('User deleted successfully!');
+        loadUsers();
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Failed to delete user');
+      }
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      alert('Failed to delete user');
+    }
+  };
+
+  const handleChangeUserRole = async (userId: number, newRole: string) => {
+    if (!confirm(`Are you sure you want to change this user's role to ${newRole}?`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`https://bluebelong-api.blackburn1910.workers.dev/api/admin/users/${userId}/role`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ role: newRole })
+      });
+
+      if (response.ok) {
+        alert('User role updated successfully!');
+        loadUsers();
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Failed to update user role');
+      }
+    } catch (err) {
+      console.error('Error updating user role:', err);
+      alert('Failed to update user role');
+    }
+  };
+
   const loadBlogs = async () => {
     try {
       // For now, using local storage for blogs
@@ -418,6 +551,81 @@ export default function AdminDashboard() {
       return true;
     } catch (err) {
       console.error('Error deleting blog:', err);
+      return false;
+    }
+  };
+
+  // Announcement Management Functions
+  const loadAnnouncements = async () => {
+    try {
+      const storedAnnouncements = localStorage.getItem('announcements');
+      if (storedAnnouncements) {
+        setAnnouncements(JSON.parse(storedAnnouncements));
+      } else {
+        setAnnouncements([]);
+      }
+    } catch (err) {
+      console.error('Error loading announcements:', err);
+    }
+  };
+
+  const saveAnnouncement = async (announcement: Omit<Announcement, 'id' | 'createdAt' | 'replies'> | Announcement) => {
+    try {
+      let updatedAnnouncements;
+      if ('id' in announcement) {
+        // Update existing announcement
+        updatedAnnouncements = announcements.map(a => a.id === announcement.id ? announcement : a);
+      } else {
+        // Create new announcement
+        const newAnnouncement: Announcement = {
+          ...announcement,
+          id: Date.now().toString(),
+          createdAt: new Date().toISOString(),
+          replies: []
+        };
+        updatedAnnouncements = [...announcements, newAnnouncement];
+      }
+      
+      setAnnouncements(updatedAnnouncements);
+      localStorage.setItem('announcements', JSON.stringify(updatedAnnouncements));
+      setEditingAnnouncement(null);
+      setShowAnnouncementForm(false);
+      alert('Announcement saved successfully!');
+      return true;
+    } catch (err) {
+      console.error('Error saving announcement:', err);
+      alert('Failed to save announcement');
+      return false;
+    }
+  };
+
+  const deleteAnnouncement = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this announcement?')) {
+      return;
+    }
+    try {
+      const updatedAnnouncements = announcements.filter(a => a.id !== id);
+      setAnnouncements(updatedAnnouncements);
+      localStorage.setItem('announcements', JSON.stringify(updatedAnnouncements));
+      alert('Announcement deleted successfully!');
+      return true;
+    } catch (err) {
+      console.error('Error deleting announcement:', err);
+      alert('Failed to delete announcement');
+      return false;
+    }
+  };
+
+  const toggleAnnouncementActive = async (id: string) => {
+    try {
+      const updatedAnnouncements = announcements.map(a => 
+        a.id === id ? { ...a, active: !a.active } : a
+      );
+      setAnnouncements(updatedAnnouncements);
+      localStorage.setItem('announcements', JSON.stringify(updatedAnnouncements));
+      return true;
+    } catch (err) {
+      console.error('Error toggling announcement:', err);
       return false;
     }
   };
@@ -744,7 +952,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen sand-section">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-blue-50 to-cyan-50 pt-20">
       {/* View Details Modal */}
       {viewModal.type && viewModal.data && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="view-modal-title">
@@ -788,22 +996,24 @@ export default function AdminDashboard() {
         </div>
       )}
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white/80 backdrop-blur-md shadow-lg border-b border-white/50 sticky top-16 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
+          <div className="flex justify-between items-center py-6">
             <div>
-              <h1 className="text-2xl font-bold text-slate-800">Admin Dashboard</h1>
-              <p className="text-slate-600">Course Management</p>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-sky-600 to-cyan-600 bg-clip-text text-transparent">Admin Dashboard</h1>
+              <div className="flex items-center gap-2 mt-2">
+                <p className="text-slate-600">Welcome back,</p>
+                <Chip color="primary" variant="flat" size="sm">{user?.name || 'Admin'}</Chip>
+              </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-slate-600">Welcome, {user?.name}</span>
-              <button
-                onClick={handleLogout}
-                className="btn-secondary text-sm"
-              >
-                Logout
-              </button>
-            </div>
+            <Button
+              color="danger"
+              variant="shadow"
+              onPress={handleLogout}
+              className="font-semibold"
+            >
+              Logout
+            </Button>
           </div>
         </div>
       </div>
@@ -811,100 +1021,150 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Admin Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex items-center">
-              <BookOpen className="h-8 w-8 text-blue-500" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-slate-600">Total Courses</p>
-                <p className="text-2xl font-bold text-slate-900">{adminStats?.totalCourses || 0}</p>
-              </div>
-            </div>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-none shadow-lg hover:shadow-xl transition-shadow">
+              <CardBody className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-blue-600 text-sm font-medium">Total Courses</p>
+                    <p className="text-3xl font-bold text-gray-800 mt-2">{adminStats?.totalCourses || 0}</p>
+                  </div>
+                  <div className="bg-blue-200 p-3 rounded-full">
+                    <BookOpen className="h-8 w-8 text-blue-700" />
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+          </motion.div>
           
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex items-center">
-              <Calendar className="h-8 w-8 text-green-500" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-slate-600">Total Bookings</p>
-                <p className="text-2xl font-bold text-slate-900">{adminStats?.totalBookings || 0}</p>
-              </div>
-            </div>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+          >
+            <Card className="bg-gradient-to-br from-green-50 to-green-100 border-none shadow-lg hover:shadow-xl transition-shadow">
+              <CardBody className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-green-600 text-sm font-medium">Total Bookings</p>
+                    <p className="text-3xl font-bold text-gray-800 mt-2">{adminStats?.totalBookings || 0}</p>
+                  </div>
+                  <div className="bg-green-200 p-3 rounded-full">
+                    <Calendar className="h-8 w-8 text-green-700" />
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+          </motion.div>
           
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex items-center">
-              <Users className="h-8 w-8 text-purple-500" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-slate-600">Total Users</p>
-                <p className="text-2xl font-bold text-slate-900">{adminStats?.totalUsers || 0}</p>
-              </div>
-            </div>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+          >
+            <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-none shadow-lg hover:shadow-xl transition-shadow">
+              <CardBody className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-purple-600 text-sm font-medium">Total Users</p>
+                    <p className="text-3xl font-bold text-gray-800 mt-2">{adminStats?.totalUsers || 0}</p>
+                  </div>
+                  <div className="bg-purple-200 p-3 rounded-full">
+                    <Users className="h-8 w-8 text-purple-700" />
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+          </motion.div>
           
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex items-center">
-              <Clock className="h-8 w-8 text-orange-500" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-slate-600">Active Bookings</p>
-                <p className="text-2xl font-bold text-slate-900">{adminStats?.activeBookings || 0}</p>
-              </div>
-            </div>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.3 }}
+          >
+            <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-none shadow-lg hover:shadow-xl transition-shadow">
+              <CardBody className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-orange-600 text-sm font-medium">Active Bookings</p>
+                    <p className="text-3xl font-bold text-gray-800 mt-2">{adminStats?.activeBookings || 0}</p>
+                  </div>
+                  <div className="bg-orange-200 p-3 rounded-full">
+                    <Clock className="h-8 w-8 text-orange-700" />
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+          </motion.div>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="bg-white rounded-lg shadow-sm border mb-6">
-          <div className="flex border-b">
-            <button
-              onClick={() => setActiveTab('courses')}
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+        <div className="mb-6">
+          <div className="flex space-x-2 bg-white/60 backdrop-blur-md p-2 rounded-2xl shadow-lg overflow-x-auto">
+            <Button
+              onPress={() => setActiveTab('courses')}
+              className={`px-6 py-3 rounded-xl font-medium whitespace-nowrap transition-all ${
                 activeTab === 'courses'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-700'
+                  ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow-lg'
+                  : 'bg-transparent text-gray-600 hover:bg-white/50'
               }`}
             >
               Course Management
-            </button>
-            <button
-              onClick={() => setActiveTab('bookings')}
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+            </Button>
+            <Button
+              onPress={() => setActiveTab('bookings')}
+              className={`px-6 py-3 rounded-xl font-medium whitespace-nowrap transition-all ${
                 activeTab === 'bookings'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-700'
+                  ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow-lg'
+                  : 'bg-transparent text-gray-600 hover:bg-white/50'
               }`}
             >
               Booking Management
-            </button>
-            <button
-              onClick={() => setActiveTab('users')}
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+            </Button>
+            <Button
+              onPress={() => setActiveTab('users')}
+              className={`px-6 py-3 rounded-xl font-medium whitespace-nowrap transition-all ${
                 activeTab === 'users'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-700'
+                  ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow-lg'
+                  : 'bg-transparent text-gray-600 hover:bg-white/50'
               }`}
             >
               User Management
-            </button>
-            <button
-              onClick={() => setActiveTab('blogs')}
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+            </Button>
+            <Button
+              onPress={() => setActiveTab('blogs')}
+              className={`px-6 py-3 rounded-xl font-medium whitespace-nowrap transition-all ${
                 activeTab === 'blogs'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-700'
+                  ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow-lg'
+                  : 'bg-transparent text-gray-600 hover:bg-white/50'
               }`}
             >
               Blog Management
-            </button>
-            <button
-              onClick={() => setActiveTab('gallery')}
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+            </Button>
+            <Button
+              onPress={() => setActiveTab('gallery')}
+              className={`px-6 py-3 rounded-xl font-medium whitespace-nowrap transition-all ${
                 activeTab === 'gallery'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-700'
+                  ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow-lg'
+                  : 'bg-transparent text-gray-600 hover:bg-white/50'
               }`}
             >
               Gallery Management
-            </button>
+            </Button>
+            <Button
+              onPress={() => setActiveTab('messages')}
+              className={`px-6 py-3 rounded-xl font-medium whitespace-nowrap transition-all ${
+                activeTab === 'messages'
+                  ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow-lg'
+                  : 'bg-transparent text-gray-600 hover:bg-white/50'
+              }`}
+            >
+              Message Board
+            </Button>
           </div>
         </div>
 
@@ -1355,10 +1615,7 @@ export default function AdminDashboard() {
                     className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     onChange={(e) => {
                       // Filter users by role
-                      const filtered = e.target.value === 'all' 
-                        ? users 
-                        : users.filter(user => user.role === e.target.value);
-                      setUsers(filtered);
+                      loadUsers(); // Reload all users first
                     }}
                   >
                     <option value="all">All Roles</option>
@@ -1368,6 +1625,71 @@ export default function AdminDashboard() {
                   </select>
                 </div>
               </div>
+
+              {/* User Edit Form */}
+              {showUserForm && editingUser && (
+                <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+                  <h3 className="text-lg font-semibold text-slate-800 mb-4">Edit User</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+                      <input
+                        type="text"
+                        value={editingUser.name}
+                        onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                      <input
+                        type="email"
+                        value={editingUser.email}
+                        onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+                      <input
+                        type="text"
+                        value={editingUser.phone || ''}
+                        onChange={(e) => setEditingUser({ ...editingUser, phone: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
+                      <select
+                        value={editingUser.role}
+                        onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="user">User</option>
+                        <option value="instructor">Instructor</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </div>
+                    <div className="flex gap-2 pt-4">
+                      <button
+                        onClick={() => handleUpdateUser(editingUser.id, editingUser)}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Save Changes
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowUserForm(false);
+                          setEditingUser(null);
+                        }}
+                        className="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-300 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
                 <div className="overflow-x-auto">
@@ -1438,6 +1760,24 @@ export default function AdminDashboard() {
                                 className="text-blue-600 hover:text-blue-900 text-xs"
                               >
                                 View
+                              </button>
+                              <span className="text-slate-300">|</span>
+                              <button
+                                onClick={() => {
+                                  setEditingUser(user);
+                                  setShowUserForm(true);
+                                }}
+                                className="text-green-600 hover:text-green-900 text-xs"
+                              >
+                                Edit
+                              </button>
+                              <span className="text-slate-300">|</span>
+                              <button
+                                onClick={() => handleDeleteUser(user.id)}
+                                className="text-red-600 hover:text-red-900 text-xs"
+                                disabled={false}
+                              >
+                                Delete
                               </button>
                             </div>
                           </td>
@@ -1680,6 +2020,286 @@ export default function AdminDashboard() {
                 ))}
                 {galleryItems.length === 0 && (
                   <div className="text-center py-12 text-slate-500">No gallery items yet. Add your first one.</div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Message Board Tab */}
+          {activeTab === 'messages' && (
+            <motion.div
+              key="messages"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold text-slate-800">Message Board</h2>
+                <Button
+                  color="primary"
+                  variant="shadow"
+                  startContent={<Plus className="h-4 w-4" />}
+                  onPress={() => {
+                    setEditingAnnouncement(null);
+                    setShowAnnouncementForm(true);
+                  }}
+                >
+                  Create Announcement
+                </Button>
+              </div>
+
+              {/* Announcement Form */}
+              {showAnnouncementForm && (
+                <Card className="mb-6">
+                  <CardHeader>
+                    <h3 className="text-lg font-semibold text-slate-800">
+                      {editingAnnouncement ? 'Edit Announcement' : 'Create New Announcement'}
+                    </h3>
+                  </CardHeader>
+                  <CardBody>
+                    <div className="space-y-4">
+                      <Input
+                        label="Title"
+                        placeholder="Enter announcement title"
+                        value={editingAnnouncement?.title || ''}
+                        onChange={(e) => setEditingAnnouncement({
+                          ...editingAnnouncement,
+                          id: editingAnnouncement?.id || '',
+                          title: e.target.value,
+                          message: editingAnnouncement?.message || '',
+                          type: editingAnnouncement?.type || 'info',
+                          priority: editingAnnouncement?.priority || 'medium',
+                          active: editingAnnouncement?.active !== undefined ? editingAnnouncement.active : true,
+                          createdAt: editingAnnouncement?.createdAt || new Date().toISOString(),
+                        } as Announcement)}
+                        required
+                      />
+                      
+                      <Textarea
+                        label="Message"
+                        placeholder="Enter your announcement message"
+                        value={editingAnnouncement?.message || ''}
+                        onChange={(e) => setEditingAnnouncement({
+                          ...editingAnnouncement,
+                          id: editingAnnouncement?.id || '',
+                          title: editingAnnouncement?.title || '',
+                          message: e.target.value,
+                          type: editingAnnouncement?.type || 'info',
+                          priority: editingAnnouncement?.priority || 'medium',
+                          active: editingAnnouncement?.active !== undefined ? editingAnnouncement.active : true,
+                          createdAt: editingAnnouncement?.createdAt || new Date().toISOString(),
+                        } as Announcement)}
+                        minRows={4}
+                        required
+                      />
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">Type</label>
+                          <select
+                            value={editingAnnouncement?.type || 'info'}
+                            onChange={(e) => setEditingAnnouncement({
+                              ...editingAnnouncement,
+                              id: editingAnnouncement?.id || '',
+                              title: editingAnnouncement?.title || '',
+                              message: editingAnnouncement?.message || '',
+                              type: e.target.value as Announcement['type'],
+                              priority: editingAnnouncement?.priority || 'medium',
+                              active: editingAnnouncement?.active !== undefined ? editingAnnouncement.active : true,
+                              createdAt: editingAnnouncement?.createdAt || new Date().toISOString(),
+                            } as Announcement)}
+                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="info">Info</option>
+                            <option value="warning">Warning</option>
+                            <option value="success">Success</option>
+                            <option value="announcement">Announcement</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">Priority</label>
+                          <select
+                            value={editingAnnouncement?.priority || 'medium'}
+                            onChange={(e) => setEditingAnnouncement({
+                              ...editingAnnouncement,
+                              id: editingAnnouncement?.id || '',
+                              title: editingAnnouncement?.title || '',
+                              message: editingAnnouncement?.message || '',
+                              type: editingAnnouncement?.type || 'info',
+                              priority: e.target.value as Announcement['priority'],
+                              active: editingAnnouncement?.active !== undefined ? editingAnnouncement.active : true,
+                              createdAt: editingAnnouncement?.createdAt || new Date().toISOString(),
+                            } as Announcement)}
+                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">Expires At (Optional)</label>
+                          <input
+                            type="datetime-local"
+                            value={editingAnnouncement?.expiresAt?.slice(0, 16) || ''}
+                            onChange={(e) => setEditingAnnouncement({
+                              ...editingAnnouncement,
+                              id: editingAnnouncement?.id || '',
+                              title: editingAnnouncement?.title || '',
+                              message: editingAnnouncement?.message || '',
+                              type: editingAnnouncement?.type || 'info',
+                              priority: editingAnnouncement?.priority || 'medium',
+                              active: editingAnnouncement?.active !== undefined ? editingAnnouncement.active : true,
+                              createdAt: editingAnnouncement?.createdAt || new Date().toISOString(),
+                              expiresAt: e.target.value ? new Date(e.target.value).toISOString() : undefined,
+                            } as Announcement)}
+                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 pt-4">
+                        <Button
+                          color="primary"
+                          onPress={() => saveAnnouncement(editingAnnouncement!)}
+                        >
+                          {editingAnnouncement?.id ? 'Update' : 'Create'} Announcement
+                        </Button>
+                        <Button
+                          color="default"
+                          variant="flat"
+                          onPress={() => {
+                            setShowAnnouncementForm(false);
+                            setEditingAnnouncement(null);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  </CardBody>
+                </Card>
+              )}
+
+              {/* Announcements List */}
+              <div className="space-y-4">
+                {announcements.map((announcement) => (
+                  <Card key={announcement.id} className={`${!announcement.active ? 'opacity-60' : ''}`}>
+                    <CardBody className="p-6">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="text-lg font-semibold text-slate-800">{announcement.title}</h3>
+                            <Chip
+                              size="sm"
+                              color={
+                                announcement.type === 'warning' ? 'warning' :
+                                announcement.type === 'success' ? 'success' :
+                                announcement.type === 'announcement' ? 'secondary' :
+                                'primary'
+                              }
+                              variant="flat"
+                            >
+                              {announcement.type}
+                            </Chip>
+                            <Chip
+                              size="sm"
+                              color={
+                                announcement.priority === 'high' ? 'danger' :
+                                announcement.priority === 'medium' ? 'warning' :
+                                'default'
+                              }
+                              variant="flat"
+                            >
+                              {announcement.priority} priority
+                            </Chip>
+                            <Chip
+                              size="sm"
+                              color={announcement.active ? 'success' : 'default'}
+                              variant="flat"
+                            >
+                              {announcement.active ? 'Active' : 'Inactive'}
+                            </Chip>
+                          </div>
+                          
+                          <p className="text-slate-600 mb-3 whitespace-pre-wrap">{announcement.message}</p>
+                          
+                          <div className="flex items-center gap-4 text-sm text-slate-500">
+                            <span>Created: {new Date(announcement.createdAt).toLocaleString()}</span>
+                            {announcement.expiresAt && (
+                              <span>Expires: {new Date(announcement.expiresAt).toLocaleString()}</span>
+                            )}
+                            {announcement.replies && announcement.replies.length > 0 && (
+                              <span className="text-blue-600 font-medium">
+                                {announcement.replies.length} {announcement.replies.length === 1 ? 'reply' : 'replies'}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Replies Section */}
+                          {announcement.replies && announcement.replies.length > 0 && (
+                            <div className="mt-4 pl-4 border-l-2 border-slate-200 space-y-3">
+                              {announcement.replies.map((reply) => (
+                                <div key={reply.id} className="bg-slate-50 rounded-lg p-3">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="font-semibold text-sm text-slate-700">{reply.userName}</span>
+                                    <span className="text-xs text-slate-500">{reply.userEmail}</span>
+                                    <span className="text-xs text-slate-400">
+                                      {new Date(reply.createdAt).toLocaleString()}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-slate-600">{reply.message}</p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                          <Button
+                            size="sm"
+                            color={announcement.active ? 'warning' : 'success'}
+                            variant="flat"
+                            onPress={() => toggleAnnouncementActive(announcement.id)}
+                          >
+                            {announcement.active ? 'Deactivate' : 'Activate'}
+                          </Button>
+                          <Button
+                            size="sm"
+                            color="primary"
+                            variant="flat"
+                            startContent={<Edit className="h-3 w-3" />}
+                            onPress={() => {
+                              setEditingAnnouncement(announcement);
+                              setShowAnnouncementForm(true);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            color="danger"
+                            variant="flat"
+                            startContent={<Trash2 className="h-3 w-3" />}
+                            onPress={() => deleteAnnouncement(announcement.id)}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </CardBody>
+                  </Card>
+                ))}
+                
+                {announcements.length === 0 && (
+                  <Card>
+                    <CardBody className="text-center py-12 text-slate-500">
+                      <p className="text-lg mb-2">No announcements yet</p>
+                      <p className="text-sm">Create your first announcement to communicate with customers</p>
+                    </CardBody>
+                  </Card>
                 )}
               </div>
             </motion.div>

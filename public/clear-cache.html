@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Cache - Blue Belongs</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: white;
+            text-align: center;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        button {
+            background: white;
+            color: #0284c7;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .success { background: rgba(34, 197, 94, 0.3); }
+        .error { background: rgba(239, 68, 68, 0.3); }
+        a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌊 Blue Belongs Cache Manager</h1>
+        <p>Use this page to clear all cached data and service workers</p>
+        
+        <button onclick="clearEverything()">🧹 Clear All Caches</button>
+        <button onclick="unregisterServiceWorker()">🔄 Unregister Service Worker</button>
+        <button onclick="reloadPage()">♻️ Reload Fresh</button>
+        
+        <div id="status" class="status" style="display: none;"></div>
+        
+        <p style="margin-top: 30px;">
+            <a href="/">← Back to Home</a>
+        </p>
+    </div>
+
+    <script>
+        const status = document.getElementById('status');
+
+        function showStatus(message, isSuccess = true) {
+            status.style.display = 'block';
+            status.className = 'status ' + (isSuccess ? 'success' : 'error');
+            status.textContent = message;
+        }
+
+        async function clearEverything() {
+            try {
+                // Clear all caches
+                const cacheNames = await caches.keys();
+                await Promise.all(cacheNames.map(name => caches.delete(name)));
+                
+                // Clear localStorage
+                localStorage.clear();
+                
+                // Clear sessionStorage
+                sessionStorage.clear();
+                
+                showStatus(`✅ Cleared ${cacheNames.length} caches and all storage!`);
+                
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1500);
+            } catch (error) {
+                showStatus('❌ Error: ' + error.message, false);
+            }
+        }
+
+        async function unregisterServiceWorker() {
+            try {
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(registrations.map(reg => reg.unregister()));
+                    showStatus(`✅ Unregistered ${registrations.length} service worker(s)!`);
+                    
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showStatus('⚠️ Service Worker not supported', false);
+                }
+            } catch (error) {
+                showStatus('❌ Error: ' + error.message, false);
+            }
+        }
+
+        function reloadPage() {
+            // Force reload bypassing cache
+            window.location.reload(true);
+        }
+
+        // Show current cache info
+        window.addEventListener('load', async () => {
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                const cacheNames = await caches.keys();
+                console.log('Service Workers:', registrations.length);
+                console.log('Caches:', cacheNames);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Link from "next/link";
 import "./globals.css";
 import Navigation from "./components/NavigationWithTabs";
 import ClientRoot from './components/ClientRoot';
+import ServiceWorkerRegistration from '../components/ServiceWorkerRegistration';
 
 const inter = Inter({
   subsets: ["latin"],
@@ -12,6 +14,19 @@ export const metadata: Metadata = {
   title: "Blue Belong - Diving School Andaman",
   description: "Premier diving school in Andaman Islands offering certified diving courses, underwater adventures, and marine exploration experiences.",
   keywords: "diving school, scuba diving, Andaman, SSI courses, underwater adventure, marine life",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "BlueBelongs"
+  }
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: "#0ea5e9"
 };
 
 export default function RootLayout({
@@ -22,6 +37,7 @@ export default function RootLayout({
   return (
     <html lang="en">
   <body className={`${inter.className}`}>
+          <ServiceWorkerRegistration />
           <Navigation />
           <ClientRoot>
             <main className="min-h-screen">
@@ -53,16 +69,16 @@ export default function RootLayout({
                   <h3 className="text-3xl font-bold bg-gradient-to-r from-sky-200 via-cyan-200 to-blue-200 bg-clip-text text-transparent" style={{ fontFamily: 'Inter, serif' }}>
                     BlueBelong
                   </h3>
-                  <p className="text-slate-400 font-medium tracking-wide text-sm">Diving School</p>
+                  <p className="text-slate-400 font-medium tracking-wide text-sm">Diving School - Andaman Islands</p>
                 </div>
               </div>
               
               <div className="max-w-2xl mx-auto">
                 <p className="text-lg text-slate-300 leading-relaxed mb-4">
-                  Dive into Adventure in the pristine waters of Andaman Islands
+                  We guide people into the ocean — not to conquer it, but to reconnect with themselves through it.
                 </p>
                 <p className="text-sm text-slate-400 italic">
-                  &quot;You are the ocean&quot; - Where dreams meet the deep blue
+                  &quot;Calm. Confident. Connected. That&apos;s how we dive. BlueBelong - you are the ocean&quot;
                 </p>
               </div>
             </div>
@@ -70,38 +86,41 @@ export default function RootLayout({
             {/* Enhanced navigation links */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12 max-w-4xl mx-auto">
               <div>
-                <h4 className="text-sky-300 font-semibold mb-3 text-sm uppercase tracking-wider">Courses</h4>
+                <h4 className="text-sky-300 font-semibold mb-3 text-sm uppercase tracking-wider">Dive Courses</h4>
                 <ul className="space-y-2 text-sm">
-                  <li><a href="/courses" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">Open Water</a></li>
-                  <li><a href="/courses" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">Advanced Open Water</a></li>
-                  <li><a href="/courses" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">Rescue Diver</a></li>
+                  <li><a href="/courses" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">SSI Open Water Diver</a></li>
+                  <li><a href="/courses" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">Advanced Adventurer</a></li>
+                  <li><a href="/courses" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">Specialty Courses</a></li>
+                  <li><a href="/courses" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">View All Courses</a></li>
                 </ul>
               </div>
               
               <div>
-                <h4 className="text-sky-300 font-semibold mb-3 text-sm uppercase tracking-wider">Experience</h4>
+                <h4 className="text-sky-300 font-semibold mb-3 text-sm uppercase tracking-wider">Explore</h4>
                 <ul className="space-y-2 text-sm">
-                  <li><a href="/about" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">About Us</a></li>
-                  <li><a href="/blogs" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">Blog</a></li>
-                  <li><a href="/itinerary" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">Travel Guide</a></li>
+                  <li><Link href="/" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">Home</Link></li>
+                  <li><Link href="/about" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">About BlueBelong</Link></li>
+                  <li><Link href="/blogs" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">Diving Blog</Link></li>
+                  <li><Link href="/itinerary" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">Travel Itinerary</Link></li>
                 </ul>
               </div>
               
               <div>
-                <h4 className="text-sky-300 font-semibold mb-3 text-sm uppercase tracking-wider">Support</h4>
+                <h4 className="text-sky-300 font-semibold mb-3 text-sm uppercase tracking-wider">Resources</h4>
                 <ul className="space-y-2 text-sm">
-                  <li><a href="/medical-form" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">Medical Form</a></li>
-                  <li><a href="/dashboard" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">Dashboard</a></li>
-                  <li><a href="/login" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">Login</a></li>
+                  <li><a href="/medical-form" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">Medical Questionnaire</a></li>
+                  <li><a href="/dashboard" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">My Dashboard</a></li>
+                  <li><a href="/login" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">Login / Sign Up</a></li>
                 </ul>
               </div>
               
               <div>
-                <h4 className="text-sky-300 font-semibold mb-3 text-sm uppercase tracking-wider">Connect</h4>
+                <h4 className="text-sky-300 font-semibold mb-3 text-sm uppercase tracking-wider">Location</h4>
                 <ul className="space-y-2 text-sm">
-                  <li><span className="text-slate-400">Andaman Islands</span></li>
-                  <li><span className="text-slate-400">Deep Blue Waters</span></li>
-                  <li><span className="text-slate-400">Ocean Adventures</span></li>
+                  <li><span className="text-slate-400">Havelock Island</span></li>
+                  <li><span className="text-slate-400">Andaman & Nicobar</span></li>
+                  <li><span className="text-slate-400">India</span></li>
+                  <li><a href="/itinerary" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">How to Reach</a></li>
                 </ul>
               </div>
             </div>
@@ -110,7 +129,7 @@ export default function RootLayout({
             <div className="border-t border-slate-700/50 pt-8">
               <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
                 <p className="text-sm text-slate-400 flex items-center space-x-2">
-                  <span>© 2024</span>
+                  <span>© 2025</span>
                   <span className="w-1 h-1 bg-slate-500 rounded-full"></span>
                   <span className="font-medium text-slate-300">BlueBelong Diving School</span>
                   <span className="w-1 h-1 bg-slate-500 rounded-full"></span>
@@ -118,10 +137,10 @@ export default function RootLayout({
                 </p>
                 
                 <div className="flex items-center space-x-6 text-xs text-slate-500">
-                  <span>Made with passion for the ocean</span>
+                  <span>SSI Certified Diving Center</span>
                   <div className="flex items-center space-x-1">
                     <div className="w-2 h-2 bg-sky-400 rounded-full animate-pulse"></div>
-                    <span>Diving into dreams</span>
+                    <span>The blue has always belonged to you</span>
                   </div>
                 </div>
               </div>

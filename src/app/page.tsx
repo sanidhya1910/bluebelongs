@@ -1,29 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Award, MapPin, Star, Fish, Heart, Shield } from 'lucide-react';
+import Image from 'next/image';
+import { ArrowRight, MapPin, Star, Fish, Users, Waves, Award, Shield, Globe } from 'lucide-react';
 import { motion, useInView } from 'framer-motion';
 import MasonryGallery from '@/components/MasonryGallery';
 import BluesBelongHero from '@/components/BluesBelongHero';
+import MessageBoard from '@/components/MessageBoard';
+import WhatsAppButton from '@/components/WhatsAppButton';
+import SpecialOffersBanner from '@/components/SpecialOffersBanner';
+import ReviewsSection from '@/components/ReviewsSection';
+import { FeaturesSectionWithHoverEffects } from '@/components/ui/feature-section-with-hover-effects';
 import { useRef, useState, useEffect, useMemo } from 'react';
-
-
-// Wave Divider Component
-const WaveDivider = ({ color = '#EFECE5', flip = false, className = '' }: { color?: string; flip?: boolean; className?: string }) => (
-  <div className={`w-full overflow-hidden leading-none ${className}`} aria-hidden="true">
-    <svg
-      viewBox="0 0 1440 100"
-      xmlns="http://www.w3.org/2000/svg"
-      className={`block w-full h-[80px] ${flip ? 'rotate-180' : ''}`}
-      preserveAspectRatio="none"
-    >
-      <path
-        d="M0,32 C120,52 240,72 360,72 C480,72 600,52 720,40 C840,28 960,24 1080,32 C1200,40 1320,60 1440,72 L1440,100 L0,100 Z"
-        fill={color}
-      />
-    </svg>
-  </div>
-);
 
 export default function HomePage() {
   const featuresRef = useRef(null);
@@ -120,25 +108,37 @@ export default function HomePage() {
   const testimonialsInView = useInView(testimonialsRef, { once: true });
   const ctaInView = useInView(ctaRef, { once: true });
 
-  // Framer-style Benefits/Features Data
-  const benefits = [
+  // Benefits/Features Data for new component
+  const benefitsFeatures = [
     {
-      icon: <Award className="h-8 w-8 text-sky-600" />,
-      title: "PROFESSIONAL TRAINING",
-      description: "SSI certified courses from beginner to advanced levels",
-      gradient: "from-sky-100/80 to-blue-100/80"
+      title: "SSI CERTIFIED COURSES",
+      description: "All our courses are SSI (Scuba Schools International) certified - recognized and accepted at dive centers worldwide. Your certification opens doors to underwater adventures globally.",
+      icon: <div className="relative w-12 h-12"><Image src="/ssi_logo.png" alt="SSI" fill className="object-contain" /></div>
     },
     {
-      icon: <Shield className="h-8 w-8 text-cyan-600" />,
-      title: "SAFETY FIRST",
-      description: "Experienced instructors ensuring your underwater safety",
-      gradient: "from-cyan-100/80 to-teal-100/80"
+      title: "EXPERT DIVE PROFESSIONAL",
+      description: "Our SSI-certified instructor brings over 15+ years of diving experience with extensive knowledge of Andaman waters, ensuring your safety and enjoyment on every dive.",
+      icon: <Users className="h-12 w-12 stroke-[1.5]" />
     },
     {
-      icon: <Heart className="h-8 w-8 text-blue-600" />,
-      title: "OCEAN CONNECTION", 
-      description: "Discover your deeper relationship with marine life",
-      gradient: "from-blue-100/80 to-indigo-100/80"
+      title: "PRISTINE DIVE SITES",
+      description: "Experience the untouched beauty of Andaman & Nicobar Islands - crystal clear waters with 15-30m visibility, vibrant coral reefs, and diverse marine life.",
+      icon: <Waves className="h-12 w-12 stroke-[1.5]" />
+    },
+    {
+      title: "LIFETIME CERTIFICATION",
+      description: "Once certified, your SSI credentials are valid for life. No renewal fees, no expiration dates - your underwater passport to explore the world's oceans forever.",
+      icon: <Award className="h-12 w-12 stroke-[1.5]" />
+    },
+    {
+      title: "SAFETY FIRST APPROACH",
+      description: "We maintain the highest safety standards with regular equipment checks, comprehensive briefings, and adherence to international diving protocols for every single dive.",
+      icon: <Shield className="h-12 w-12 stroke-[1.5]" />
+    },
+    {
+      title: "GLOBAL RECOGNITION",
+      description: "Your SSI certification is recognized at over 30,000 dive centers worldwide in 130+ countries. Dive anywhere, anytime with credentials that matter.",
+      icon: <Globe className="h-12 w-12 stroke-[1.5]" />
     }
   ];
 
@@ -146,7 +146,7 @@ export default function HomePage() {
     {
       name: "Sanidhya",
       rating: 5,
-      comment: "BlueBelong transformed my relationship with the ocean. The instructors create such a peaceful, connected experience.",
+      comment: "BlueBelong transformed my relationship with the ocean. The instructor creates such a peaceful, connected experience.",
       role: "Open Water Diver",
       avatar: "S"
     },
@@ -167,40 +167,32 @@ export default function HomePage() {
       {/* MAIN CONTENT */}
       <main className="sand-section">
         
-        {/* BENEFITS SECTION - Framer Style */}
-  <section ref={featuresRef} className="py-24 relative sand-section">
+      {/* BENEFITS SECTION - shadcn Style */}
+      <section ref={featuresRef} className="py-24 relative bg-white">
           <div className="container mx-auto px-4">
-            <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              {benefits.map((benefit, index) => (
-                <motion.div
-                  key={index}
-                  className={`relative p-8 rounded-3xl border border-white/20 backdrop-blur-sm bg-gradient-to-br ${benefit.gradient} shadow-lg hover:shadow-xl transition-all duration-500`}
-                  initial={{ opacity: 0, y: 60 }}
-                  animate={featuresInView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ delay: index * 0.2, duration: 1 }}
-                  whileHover={{ scale: 1.02, y: -8 }}
-                >
-                  {/* Icon Circle */}
-                  <motion.div
-                    className="inline-flex p-4 rounded-full bg-white/80 backdrop-blur-sm mb-6 shadow-lg"
-                    animate={{ rotate: [0, 5, -5, 0] }}
-                    transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                  >
-                    {benefit.icon}
-                  </motion.div>
-                  
-                  {/* Text Content */}
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-bold text-slate-700 tracking-wider uppercase">
-                      {benefit.title}
-                    </h3>
-                    <p className="text-slate-600 leading-relaxed">
-                      {benefit.description}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+            {/* Section Header */}
+            <motion.div
+              className="text-center mb-16"
+              initial={{ opacity: 0, y: 20 }}
+              animate={featuresInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.8 }}
+            >
+              <h2 className="text-4xl md:text-5xl font-bold text-slate-800 mb-4">
+                Why Choose <span className="text-sky-600">BlueBelong</span>
+              </h2>
+              <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+                Professional training, world-class certifications, and unforgettable underwater experiences
+              </p>
+            </motion.div>
+
+            {/* Feature Grid */}
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={featuresInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              <FeaturesSectionWithHoverEffects features={benefitsFeatures} />
+            </motion.div>
           </div>
         </section>
 
@@ -246,7 +238,7 @@ export default function HomePage() {
                   animate={aboutInView ? { opacity: 1, scale: 1 } : {}}
                   transition={{ delay: 0.5, duration: 0.8 }}
                 >
-                  <span className="text-sm font-medium text-sky-700">ABOUT YOUR INSTRUCTORS</span>
+                  <span className="text-sm font-medium text-sky-700">ABOUT YOUR INSTRUCTOR</span>
                 </motion.div>
                 
                 {/* Main Heading with Framer Animation */}
@@ -312,11 +304,11 @@ export default function HomePage() {
                 >
                   <div className="flex items-center gap-3 text-sky-700 font-medium">
                     <div className="w-2 h-2 bg-sky-500 rounded-full"></div>
-                    <span>SSI Certified Instructors</span>
+                    <span>SSI Certified Instructor</span>
                   </div>
                   <div className="flex items-center gap-3 text-sky-700 font-medium">
                     <div className="w-2 h-2 bg-sky-500 rounded-full"></div>
-                    <span>15+ Years Combined Experience</span>
+                    <span>15+ Years of Experience</span>
                   </div>
                 </motion.div>
                 
@@ -339,7 +331,7 @@ export default function HomePage() {
         </section>
 
     {/* GALLERY SECTION - Masonry */}
-  <section className="py-16 relative overflow-hidden sand-section">
+  <section className="py-16 relative overflow-hidden bg-gradient-to-b from-[rgb(239,236,229)] to-white">
           <div className="container mx-auto px-4">
               <motion.div
               className="text-center mb-12"
@@ -390,11 +382,8 @@ export default function HomePage() {
           </div>
         </section>
 
-  {/* Wave divider between gallery and testimonials */}
-  <WaveDivider color="rgb(239, 236, 229)" />
-
         {/* TESTIMONIALS SECTION - Framer Style */}
-  <section ref={testimonialsRef} className="py-24 relative sand-section">
+  <section ref={testimonialsRef} className="py-24 relative bg-white">
           <div className="container mx-auto px-4">
             <motion.div
               className="text-center mb-16"
@@ -452,11 +441,14 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* USER REVIEWS SECTION - Dynamic from localStorage */}
+        <ReviewsSection maxReviews={5} />
+
         {/* CTA SECTION - Framer Style with Ocean Background */}
-  <section ref={ctaRef} className="py-24 relative overflow-hidden">
-          {/* Ocean gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-sky-600 via-blue-700 to-cyan-600 z-0"></div>
-          <div className="absolute inset-0 bg-gradient-to-br from-sky-600/40 via-blue-700/30 to-cyan-600/40 z-10"></div>
+  <section ref={ctaRef} className="py-24 relative overflow-hidden bg-gradient-to-br from-sky-500 via-blue-600 to-cyan-500">
+          {/* Ocean pattern overlay */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.1),transparent_50%)] z-0"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(255,255,255,0.05),transparent_50%)] z-0"></div>
           
           <div className="container mx-auto px-4 text-center relative z-20">
             <motion.div
@@ -527,10 +519,16 @@ export default function HomePage() {
             </motion.div>
           </div>
         </section>
-
-  {/* Wave divider into footer background */}
-  <WaveDivider color="#f8fafc" flip className="-mt-[1px]" />
       </main>
+
+      {/* Special Offers Banner */}
+      <SpecialOffersBanner />
+      
+      {/* Message Board Component */}
+      <MessageBoard />
+      
+      {/* WhatsApp Button */}
+      <WhatsAppButton />
     </div>
   );
 }
