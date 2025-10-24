@@ -2,22 +2,23 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { Card, CardBody, CardHeader, Button, Tabs, Tab, Avatar, Chip, Input } from '@heroui/react';
 import { 
-  User, 
-  Calendar, 
-  BookOpen, 
-  Users, 
-  Clock, 
-  CheckCircle, 
-  Settings,
-  Activity,
-  Waves,
   Fish,
+  BookOpen,
   MapPin,
-  X
+  Calendar,
+  CheckCircle,
+  X,
+  Activity,
+  User as UserIcon,
+  Clock,
+  Users,
+  Waves
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-interface User {
+interface UserData {
   id: number;
   name: string;
   email: string;
@@ -47,7 +48,7 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserData | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
   const [userBookings, setUserBookings] = useState<Booking[]>([]);
@@ -108,30 +109,6 @@ export default function DashboardPage() {
     }
   };
 
-  // Logout handled globally via main navigation
-
-  if (loading) {
-    return (
-      <div className="min-h-screen sand-section flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600 mx-auto mb-4"></div>
-          <p className="text-sky-600">Loading your diving dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen sand-section flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">Please log in to access the dashboard</p>
-          <Link href="/login" className="btn-primary">Go to Login</Link>
-        </div>
-      </div>
-    );
-  }
-
   const cancelBooking = async (bookingId: number) => {
     if (!confirm('Are you sure you want to cancel this booking? This action cannot be undone.')) {
       return;
@@ -149,7 +126,6 @@ export default function DashboardPage() {
 
       if (response.ok) {
         alert('Booking cancelled successfully');
-        // Reload the data to show updated status
         loadDashboardData();
       } else {
         const error = await response.json();
@@ -161,452 +137,414 @@ export default function DashboardPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): "default" | "primary" | "secondary" | "success" | "warning" | "danger" => {
     switch (status) {
-      case 'confirmed': return 'text-green-600 bg-green-100';
-      case 'pending': return 'text-yellow-600 bg-yellow-100';
-      case 'cancelled': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
+      case 'confirmed': return 'success';
+      case 'pending': return 'warning';
+      case 'cancelled': return 'danger';
+      default: return 'default';
     }
   };
 
-  return (
-    <div className="min-h-screen sand-section pt-24">
-      <div className="container mx-auto px-4 py-6">
-        {/* Navigation Tabs */}
-        <div className="flex space-x-1 mb-8 bg-white rounded-lg p-1 shadow-sm">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`flex-1 px-4 py-2 rounded-md transition-colors ${
-              activeTab === 'overview'
-                ? 'bg-sky-500 text-white shadow-sm'
-                : 'text-sky-600 hover:bg-sky-50'
-            }`}
-          >
-            <Activity className="h-4 w-4 inline mr-2" />
-            Overview
-          </button>
-          
-          <button
-            onClick={() => setActiveTab('bookings')}
-            className={`flex-1 px-4 py-2 rounded-md transition-colors ${
-              activeTab === 'bookings'
-                ? 'bg-sky-500 text-white shadow-sm'
-                : 'text-sky-600 hover:bg-sky-50'
-            }`}
-          >
-            <Calendar className="h-4 w-4 inline mr-2" />
-            My Bookings
-          </button>
-          
-          <button
-            onClick={() => setActiveTab('profile')}
-            className={`flex-1 px-4 py-2 rounded-md transition-colors ${
-              activeTab === 'profile'
-                ? 'bg-sky-500 text-white shadow-sm'
-                : 'text-sky-600 hover:bg-sky-50'
-            }`}
-          >
-            <User className="h-4 w-4 inline mr-2" />
-            Profile
-          </button>
-          
-          {(user.role === 'admin' || user.role === 'instructor') && (
-            <button
-              onClick={() => setActiveTab('admin')}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
-                activeTab === 'admin'
-                  ? 'bg-sky-500 text-white shadow-sm'
-                  : 'text-sky-600 hover:bg-sky-50'
-              }`}
-            >
-              <Settings className="h-4 w-4 inline mr-2" />
-              Admin
-            </button>
-          )}
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-50 flex items-center justify-center pt-24">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600 mx-auto mb-4"></div>
+          <p className="text-sky-600 text-lg">Loading your diving dashboard...</p>
         </div>
+      </div>
+    );
+  }
 
-        {/* Overview Tab */}
-        {activeTab === 'overview' && (
-          <div className="space-y-8">
-            {/* Welcome Section */}
-            <div className="bg-gradient-to-r from-sky-500 to-cyan-600 rounded-xl p-8 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-2xl font-bold mb-2">Welcome back, {user.name}!</h3>
-                  <p className="text-sky-100 mb-4">Ready for your next diving adventure?</p>
-                  <div className="flex items-center space-x-6">
-                    <div className="flex items-center space-x-2">
-                      <Fish className="h-5 w-5" />
-                      <span>Total Dives: {user.total_dives}</span>
-                    </div>
-                    {user.certification_level && (
-                      <div className="flex items-center space-x-2">
-                        <BookOpen className="h-5 w-5" />
-                        <span>Level: {user.certification_level}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="hidden md:block">
-                  <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center">
-                    <Waves className="h-12 w-12 text-white" />
-                  </div>
-                </div>
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-50 flex items-center justify-center pt-24">
+        <Card className="max-w-md shadow-2xl">
+          <CardBody className="text-center space-y-4 p-8">
+            <p className="text-red-600 text-lg">Please log in to access the dashboard</p>
+            <Link href="/login">
+              <Button color="primary" size="lg">Go to Login</Button>
+            </Link>
+          </CardBody>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-blue-50 to-cyan-50 pt-24 pb-12">
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        <Tabs 
+          selectedKey={activeTab} 
+          onSelectionChange={(key) => setActiveTab(key as string)}
+          color="primary"
+          variant="underlined"
+          size="lg"
+          classNames={{
+            tabList: "bg-white/60 backdrop-blur-md rounded-2xl p-2 shadow-lg border border-white/50",
+            cursor: "bg-gradient-to-r from-sky-500 to-cyan-500 shadow-md",
+            tab: "text-slate-700 data-[selected=true]:text-sky-700 font-medium px-6",
+            panel: "mt-8"
+          }}
+        >
+          <Tab
+            key="overview"
+            title={
+              <div className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                <span>Overview</span>
               </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Link href="/courses" className="card hover:shadow-lg transition-shadow group">
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 bg-sky-100 rounded-lg group-hover:bg-sky-200 transition-colors">
-                    <BookOpen className="h-6 w-6 text-sky-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Browse Courses</h4>
-                    <p className="text-sm text-gray-600">Explore diving courses</p>
-                  </div>
-                </div>
-              </Link>
-              
-              <Link href="/medical-form" className="card hover:shadow-lg transition-shadow group">
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors">
-                    <CheckCircle className="h-6 w-6 text-green-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Medical Form</h4>
-                    <p className="text-sm text-gray-600">Complete health check</p>
-                  </div>
-                </div>
-              </Link>
-              
-              <Link href="/itinerary" className="card hover:shadow-lg transition-shadow group">
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 bg-cyan-100 rounded-lg group-hover:bg-cyan-200 transition-colors">
-                    <MapPin className="h-6 w-6 text-cyan-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Travel Guide</h4>
-                    <p className="text-sm text-gray-600">Plan your trip</p>
-                  </div>
-                </div>
-              </Link>
-            </div>
-
-            {/* Recent Bookings Preview */}
-            {userBookings.length > 0 && (
-              <div className="card">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-semibold text-gray-900">Recent Bookings</h3>
-                  <button 
-                    onClick={() => setActiveTab('bookings')}
-                    className="text-sky-600 hover:text-sky-700 font-medium"
-                  >
-                    View All
-                  </button>
-                </div>
-                
-                <div className="space-y-4">
-                  {userBookings.slice(0, 3).map((booking) => (
-                    <div key={booking.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div>
-                        <h4 className="font-medium text-gray-900">{booking.course_name}</h4>
-                        <p className="text-sm text-gray-600">
-                          {new Date(booking.preferred_date).toLocaleDateString()} • {booking.course_price}
-                        </p>
-                      </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
-                        {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Bookings Tab */}
-        {activeTab === 'bookings' && (
-          <div className="card">
-            <h3 className="text-xl font-semibold text-gray-900 mb-6">My Bookings</h3>
-            
-            {userBookings.length === 0 ? (
-              <div className="text-center py-12">
-                <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-4">No bookings yet</p>
-                <Link href="/courses" className="btn-primary">Book Your First Course</Link>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {userBookings.map((booking) => (
-                  <div key={booking.id} className="border border-gray-200 rounded-lg p-6">
-                    <div className="flex items-start justify-between">
+            }
+          >
+            <div className="space-y-8">
+              {/* Welcome Card */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Card className="bg-gradient-to-r from-sky-500 via-blue-600 to-cyan-600 border-none shadow-2xl overflow-hidden">
+                  <CardBody className="p-8 md:p-10">
+                    <div className="flex flex-col md:flex-row items-center justify-between text-white gap-6">
                       <div className="flex-1">
-                        <h4 className="text-lg font-semibold text-gray-900 mb-2">{booking.course_name}</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                          <div>
-                            <span className="font-medium">Date:</span> {new Date(booking.preferred_date).toLocaleDateString()}
+                        <h3 className="text-3xl md:text-4xl font-bold mb-3">Welcome back, {user.name}!</h3>
+                        <p className="text-sky-100 mb-6 text-lg md:text-xl">Ready for your next diving adventure?</p>
+                        <div className="flex flex-wrap items-center gap-4">
+                          <div className="flex items-center space-x-2 bg-white/20 rounded-full px-5 py-2.5 backdrop-blur-sm border border-white/30">
+                            <Fish className="h-5 w-5" />
+                            <span className="font-semibold">Total Dives: {user.total_dives}</span>
                           </div>
-                          <div>
-                            <span className="font-medium">Price:</span> {booking.course_price}
-                          </div>
-                          <div>
-                            <span className="font-medium">Booked:</span> {new Date(booking.created_at).toLocaleDateString()}
-                          </div>
+                          {user.certification_level && (
+                            <div className="flex items-center space-x-2 bg-white/20 rounded-full px-5 py-2.5 backdrop-blur-sm border border-white/30">
+                              <BookOpen className="h-5 w-5" />
+                              <span className="font-semibold">Level: {user.certification_level}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
+                      <Avatar
+                        className="w-28 h-28 text-5xl bg-white/30 text-white border-4 border-white/50 shadow-xl"
+                        name={user.name}
+                        showFallback
+                      />
+                    </div>
+                  </CardBody>
+                </Card>
+              </motion.div>
+
+              {/* Quick Actions */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[
+                  { href: '/courses', icon: <BookOpen className="h-8 w-8" />, title: 'Browse Courses', desc: 'Explore diving courses', gradient: 'from-sky-50 to-blue-100', iconBg: 'bg-sky-100', iconColor: 'text-sky-600' },
+                  { href: '/medical-form', icon: <CheckCircle className="h-8 w-8" />, title: 'Medical Form', desc: 'Complete health check', gradient: 'from-green-50 to-emerald-100', iconBg: 'bg-green-100', iconColor: 'text-green-600' },
+                  { href: '/itinerary', icon: <MapPin className="h-8 w-8" />, title: 'Travel Guide', desc: 'Plan your trip', gradient: 'from-cyan-50 to-teal-100', iconBg: 'bg-cyan-100', iconColor: 'text-cyan-600' }
+                ].map((action, i) => (
+                  <motion.div
+                    key={action.href}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 * (i + 1), duration: 0.5 }}
+                  >
+                    <Link href={action.href}>
+                      <Card className={`hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-gradient-to-br ${action.gradient} border border-white/50`}>
+                        <CardBody className="p-7">
+                          <div className="flex items-center space-x-5">
+                            <div className={`p-4 ${action.iconBg} rounded-2xl shadow-md ${action.iconColor}`}>
+                              {action.icon}
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-gray-900 text-lg mb-1">{action.title}</h4>
+                              <p className="text-sm text-gray-600">{action.desc}</p>
+                            </div>
+                          </div>
+                        </CardBody>
+                      </Card>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Recent Bookings */}
+              {userBookings.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.5 }}
+                >
+                  <Card className="shadow-xl border border-white/50">
+                    <CardHeader className="flex justify-between items-center pb-0 px-7 pt-6">
+                      <h3 className="text-2xl font-bold text-gray-900">Recent Bookings</h3>
+                      <Button 
+                        onClick={() => setActiveTab('bookings')}
+                        color="primary"
+                        variant="flat"
+                        size="md"
+                      >
+                        View All
+                      </Button>
+                    </CardHeader>
+                    <CardBody className="space-y-3 pt-5 px-7 pb-7">
+                      {userBookings.slice(0, 3).map((booking) => (
+                        <div key={booking.id} className="flex items-center justify-between p-5 bg-gradient-to-r from-sky-50 via-blue-50 to-cyan-50 rounded-xl border border-sky-200 shadow-sm hover:shadow-md transition-shadow">
+                          <div>
+                            <h4 className="font-semibold text-gray-900 text-lg mb-1">{booking.course_name}</h4>
+                            <p className="text-sm text-gray-600">
+                              {new Date(booking.preferred_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} • {booking.course_price}
+                            </p>
+                          </div>
+                          <Chip color={getStatusColor(booking.status)} variant="flat" size="lg">
+                            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                          </Chip>
+                        </div>
+                      ))}
+                    </CardBody>
+                  </Card>
+                </motion.div>
+              )}
+
+              {/* Admin Stats */}
+              {(user.role === 'admin' || user.role === 'instructor') && stats && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.5 }}
+                  className="grid grid-cols-1 md:grid-cols-4 gap-6"
+                >
+                  {[
+                    { label: 'Total Bookings', value: stats.totalBookings, icon: <Calendar className="h-8 w-8" />, color: 'from-blue-500 to-blue-600', iconColor: 'text-blue-600' },
+                    { label: 'Pending', value: stats.pendingBookings, icon: <Clock className="h-8 w-8" />, color: 'from-yellow-500 to-yellow-600', iconColor: 'text-yellow-600' },
+                    { label: 'Confirmed', value: stats.confirmedBookings, icon: <CheckCircle className="h-8 w-8" />, color: 'from-green-500 to-green-600', iconColor: 'text-green-600' },
+                    { label: 'Total Users', value: stats.totalUsers, icon: <Users className="h-8 w-8" />, color: 'from-purple-500 to-purple-600', iconColor: 'text-purple-600' }
+                  ].map((stat) => (
+                    <Card key={stat.label} className="shadow-lg border border-white/50">
+                      <CardBody className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-gray-600 mb-1">{stat.label}</p>
+                            <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                          </div>
+                          <div className={`${stat.iconColor}`}>
+                            {stat.icon}
+                          </div>
+                        </div>
+                      </CardBody>
+                    </Card>
+                  ))}
+                </motion.div>
+              )}
+            </div>
+          </Tab>
+
+          <Tab
+            key="bookings"
+            title={
+              <div className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                <span>My Bookings</span>
+              </div>
+            }
+          >
+            <Card className="shadow-xl border border-white/50">
+              <CardHeader className="px-7 pt-6">
+                <h3 className="text-2xl font-bold text-gray-900">My Bookings</h3>
+              </CardHeader>
+              <CardBody className="px-7 pb-7">
+                {userBookings.length === 0 ? (
+                  <div className="text-center py-16">
+                    <div className="inline-block p-6 bg-sky-50 rounded-full mb-6">
+                      <Calendar className="h-20 w-20 text-sky-300" />
+                    </div>
+                    <p className="text-gray-600 text-lg mb-6">No bookings yet</p>
+                    <Link href="/courses">
+                      <Button color="primary" size="lg" startContent={<BookOpen className="h-5 w-5" />} className="font-semibold">
+                        Book Your First Course
+                      </Button>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-5">
+                    {userBookings.map((booking) => (
+                      <Card key={booking.id} className="border-2 border-gray-200 shadow-md hover:shadow-lg transition-shadow">
+                        <CardBody className="p-6">
+                          <div className="flex flex-col md:flex-row items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <h4 className="text-xl font-bold text-gray-900 mb-3">{booking.course_name}</h4>
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-gray-600">
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="h-4 w-4 text-sky-500" />
+                                  <span><span className="font-medium">Date:</span> {new Date(booking.preferred_date).toLocaleDateString()}</span>
+                                </div>
+                                <div>
+                                  <span className="font-medium">Price:</span> {booking.course_price}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Booked:</span> {new Date(booking.created_at).toLocaleDateString()}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex flex-col items-end space-y-3">
+                              <Chip color={getStatusColor(booking.status)} variant="flat" size="lg">
+                                {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                              </Chip>
+                              <Chip color={getStatusColor(booking.payment_status)} variant="flat">
+                                Payment: {booking.payment_status}
+                              </Chip>
+                              {(booking.status === 'pending' || booking.status === 'confirmed') && (
+                                <Button
+                                  onClick={() => cancelBooking(booking.id)}
+                                  color="danger"
+                                  variant="flat"
+                                  size="sm"
+                                  startContent={<X className="h-4 w-4" />}
+                                >
+                                  Cancel
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </CardBody>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardBody>
+            </Card>
+          </Tab>
+
+          <Tab
+            key="profile"
+            title={
+              <div className="flex items-center gap-2">
+                <UserIcon className="h-5 w-5" />
+                <span>Profile</span>
+              </div>
+            }
+          >
+            <Card className="shadow-xl border border-white/50">
+              <CardHeader className="px-7 pt-6">
+                <h3 className="text-2xl font-bold text-gray-900">Profile Information</h3>
+              </CardHeader>
+              <CardBody className="px-7 pb-7">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  <div className="space-y-6">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4">Personal Details</h4>
+                    <Input
+                      label="Full Name"
+                      value={user.name}
+                      isDisabled
+                      variant="bordered"
+                      size="lg"
+                      classNames={{ input: "text-gray-700" }}
+                    />
+                    
+                    <Input
+                      label="Email"
+                      type="email"
+                      value={user.email}
+                      isDisabled
+                      variant="bordered"
+                      size="lg"
+                      classNames={{ input: "text-gray-700" }}
+                    />
+
+                    <Input
+                      label="Phone"
+                      value={user.phone ?? 'Not provided'}
+                      isDisabled
+                      variant="bordered"
+                      size="lg"
+                      classNames={{ input: "text-gray-700" }}
+                    />
+                  </div>
+                  
+                  <div className="space-y-6">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4">Change Password</h4>
+                    <div className="space-y-5">
+                      <Input
+                        type="password"
+                        label="Current Password"
+                        value={pwForm.currentPassword}
+                        onChange={(e) => setPwForm({ ...pwForm, currentPassword: e.target.value })}
+                        variant="bordered"
+                        size="lg"
+                      />
                       
-                      <div className="flex flex-col items-end space-y-2">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
-                          {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                        </span>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.payment_status)}`}>
-                          Payment: {booking.payment_status}
-                        </span>
-                        {(booking.status === 'pending' || booking.status === 'confirmed') && (
-                          <button
-                            onClick={() => cancelBooking(booking.id)}
-                            className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
-                          >
-                            <X className="h-3 w-3" />
-                            Cancel
-                          </button>
+                      <Input
+                        type="password"
+                        label="New Password"
+                        value={pwForm.newPassword}
+                        onChange={(e) => setPwForm({ ...pwForm, newPassword: e.target.value })}
+                        variant="bordered"
+                        size="lg"
+                      />
+                      
+                      <Input
+                        type="password"
+                        label="Confirm New Password"
+                        value={pwForm.confirm}
+                        onChange={(e) => setPwForm({ ...pwForm, confirm: e.target.value })}
+                        variant="bordered"
+                        size="lg"
+                      />
+                      
+                      <div className="flex flex-col gap-3 pt-2">
+                        <Button
+                          onClick={async () => {
+                            setPwMessage(null);
+                            if (!pwForm.currentPassword || !pwForm.newPassword) {
+                              setPwMessage('Please fill all password fields');
+                              return;
+                            }
+                            if (pwForm.newPassword !== pwForm.confirm) {
+                              setPwMessage('New passwords do not match');
+                              return;
+                            }
+                            try {
+                              setPwLoading(true);
+                              const token = localStorage.getItem('authToken');
+                              const res = await fetch('https://bluebelong-api.blackburn1910.workers.dev/api/auth/change-password', {
+                                method: 'POST',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                  'Authorization': `Bearer ${token}`
+                                },
+                                body: JSON.stringify({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword })
+                              });
+                              const data = await res.json();
+                              if (res.ok && data.success) {
+                                setPwMessage('Password updated successfully');
+                                setPwForm({ currentPassword: '', newPassword: '', confirm: '' });
+                              } else {
+                                setPwMessage(data.error || 'Failed to change password');
+                              }
+                            } catch {
+                              setPwMessage('Network error. Please try again.');
+                            } finally {
+                              setPwLoading(false);
+                            }
+                          }}
+                          color="primary"
+                          isLoading={pwLoading}
+                          size="lg"
+                          className="w-full font-semibold"
+                        >
+                          Change Password
+                        </Button>
+                        {pwMessage && (
+                          <p className={`text-sm font-medium ${pwMessage.includes('success') ? 'text-green-600' : 'text-red-600'}`}>
+                            {pwMessage}
+                          </p>
                         )}
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Profile Tab */}
-        {activeTab === 'profile' && (
-          <div className="card">
-            <h3 className="text-xl font-semibold text-gray-900 mb-6">Profile Information</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                  <input
-                    type="text"
-                    value={user.name}
-                    disabled
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                  />
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                  <input
-                    type="email"
-                    value={user.email}
-                    disabled
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                  <input
-                    type="text"
-                    value={user.phone ?? 'Not provided'}
-                    disabled
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-6">
-                {/* Removed Total Dives and Certification Level per requirement */}
-                
-                <div className="pt-4">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-3">Change Password</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
-                      <input
-                        type="password"
-                        value={pwForm.currentPassword}
-                        onChange={(e) => setPwForm({ ...pwForm, currentPassword: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                        placeholder="Enter current password"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                      <input
-                        type="password"
-                        value={pwForm.newPassword}
-                        onChange={(e) => setPwForm({ ...pwForm, newPassword: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                        placeholder="Enter new password"
-                      />
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
-                      <input
-                        type="password"
-                        value={pwForm.confirm}
-                        onChange={(e) => setPwForm({ ...pwForm, confirm: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                        placeholder="Retype new password"
-                      />
-                    </div>
-                    <div className="md:col-span-2 flex items-center gap-3">
-                      <button
-                        onClick={async () => {
-                          setPwMessage(null);
-                          if (!pwForm.currentPassword || !pwForm.newPassword) {
-                            setPwMessage('Please fill all password fields');
-                            return;
-                          }
-                          if (pwForm.newPassword !== pwForm.confirm) {
-                            setPwMessage('New passwords do not match');
-                            return;
-                          }
-                          try {
-                            setPwLoading(true);
-                            const token = localStorage.getItem('authToken');
-                            const res = await fetch('https://bluebelong-api.blackburn1910.workers.dev/api/auth/change-password', {
-                              method: 'POST',
-                              headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`
-                              },
-                              body: JSON.stringify({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword })
-                            });
-                            const data = await res.json();
-                            if (res.ok && data.success) {
-                              setPwMessage('Password updated successfully');
-                              setPwForm({ currentPassword: '', newPassword: '', confirm: '' });
-                            } else {
-                              setPwMessage(data.error || 'Failed to change password');
-                            }
-                          } catch {
-                            setPwMessage('Network error. Please try again.');
-                          } finally {
-                            setPwLoading(false);
-                          }
-                        }}
-                        className="btn-primary"
-                        disabled={pwLoading}
-                      >
-                        {pwLoading ? 'Updating...' : 'Change Password'}
-                      </button>
-                      {pwMessage && <span className={`text-sm ${pwMessage.includes('success') ? 'text-green-600' : 'text-red-600'}`}>{pwMessage}</span>}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Admin Tab */}
-        {(user.role === 'admin' || user.role === 'instructor') && activeTab === 'admin' && (
-          <div className="space-y-8">
-            {/* Stats Cards */}
-            {stats && (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="card">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Total Bookings</p>
-                      <p className="text-2xl font-bold text-gray-900">{stats.totalBookings}</p>
-                    </div>
-                    <Calendar className="h-8 w-8 text-sky-600" />
-                  </div>
-                </div>
-                
-                <div className="card">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Pending</p>
-                      <p className="text-2xl font-bold text-yellow-600">{stats.pendingBookings}</p>
-                    </div>
-                    <Clock className="h-8 w-8 text-yellow-600" />
-                  </div>
-                </div>
-                
-                <div className="card">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Confirmed</p>
-                      <p className="text-2xl font-bold text-green-600">{stats.confirmedBookings}</p>
-                    </div>
-                    <CheckCircle className="h-8 w-8 text-green-600" />
-                  </div>
-                </div>
-                
-                <div className="card">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Total Users</p>
-                      <p className="text-2xl font-bold text-purple-600">{stats.totalUsers}</p>
-                    </div>
-                    <Users className="h-8 w-8 text-purple-600" />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Recent Bookings Table */}
-            {recentBookings.length > 0 && (
-              <div className="card">
-                <h3 className="text-xl font-semibold text-gray-900 mb-6">Recent Bookings</h3>
-                
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Customer</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Course</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Date</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Payment</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recentBookings.map((booking) => (
-                        <tr key={booking.id} className="border-b border-gray-100">
-                          <td className="py-3 px-4">
-                            <div>
-                              <p className="font-medium text-gray-900">{booking.name}</p>
-                              <p className="text-sm text-gray-600">{booking.email}</p>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">
-                            <p className="font-medium text-gray-900">{booking.course_name}</p>
-                            <p className="text-sm text-gray-600">{booking.course_price}</p>
-                          </td>
-                          <td className="py-3 px-4 text-gray-600">
-                            {new Date(booking.preferred_date).toLocaleDateString()}
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
-                              {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.payment_status)}`}>
-                              {booking.payment_status.charAt(0).toUpperCase() + booking.payment_status.slice(1)}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+              </CardBody>
+            </Card>
+          </Tab>
+        </Tabs>
       </div>
     </div>
   );

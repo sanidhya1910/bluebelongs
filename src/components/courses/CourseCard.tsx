@@ -2,6 +2,7 @@
 
 import { Clock, Waves, Award, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import type { Course } from '@/data/courses';
 import Badge from '@/components/ui/Badge';
 import type { CSSProperties } from 'react';
@@ -43,10 +44,21 @@ export default function CourseCard({ course, onBook, isHydrated, userPresent }: 
     >
     {displayImage && (
         <div
-          className="h-40 w-full bg-cover bg-center"
-      style={{ backgroundImage: `url(${displayImage})` }}
+          className="h-40 w-full bg-cover bg-center relative"
+          style={{ backgroundImage: `url(${displayImage})` }}
           aria-label={`${course.title} cover image`}
-        />
+        >
+          {/* SSI Certification Stamp */}
+          <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-sm rounded-full p-2 shadow-lg">
+            <Image
+              src="/ssi_logo.png"
+              alt="SSI Certified"
+              width={50}
+              height={50}
+              className="object-contain"
+            />
+          </div>
+        </div>
       )}
       <div className="p-6 flex flex-col gap-3">
   <Badge tone={tone as 'sky' | 'blue' | 'indigo' | 'cyan'} className="mb-2">{course.level}</Badge>

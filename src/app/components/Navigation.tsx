@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Menu, X, User, LogOut } from 'lucide-react';
+import { Menu, X, User, LogOut, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navigation() {
@@ -11,6 +11,7 @@ export default function Navigation() {
   const [user, setUser] = useState<{ name: string; role: string } | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
 
   useEffect(() => {
     // Mark as hydrated first to prevent hydration mismatches
@@ -40,13 +41,20 @@ export default function Navigation() {
   };
 
   const dashboardHref = user?.role === 'admin' ? '/admin/dashboard' : '/dashboard';
+  
+  const moreItems = [
+    { href: '/itinerary', label: 'Travel Itinerary' },
+    { href: '/marine-life', label: 'Marine Life Encyclopedia' },
+    { href: '/safety', label: 'Safety Guidelines' },
+    { href: '/faq', label: 'FAQ' }
+  ];
+
   const navItems = [
     { href: '/', label: 'Home' },
     { href: '/about', label: 'About' },
     { href: '/courses', label: 'Courses' },
     { href: '/blogs', label: 'Blogs' },
     ...(isHydrated && user ? [{ href: '/medical-form', label: 'Medical Form' }] : []),
-    { href: '/itinerary', label: 'Itinerary' },
     ...(user ? [
       { href: dashboardHref, label: 'Dashboard' }
     ] : [
@@ -119,6 +127,65 @@ export default function Navigation() {
                 </Link>
               </motion.div>
             ))}
+            
+            {/* More Dropdown */}
+            <motion.div
+              className="relative"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: navItems.length * 0.1, duration: 0.6 }}
+              onMouseEnter={() => setMoreDropdownOpen(true)}
+              onMouseLeave={() => setMoreDropdownOpen(false)}
+            >
+              <button
+                className="relative px-4 py-2.5 text-slate-700 hover:text-sky-600 font-medium transition-all duration-300 rounded-xl group overflow-hidden flex items-center space-x-1"
+              >
+                <span className="relative z-10 whitespace-nowrap">More</span>
+                <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${moreDropdownOpen ? 'rotate-180' : ''}`} />
+                
+                {/* Sophisticated hover effect */}
+                <div
+                  className="absolute inset-0 bg-gradient-to-r from-sky-50 to-cyan-50 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 border border-transparent group-hover:border-sky-200/60 scale-95 group-hover:scale-100"
+                />
+                
+                {/* Animated underline */}
+                <div
+                  className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-sky-500 to-cyan-500 group-hover:w-8 transition-all duration-300 rounded-full"
+                />
+              </button>
+              
+              {/* Dropdown Menu */}
+              <AnimatePresence>
+                {moreDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute top-full mt-2 left-0 w-56 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-sky-100/50 overflow-hidden"
+                  >
+                    <div className="py-2">
+                      {moreItems.map((item, index) => (
+                        <motion.div
+                          key={item.href}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                        >
+                          <Link
+                            href={item.href}
+                            className="block px-4 py-3 text-slate-700 hover:text-sky-600 hover:bg-gradient-to-r hover:from-sky-50 hover:to-cyan-50 transition-all duration-200 font-medium"
+                            onClick={() => setMoreDropdownOpen(false)}
+                          >
+                            {item.label}
+                          </Link>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
             
             {/* Enhanced User Menu */}
             {isHydrated && user && (
@@ -205,6 +272,54 @@ export default function Navigation() {
                     </Link>
                   </motion.div>
                 ))}
+                
+                {/* Mobile More Section */}
+                <motion.div
+                  initial={{ opacity: 0, x: -30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: navItems.length * 0.1, duration: 0.3 }}
+                  className="border-t border-slate-100 pt-2 mt-2"
+                >
+                  <button
+                    onClick={() => setMoreDropdownOpen(!moreDropdownOpen)}
+                    className="w-full flex items-center justify-between text-slate-700 hover:text-sky-600 font-medium py-3 px-4 rounded-2xl hover:bg-gradient-to-r hover:from-sky-50 hover:to-cyan-50 transition-all duration-300 border border-transparent hover:border-sky-100"
+                  >
+                    <span>More</span>
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${moreDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  <AnimatePresence>
+                    {moreDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="ml-4 mt-1 space-y-1 overflow-hidden"
+                      >
+                        {moreItems.map((item, index) => (
+                          <motion.div
+                            key={item.href}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                          >
+                            <Link
+                              href={item.href}
+                              className="block text-slate-600 hover:text-sky-600 py-2 px-4 rounded-xl hover:bg-sky-50 transition-all duration-200"
+                              onClick={() => {
+                                setIsOpen(false);
+                                setMoreDropdownOpen(false);
+                              }}
+                            >
+                              {item.label}
+                            </Link>
+                          </motion.div>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
                 
                 {/* Mobile User Menu */}
                 {isHydrated && user && (

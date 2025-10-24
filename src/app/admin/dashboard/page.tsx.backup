@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Plus, Edit, Trash2, Save, X, Clock, Award, MapPin, Waves, Users, BookOpen, Calendar, Settings, Eye, EyeOff } from 'lucide-react';
+import Image from 'next/image';
+import { Plus, Edit, Trash2, Save, X, Clock, Award, MapPin, Waves, Users, BookOpen, Calendar, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Course {
@@ -16,6 +16,7 @@ interface Course {
   certification: string;
   category: 'beginner' | 'certification' | 'specialty';
   available: boolean;
+  image?: string;
 }
 
 interface User {
@@ -66,14 +67,28 @@ interface BlogPost {
   published: boolean;
 }
 
+type GalleryItem = {
+  id: string | number;
+  title: string;
+  desc: string;
+  img: string;
+  height: number;
+  url?: string;
+};
+
+type ViewModalState =
+  | { type: 'booking'; data: Booking }
+  | { type: 'user'; data: User }
+  | { type: null; data: null };
+
 export default function AdminDashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
-  const [stats, setStats] = useState<AdminStats | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'bookings' | 'users' | 'blogs'>('overview');
+  // Removed unused stats state
+  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'bookings' | 'users' | 'blogs' | 'gallery'>('overview');
   const [editingBlog, setEditingBlog] = useState<BlogPost | null>(null);
   const [showBlogForm, setShowBlogForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -81,7 +96,13 @@ export default function AdminDashboard() {
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState<Partial<Course>>({});
-  const router = useRouter();
+  const [courseImageOverrides, setCourseImageOverrides] = useState<Record<string, string>>({});
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
+  const [editingGallery, setEditingGallery] = useState<GalleryItem | null>(null);
+  const [showGalleryForm, setShowGalleryForm] = useState(false);
+  // Modal state for replacing browser alerts on "View" actions
+  const [viewModal, setViewModal] = useState<ViewModalState>({ type: null, data: null });
+  // router not used
 
   const categoryOptions = [
     { value: 'beginner', label: 'Entry Level Programs' },
@@ -97,6 +118,11 @@ export default function AdminDashboard() {
     checkAuth();
     loadCourses();
     loadAdminStats();
+    // Load local overrides on mount/tab changes
+    loadCourseImageOverrides();
+    if (activeTab === 'gallery') {
+      loadGallery();
+    }
     if (activeTab === 'bookings') {
       loadBookings();
     } else if (activeTab === 'users') {
@@ -125,6 +151,120 @@ export default function AdminDashboard() {
     setUser(parsedUser);
   };
 
+  const loadCourseImageOverrides = () => {
+    try {
+      const raw = localStorage.getItem('courseImageOverrides');
+      setCourseImageOverrides(raw ? JSON.parse(raw) : {});
+    } catch {
+      setCourseImageOverrides({});
+    }
+  };
+
+  const saveCourseImageOverride = (courseId: string, url: string) => {
+    const next = { ...courseImageOverrides, [courseId]: url };
+    setCourseImageOverrides(next);
+    localStorage.setItem('courseImageOverrides', JSON.stringify(next));
+  };
+
+  const clearCourseImageOverride = (courseId: string) => {
+    const next = { ...courseImageOverrides };
+    delete next[courseId];
+    setCourseImageOverrides(next);
+    localStorage.setItem('courseImageOverrides', JSON.stringify(next));
+  };
+
+  const loadGallery = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const res = await fetch('https://bluebelong-api.blackburn1910.workers.dev/api/admin/gallery', {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const items: GalleryItem[] = data.items || [];
+        setGalleryItems(items);
+        // Update localStorage with actual DB items
+        localStorage.setItem('masonryGallery', JSON.stringify(items));
+        return;
+      } else {
+        console.error('Failed to load gallery:', res.status, res.statusText);
+      }
+    } catch (err) {
+      console.error('Error loading gallery:', err);
+    }
+    
+    // Fallback to localStorage only if API fails completely
+    try {
+      const raw = localStorage.getItem('masonryGallery');
+      const fallbackItems = raw ? JSON.parse(raw) : [];
+      setGalleryItems(Array.isArray(fallbackItems) ? fallbackItems : []);
+    } catch {
+      setGalleryItems([]);
+    }
+  };
+
+  const saveGalleryItem = async (item: Omit<GalleryItem, 'id'> & { id?: string | number }) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) throw new Error('Not authenticated');
+
+      const isUpdate = Boolean(item.id);
+      const url = isUpdate
+        ? `https://bluebelong-api.blackburn1910.workers.dev/api/admin/gallery/${String(item.id)}`
+        : 'https://bluebelong-api.blackburn1910.workers.dev/api/admin/gallery';
+      const method = isUpdate ? 'PUT' : 'POST';
+      const body = JSON.stringify({
+        title: item.title,
+        desc: item.desc,
+        img: item.img,
+        height: item.height,
+        url: item.url || undefined,
+      });
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body,
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || err.message || 'Failed to save gallery item');
+      }
+
+      // Refresh from server to get canonical list and IDs
+      await loadGallery();
+      setEditingGallery(null);
+      setShowGalleryForm(false);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to save gallery item';
+      alert(msg);
+    }
+  };
+
+  const deleteGalleryItem = async (id: GalleryItem['id']) => {
+    if (!confirm('Delete this gallery item?')) return;
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) throw new Error('Not authenticated');
+      const res = await fetch(`https://bluebelong-api.blackburn1910.workers.dev/api/admin/gallery/${String(id)}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || err.message || 'Failed to delete gallery item');
+      }
+      await loadGallery();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete gallery item';
+      alert(msg);
+    }
+  };
+
   const loadCourses = async () => {
     try {
       const token = localStorage.getItem('authToken');
@@ -138,8 +278,8 @@ export default function AdminDashboard() {
         const data = await response.json();
         setCourses(data.courses || []);
       }
-    } catch (error) {
-      console.error('Error loading courses:', error);
+    } catch (err) {
+      console.error('Error loading courses:', err);
     } finally {
       setIsLoading(false);
     }
@@ -158,8 +298,8 @@ export default function AdminDashboard() {
         const data = await response.json();
         setAdminStats(data.stats || { totalBookings: 0, totalUsers: 0, totalCourses: 0, activeBookings: 0 });
       }
-    } catch (error) {
-      console.error('Error loading admin stats:', error);
+    } catch (err) {
+      console.error('Error loading admin stats:', err);
     }
   };
 
@@ -176,8 +316,8 @@ export default function AdminDashboard() {
         const data = await response.json();
         setBookings(data.bookings || []);
       }
-    } catch (error) {
-      console.error('Error loading bookings:', error);
+    } catch (err) {
+      console.error('Error loading bookings:', err);
     }
   };
 
@@ -194,8 +334,8 @@ export default function AdminDashboard() {
         const data = await response.json();
         setUsers(data.users || []);
       }
-    } catch (error) {
-      console.error('Error loading users:', error);
+    } catch (err) {
+      console.error('Error loading users:', err);
     }
   };
 
@@ -238,8 +378,8 @@ export default function AdminDashboard() {
         setBlogs(defaultBlogs);
         localStorage.setItem('blogs', JSON.stringify(defaultBlogs));
       }
-    } catch (error) {
-      console.error('Error loading blogs:', error);
+    } catch (err) {
+      console.error('Error loading blogs:', err);
     }
   };
 
@@ -264,8 +404,8 @@ export default function AdminDashboard() {
       setEditingBlog(null);
       setShowBlogForm(false);
       return true;
-    } catch (error) {
-      console.error('Error saving blog:', error);
+    } catch (err) {
+      console.error('Error saving blog:', err);
       return false;
     }
   };
@@ -276,8 +416,8 @@ export default function AdminDashboard() {
       setBlogs(updatedBlogs);
       localStorage.setItem('blogs', JSON.stringify(updatedBlogs));
       return true;
-    } catch (error) {
-      console.error('Error deleting blog:', error);
+    } catch (err) {
+      console.error('Error deleting blog:', err);
       return false;
     }
   };
@@ -451,10 +591,12 @@ export default function AdminDashboard() {
 
       const updateBookingStatus = async (id: number, status: Booking['status']) => {
     try {
-      const response = await fetch(`https://bluebelong-api.blackburn1910.workers.dev/api/admin/bookings/${id}`, {
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(`https://bluebelong-api.blackburn1910.workers.dev/api/admin/bookings/${id}`, {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ status })
       });
@@ -467,7 +609,8 @@ export default function AdminDashboard() {
       } else {
         alert('Failed to update booking status');
       }
-    } catch (error) {
+    } catch (err) {
+      console.error('Error updating booking status:', err);
       alert('Error updating booking status');
     }
   };
@@ -521,8 +664,8 @@ export default function AdminDashboard() {
         const error = await response.json();
         alert(error.message || 'Failed to save course');
       }
-    } catch (error) {
-      console.error('Error saving course:', error);
+    } catch (err) {
+      console.error('Error saving course:', err);
       alert('Failed to save course');
     }
   };
@@ -547,13 +690,15 @@ export default function AdminDashboard() {
         const error = await response.json();
         alert(error.message || 'Failed to delete course');
       }
-    } catch (error) {
-      console.error('Error deleting course:', error);
+    } catch (err) {
+      console.error('Error deleting course:', err);
       alert('Failed to delete course');
     }
   };
 
-  const handleToggleAvailability = async (courseId: string, currentStatus: boolean) => {
+  const handleToggleAvailability = async (courseId: string, _currentStatus: boolean) => {
+  // Mark unused param as intentionally unused to satisfy lint rules
+  void _currentStatus;
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch(`https://bluebelong-api.blackburn1910.workers.dev/api/admin/courses/${courseId}/toggle`, {
@@ -569,8 +714,8 @@ export default function AdminDashboard() {
         const error = await response.json();
         alert(error.message || 'Failed to toggle course availability');
       }
-    } catch (error) {
-      console.error('Error toggling course availability:', error);
+    } catch (err) {
+      console.error('Error toggling course availability:', err);
       alert('Failed to toggle course availability');
     }
   };
@@ -589,7 +734,7 @@ export default function AdminDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen sand-section flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
           <p className="mt-4 text-slate-600">Loading admin dashboard...</p>
@@ -599,7 +744,49 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen sand-section">
+      {/* View Details Modal */}
+      {viewModal.type && viewModal.data && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="view-modal-title">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setViewModal({ type: null, data: null })} />
+          <div className="relative z-10 w-full max-w-lg mx-4 rounded-2xl bg-white shadow-2xl border border-slate-200">
+            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+              <h3 id="view-modal-title" className="text-lg font-semibold text-slate-800">{viewModal.type === 'booking' ? 'Booking Details' : 'User Details'}</h3>
+              <button aria-label="Close" className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100" onClick={() => setViewModal({ type: null, data: null })}>✕</button>
+            </div>
+            <div className="px-6 py-5 text-slate-800">
+              {viewModal.type === 'booking' && (
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between"><span className="text-slate-600">Customer</span><span className="font-medium">{viewModal.data.name}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-600">Email</span><span className="font-medium break-all">{viewModal.data.email}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-600">Phone</span><span className="font-medium">{viewModal.data.phone || '—'}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-600">Course</span><span className="font-medium">{viewModal.data.course_name}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-600">Price</span><span className="font-medium">{viewModal.data.course_price}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-600">Preferred Date</span><span className="font-medium">{new Date(viewModal.data.preferred_date).toLocaleDateString()}</span></div>
+                  <div><div className="text-slate-600">Experience</div><div className="font-medium">{viewModal.data.experience || 'None specified'}</div></div>
+                  <div><div className="text-slate-600">Notes</div><div className="font-medium whitespace-pre-wrap">{viewModal.data.notes || 'None'}</div></div>
+                  <div className="flex justify-between"><span className="text-slate-600">Booking Date</span><span className="font-medium">{new Date(viewModal.data.created_at).toLocaleDateString()}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-600">Payment Status</span><span className="font-medium capitalize">{viewModal.data.payment_status}</span></div>
+                </div>
+              )}
+              {viewModal.type === 'user' && (
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between"><span className="text-slate-600">Name</span><span className="font-medium">{viewModal.data.name}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-600">Email</span><span className="font-medium break-all">{viewModal.data.email}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-600">Phone</span><span className="font-medium">{viewModal.data.phone || '—'}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-600">Role</span><span className="font-medium capitalize">{viewModal.data.role}</span></div>
+                  {viewModal.data.created_at && (
+                    <div className="flex justify-between"><span className="text-slate-600">Joined</span><span className="font-medium">{new Date(viewModal.data.created_at).toLocaleDateString()}</span></div>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-slate-200 flex justify-end">
+              <button className="btn-secondary" onClick={() => setViewModal({ type: null, data: null })}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -707,6 +894,16 @@ export default function AdminDashboard() {
               }`}
             >
               Blog Management
+            </button>
+            <button
+              onClick={() => setActiveTab('gallery')}
+              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'gallery'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Gallery Management
             </button>
           </div>
         </div>
@@ -887,7 +1084,7 @@ export default function AdminDashboard() {
           )}
         </AnimatePresence>
 
-        {/* Courses List */}
+  {/* Courses List */}
         <div className="grid gap-4">
           {courses.map((course) => (
             <motion.div
@@ -924,6 +1121,34 @@ export default function AdminDashboard() {
                   </div>
                   
                   <p className="text-slate-600 mb-3">{course.description}</p>
+
+                  {/* Image override controls */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Course Image URL (override)</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        defaultValue={courseImageOverrides[course.id] || ''}
+                        placeholder="https://example.com/image.jpg"
+                        className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        onBlur={(e) => {
+                          const url = e.target.value.trim();
+                          if (url) saveCourseImageOverride(course.id, url);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => clearCourseImageOverride(course.id)}
+                        className="px-3 py-2 text-sm rounded-lg border border-slate-300 hover:bg-slate-50"
+                        title="Clear override"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                    {courseImageOverrides[course.id] && (
+                      <div className="mt-2 text-xs text-slate-500">Override set. Public courses page will use this image.</div>
+                    )}
+                  </div>
                   
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-slate-600">
                     <div className="flex items-center">
@@ -1015,37 +1240,37 @@ export default function AdminDashboard() {
               <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-slate-50">
+                    <thead className="sand-gradient">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Booking ID
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Customer
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Course
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Date & Time
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Participants
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Status
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Payment
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Actions
                         </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-slate-200">
                       {bookings.map((booking) => (
-                        <tr key={booking.id} className="hover:bg-slate-50">
+                        <tr key={booking.id} className="hover:bg-sand-50">
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
                             #{booking.id.toString().padStart(6, '0')}
                           </td>
@@ -1095,10 +1320,7 @@ export default function AdminDashboard() {
                                 <option value="completed">Completed</option>
                               </select>
                               <button
-                                onClick={() => {
-                                  // View booking details
-                                  alert(`Booking Details:\n\nCustomer: ${booking.name}\nEmail: ${booking.email}\nPhone: ${booking.phone}\nCourse: ${booking.course_name}\nPrice: ${booking.course_price}\nPreferred Date: ${new Date(booking.preferred_date).toLocaleDateString()}\nExperience: ${booking.experience || 'None specified'}\nNotes: ${booking.notes || 'None'}\nBooking Date: ${new Date(booking.created_at).toLocaleDateString()}\nPayment Status: ${booking.payment_status}`);
-                                }}
+                                onClick={() => setViewModal({ type: 'booking', data: booking })}
                                 className="text-blue-600 hover:text-blue-900 text-xs"
                               >
                                 View
@@ -1150,37 +1372,37 @@ export default function AdminDashboard() {
               <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-slate-50">
+                    <thead className="sand-gradient">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           User ID
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Name & Email
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Phone
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Role
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                          Certification
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                          Total Dives
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        {false && (
+                          <>
+                            <th className="px-6 py-3 text-left text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Certification</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Total Dives</th>
+                          </>
+                        )}
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Joined
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Actions
                         </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-slate-200">
                       {users.map((user) => (
-                        <tr key={user.id} className="hover:bg-slate-50">
+                        <tr key={user.id} className="hover:bg-sand-50">
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
                             #{user.id.toString().padStart(4, '0')}
                           </td>
@@ -1200,43 +1422,23 @@ export default function AdminDashboard() {
                               {user.role}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
-                            {user.certification_level || 'None'}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
-                            {user.total_dives || 0}
-                          </td>
+                          {false && (
+                            <>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{user.certification_level || 'None'}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{user.total_dives || 0}</td>
+                            </>
+                          )}
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
                             {new Date(user.created_at).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div className="flex items-center gap-2">
                               <button
-                                onClick={() => {
-                                  // View user details
-                                  alert(`User Details:\n\nName: ${user.name}\nEmail: ${user.email}\nPhone: ${user.phone || 'Not provided'}\nRole: ${user.role}\nCertification Level: ${user.certification_level || 'None'}\nTotal Dives: ${user.total_dives || 0}\nJoined: ${new Date(user.created_at).toLocaleDateString()}`);
-                                }}
+                                onClick={() => setViewModal({ type: 'user', data: user })}
                                 className="text-blue-600 hover:text-blue-900 text-xs"
                               >
                                 View
                               </button>
-                              <select
-                                value={user.role}
-                                onChange={(e) => {
-                                  // Update user role
-                                  const newRole = e.target.value;
-                                  setUsers(users.map(u => 
-                                    u.id === user.id ? { ...u, role: newRole } : u
-                                  ));
-                                  // Here you would typically make an API call to update the role
-                                  console.log(`Updated user ${user.id} role to ${newRole}`);
-                                }}
-                                className="text-xs px-2 py-1 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                              >
-                                <option value="user">User</option>
-                                <option value="instructor">Instructor</option>
-                                <option value="admin">Admin</option>
-                              </select>
                             </div>
                           </td>
                         </tr>
@@ -1294,27 +1496,31 @@ export default function AdminDashboard() {
               {/* Blogs List */}
               <div className="bg-white rounded-lg shadow-sm border">
                 <div className="overflow-x-auto">
-                  <table className="w-full">
+          <table className="w-full">
                     <thead>
-                      <tr className="border-b border-slate-200">
-                        <th className="text-left p-4 text-sm font-medium text-slate-700">Image</th>
-                        <th className="text-left p-4 text-sm font-medium text-slate-700">Title</th>
-                        <th className="text-left p-4 text-sm font-medium text-slate-700">Category</th>
-                        <th className="text-left p-4 text-sm font-medium text-slate-700">Author</th>
-                        <th className="text-left p-4 text-sm font-medium text-slate-700">Date</th>
-                        <th className="text-left p-4 text-sm font-medium text-slate-700">Status</th>
-                        <th className="text-left p-4 text-sm font-medium text-slate-700">Actions</th>
+            <tr className="border-b border-slate-200 sand-gradient">
+            <th className="text-left p-4 text-sm font-medium text-slate-700">Image</th>
+            <th className="text-left p-4 text-sm font-medium text-slate-700">Title</th>
+            <th className="text-left p-4 text-sm font-medium text-slate-700">Category</th>
+            <th className="text-left p-4 text-sm font-medium text-slate-700">Author</th>
+            <th className="text-left p-4 text-sm font-medium text-slate-700">Date</th>
+            <th className="text-left p-4 text-sm font-medium text-slate-700">Status</th>
+            <th className="text-left p-4 text-sm font-medium text-slate-700">Actions</th>
                       </tr>
                     </thead>
-                    <tbody>
+          <tbody>
                       {blogs.map((blog) => (
-                        <tr key={blog.id} className="border-b border-slate-100">
+            <tr key={blog.id} className="border-b border-slate-100 hover:bg-sand-50">
                           <td className="p-4">
-                            <img
-                              src={blog.image}
-                              alt={blog.title}
-                              className="w-16 h-12 object-cover rounded"
-                            />
+                            <div className="relative w-16 h-12">
+                              <Image
+                                src={blog.image}
+                                alt={blog.title}
+                                fill
+                                sizes="64px"
+                                className="object-cover rounded"
+                              />
+                            </div>
                           </td>
                           <td className="p-4">
                             <div>
@@ -1361,9 +1567,13 @@ export default function AdminDashboard() {
                                 <Trash2 size={16} />
                               </button>
                               {blog.published ? (
-                                <Eye size={16} className="text-green-600" title="Published" />
+                              <div title="Published">
+                                <Eye size={16} className="text-green-600" />
+                              </div>
                               ) : (
-                                <EyeOff size={16} className="text-yellow-600" title="Draft" />
+                              <div title="Draft">
+                                <EyeOff size={16} className="text-yellow-600" />
+                              </div>
                               )}
                             </div>
                           </td>
@@ -1378,191 +1588,99 @@ export default function AdminDashboard() {
                   )}
                 </div>
               </div>
-                {/* General Settings */}
-                <div className="bg-white rounded-lg shadow-sm border p-6">
-                  <h3 className="text-lg font-semibold text-slate-800 mb-4">General Settings</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Business Name
-                      </label>
-                      <input
-                        type="text"
-                        defaultValue="BlueBelong Diving School"
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Contact Email
-                      </label>
-                      <input
-                        type="email"
-                        defaultValue="info@bluebelong.com"
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Contact Phone
-                      </label>
-                      <input
-                        type="tel"
-                        defaultValue="+91-123-456-7890"
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Business Address
-                      </label>
-                      <textarea
-                        rows={3}
-                        defaultValue="Havelock Island, Andaman and Nicobar Islands, India"
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-                </div>
+            </motion.div>
+          )}
 
-                {/* Booking Settings */}
-                <div className="bg-white rounded-lg shadow-sm border p-6">
-                  <h3 className="text-lg font-semibold text-slate-800 mb-4">Booking Settings</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Advance Booking Days
-                      </label>
-                      <input
-                        type="number"
-                        defaultValue="30"
-                        min="1"
-                        max="365"
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Maximum Group Size
-                      </label>
-                      <input
-                        type="number"
-                        defaultValue="6"
-                        min="1"
-                        max="20"
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Cancellation Policy (hours)
-                      </label>
-                      <input
-                        type="number"
-                        defaultValue="48"
-                        min="0"
-                        max="168"
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        defaultChecked
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded"
-                      />
-                      <label className="ml-2 block text-sm text-slate-700">
-                        Auto-confirm bookings
-                      </label>
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        defaultChecked
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded"
-                      />
-                      <label className="ml-2 block text-sm text-slate-700">
-                        Send confirmation emails
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Email Settings */}
-                <div className="bg-white rounded-lg shadow-sm border p-6">
-                  <h3 className="text-lg font-semibold text-slate-800 mb-4">Email Settings</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        SMTP Server Status
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                          Connected (Resend API)
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        From Email Address
-                      </label>
-                      <input
-                        type="email"
-                        defaultValue="noreply@bluebelong.com"
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Email Templates
-                      </label>
-                      <select className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option>Booking Confirmation</option>
-                        <option>Password Reset</option>
-                        <option>Welcome Email</option>
-                        <option>Course Reminder</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                {/* System Information */}
-                <div className="bg-white rounded-lg shadow-sm border p-6">
-                  <h3 className="text-lg font-semibold text-slate-800 mb-4">System Information</h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-slate-600">Version:</span>
-                      <span className="text-sm text-slate-900">v1.0.0</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-slate-600">Database:</span>
-                      <span className="text-sm text-slate-900">Cloudflare D1</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-slate-600">API Status:</span>
-                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                        Online
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-slate-600">Last Backup:</span>
-                      <span className="text-sm text-slate-900">Today, 3:30 AM</span>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-6 pt-4 border-t border-slate-200">
-                    <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm">
-                      Export Database
-                    </button>
-                  </div>
-                </div>
+          {activeTab === 'gallery' && (
+            <motion.div
+              key="gallery"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold text-slate-800">Masonry Gallery</h2>
+                <button
+                  onClick={() => { setEditingGallery(null); setShowGalleryForm(true); }}
+                  className="btn-primary flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" /> Add Item
+                </button>
               </div>
 
-              {/* Save Button */}
-              <div className="mt-8 flex justify-end">
-                <button className="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                  Save Settings
-                </button>
+              {/* Gallery Form */}
+              {showGalleryForm && (
+                <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+                  <h3 className="text-lg font-semibold text-slate-800 mb-4">{editingGallery ? 'Edit' : 'Add'} Gallery Item</h3>
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      const fd = new FormData(e.currentTarget as HTMLFormElement);
+                      const payload = {
+                        id: editingGallery?.id,
+                        title: String(fd.get('title') || ''),
+                        desc: String(fd.get('desc') || ''),
+                        img: String(fd.get('img') || ''),
+                        height: Number(fd.get('height') || 400),
+                        url: String(fd.get('url') || ''),
+                      } as GalleryItem;
+                      await saveGalleryItem(payload);
+                    }}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                  >
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Title</label>
+                      <input name="title" defaultValue={editingGallery?.title || ''} className="w-full px-3 py-2 border border-slate-300 rounded-lg" required />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Link URL (optional)</label>
+                      <input name="url" defaultValue={editingGallery?.url || ''} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                      <input name="desc" defaultValue={editingGallery?.desc || ''} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Image URL</label>
+                      <input name="img" type="url" defaultValue={editingGallery?.img || ''} className="w-full px-3 py-2 border border-slate-300 rounded-lg" required />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Display Height (px)</label>
+                      <input name="height" type="number" min="200" max="800" defaultValue={editingGallery?.height || 420} className="w-full px-3 py-2 border border-slate-300 rounded-lg" required />
+                    </div>
+                    <div className="flex items-end gap-3">
+                      <button type="submit" className="btn-primary">Save Item</button>
+                      <button type="button" className="btn-secondary" onClick={() => { setShowGalleryForm(false); setEditingGallery(null); }}>Cancel</button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {/* Gallery Items List */}
+              <div className="grid gap-4">
+                {galleryItems.map(item => (
+                  <div key={item.id} className="bg-white rounded-lg shadow-sm border p-4 flex items-center gap-4">
+                    <div className="relative w-24 h-16 overflow-hidden rounded">
+                      <Image src={item.img} alt={item.title} fill className="object-cover" sizes="96px" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-slate-800">{item.title}</div>
+                      <div className="text-sm text-slate-500">{item.desc}</div>
+                      <div className="text-xs text-slate-400">Height: {item.height}px {item.url ? `• Link: ${item.url}` : ''}</div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" onClick={() => { setEditingGallery(item); setShowGalleryForm(true); }} title="Edit">
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg" onClick={() => deleteGalleryItem(item.id)} title="Delete">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {galleryItems.length === 0 && (
+                  <div className="text-center py-12 text-slate-500">No gallery items yet. Add your first one.</div>
+                )}
               </div>
             </motion.div>
           )}
