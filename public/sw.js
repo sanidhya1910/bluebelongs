@@ -1,4 +1,4 @@
-const CACHE_NAME = 'blue-belongs-v2'; // Increment version to force update
+const CACHE_NAME = 'blue-belongs-v3'; // Increment version to force update
 // Paths use trailing slashes to match the static export (trailingSlash: true).
 const urlsToCache = [
   '/',
@@ -11,47 +11,80 @@ const urlsToCache = [
   '/offline.html'
 ];
 
-// Install Service Worker
+// Install Service Worker — precache the app shell, but DON'T skipWaiting:
+// the new worker waits until the user opts in (see the SKIP_WAITING message),
+// so we never reload someone mid-action.
 self.addEventListener('install', (event) => {
-  // Force the waiting service worker to become the active service worker
-  self.skipWaiting();
-  
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
-      })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
   );
 });
 
-// Cache and return requests - NETWORK FIRST STRATEGY (better for development)
+// Activate the waiting worker on demand (triggered by the refresh prompt)
+self.addEventListener('message', (event) => {
+  if (event.data === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// Tiered caching strategy:
+//  - navigations (HTML): network-first, fall back to cache, then offline.html
+//  - same-origin static assets: cache-first (immutable hashed _next assets, images)
+//  - cross-origin (API, external images/video): bypass the SW cache entirely
 self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  if (request.method !== 'GET') return;
+
+  const url = new URL(request.url);
+  const sameOrigin = url.origin === self.location.origin;
+
+  // Navigations -> network-first with offline fallback
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          return response;
+        })
+        .catch(() =>
+          caches.match(request).then((cached) => cached || caches.match('/offline.html'))
+        )
+    );
+    return;
+  }
+
+  // Don't touch cross-origin requests (API calls, Unsplash/Pexels media, video)
+  if (!sameOrigin) return;
+
+  // Same-origin static assets -> cache-first
+  if (/\.(?:js|css|woff2?|png|jpe?g|svg|gif|webp|ico)$/.test(url.pathname)) {
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        if (cached) return cached;
+        return fetch(request).then((response) => {
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        });
+      })
+    );
+    return;
+  }
+
+  // Other same-origin GETs -> network-first, cache fallback
   event.respondWith(
-    // Try network first
-    fetch(event.request)
+    fetch(request)
       .then((response) => {
-        // If network request succeeds, cache it and return
         if (response && response.status === 200 && response.type === 'basic') {
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME)
-            .then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
         }
         return response;
       })
-      .catch(() => {
-        // If network fails, try cache
-        return caches.match(event.request)
-          .then((response) => {
-            if (response) {
-              return response;
-            }
-            // If not in cache, return offline page
-            return caches.match('/offline.html');
-          });
-      })
+      .catch(() => caches.match(request))
   );
 });
 

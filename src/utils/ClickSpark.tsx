@@ -27,7 +27,8 @@ const ClickSpark: React.FC<Props> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const sparksRef = useRef<Array<{ x: number; y: number; angle: number; startTime: number }>>([]);
-  const startTimeRef = useRef<number | null>(null);
+  const rafRef = useRef<number>(0);
+  const drawRef = useRef<((timestamp: number) => void) | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -100,12 +101,7 @@ const ClickSpark: React.FC<Props> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let animationId = 0;
-
     const draw = (timestamp: number) => {
-      if (!startTimeRef.current) {
-        startTimeRef.current = timestamp;
-      }
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       sparksRef.current = sparksRef.current.filter((spark) => {
@@ -133,53 +129,56 @@ const ClickSpark: React.FC<Props> = ({
         return true;
       });
 
-      animationId = requestAnimationFrame(draw);
+      // Keep animating only while sparks remain; otherwise go idle (saves CPU/battery)
+      if (sparksRef.current.length > 0) {
+        rafRef.current = requestAnimationFrame(draw);
+      } else {
+        rafRef.current = 0;
+      }
     };
 
-    animationId = requestAnimationFrame(draw);
+    drawRef.current = draw;
 
-    return () => cancelAnimationFrame(animationId);
-  }, [sparkColor, sparkSize, sparkRadius, sparkCount, duration, easeFunc, extraScale]);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
+    };
+  }, [sparkColor, sparkSize, sparkRadius, duration, easeFunc, extraScale]);
+
+  const spawnSparks = useCallback(
+    (clientX: number, clientY: number) => {
+      // Respect reduced-motion: skip the effect entirely
+      if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        return;
+      }
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      const now = performance.now();
+      for (let i = 0; i < sparkCount; i++) {
+        sparksRef.current.push({ x, y, angle: (2 * Math.PI * i) / sparkCount, startTime: now });
+      }
+      // Restart the loop if it went idle
+      if (!rafRef.current && drawRef.current) {
+        rafRef.current = requestAnimationFrame(drawRef.current);
+      }
+    },
+    [sparkCount]
+  );
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const now = performance.now();
-    const newSparks = Array.from({ length: sparkCount }, (_, i) => ({
-      x,
-      y,
-      angle: (2 * Math.PI * i) / sparkCount,
-      startTime: now,
-    }));
-
-    sparksRef.current.push(...newSparks);
+    spawnSparks(e.clientX, e.clientY);
   };
 
   // Listen to global document clicks if requested
   useEffect(() => {
     if (!listenGlobalClicks) return;
-    const handler = (e: MouseEvent) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const now = performance.now();
-      const newSparks = Array.from({ length: sparkCount }, (_, i) => ({
-        x,
-        y,
-        angle: (2 * Math.PI * i) / sparkCount,
-        startTime: now,
-      }));
-      sparksRef.current.push(...newSparks);
-    };
+    const handler = (e: MouseEvent) => spawnSparks(e.clientX, e.clientY);
     document.addEventListener('click', handler, { passive: true });
     return () => document.removeEventListener('click', handler as EventListener);
-  }, [listenGlobalClicks, sparkCount]);
+  }, [listenGlobalClicks, spawnSparks]);
 
   return (
     <div className="relative w-full h-full" onClick={handleClick}>
