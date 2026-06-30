@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
+import Image from 'next/image';
 import { motion, useScroll, useTransform } from 'framer-motion';
 
 interface ScrollExpandMediaProps {
@@ -86,9 +87,11 @@ const ScrollExpandMedia = ({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <img
+                <Image
                   src={mediaSrc}
                   alt={title}
+                  fill
+                  sizes="(max-width: 1280px) 100vw, 1280px"
                   className="w-full h-full object-cover"
                 />
               )}

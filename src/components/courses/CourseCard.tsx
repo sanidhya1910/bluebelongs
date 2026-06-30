@@ -35,21 +35,26 @@ export default function CourseCard({ course, onBook, isHydrated, userPresent }: 
 
   return (
     <motion.div
-      className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full flex flex-col"
-      initial={{ opacity: 0, y: 20 }}
+      className="bg-white rounded-xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 h-full flex flex-col group"
+      initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.4 }}
-      whileHover={{ scale: 1.02 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      whileHover={{ y: -4 }}
     >
     {displayImage && (
         <div
-          className="h-40 w-full bg-cover bg-center relative"
+          className="h-44 w-full bg-cover bg-center relative overflow-hidden"
           style={{ backgroundImage: `url(${displayImage})` }}
           aria-label={`${course.title} cover image`}
         >
+          {/* Hover zoom effect */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-110"
+            style={{ backgroundImage: `url(${displayImage})` }}
+          />
           {/* SSI Certification Stamp */}
-          <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-sm rounded-full p-2 shadow-lg">
+          <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm rounded-full p-2 shadow-lg z-10">
             <Image
               src="/ssi_logo.png"
               alt="SSI Certified"
