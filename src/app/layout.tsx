@@ -5,6 +5,7 @@ import "./globals.css";
 import Navigation from "./components/NavigationWithTabs";
 import ClientRoot from './components/ClientRoot';
 import ServiceWorkerRegistration from '../components/ServiceWorkerRegistration';
+import BackToTop from '../components/BackToTop';
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,7 +26,6 @@ export const metadata: Metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
   themeColor: "#0ea5e9"
 };
 
@@ -36,19 +36,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-  <body className={`${inter.className}`}>
-          <ServiceWorkerRegistration />
-          <Navigation />
-          <ClientRoot>
-            <main className="min-h-screen">
-              {children}
-            </main>
-          </ClientRoot>
-          <footer className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-sky-900 text-white">
+      <body className={`${inter.className} w-full`}>
+        <ServiceWorkerRegistration />
+        <Navigation />
+        <ClientRoot>
+          <main className="min-h-screen w-full">
+            {children}
+          </main>
+        </ClientRoot>
+        <BackToTop />
+        <footer className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-sky-900 text-white">
           {/* Sophisticated background patterns */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"></div>
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-400"></div>
-          
+
           {/* Animated underwater effect */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-10 left-10 w-2 h-2 bg-cyan-400 rounded-full animate-bubble-float"></div>
@@ -72,7 +73,7 @@ export default function RootLayout({
                   <p className="text-slate-400 font-medium tracking-wide text-sm">Diving School - Andaman Islands</p>
                 </div>
               </div>
-              
+
               <div className="max-w-2xl mx-auto">
                 <p className="text-lg text-slate-300 leading-relaxed mb-4">
                   We guide people into the ocean — not to conquer it, but to reconnect with themselves through it.
@@ -88,13 +89,13 @@ export default function RootLayout({
               <div>
                 <h4 className="text-sky-300 font-semibold mb-3 text-sm uppercase tracking-wider">Dive Courses</h4>
                 <ul className="space-y-2 text-sm">
-                  <li><a href="/courses" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">SSI Open Water Diver</a></li>
-                  <li><a href="/courses" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">Advanced Adventurer</a></li>
-                  <li><a href="/courses" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">Specialty Courses</a></li>
-                  <li><a href="/courses" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">View All Courses</a></li>
+                  <li><Link href="/courses" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">SSI Open Water Diver</Link></li>
+                  <li><Link href="/courses" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">Advanced Adventurer</Link></li>
+                  <li><Link href="/courses" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">Specialty Courses</Link></li>
+                  <li><Link href="/courses" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">View All Courses</Link></li>
                 </ul>
               </div>
-              
+
               <div>
                 <h4 className="text-sky-300 font-semibold mb-3 text-sm uppercase tracking-wider">Explore</h4>
                 <ul className="space-y-2 text-sm">
@@ -104,23 +105,23 @@ export default function RootLayout({
                   <li><Link href="/itinerary" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">Travel Itinerary</Link></li>
                 </ul>
               </div>
-              
+
               <div>
                 <h4 className="text-sky-300 font-semibold mb-3 text-sm uppercase tracking-wider">Resources</h4>
                 <ul className="space-y-2 text-sm">
-                  <li><a href="/medical-form" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">Medical Questionnaire</a></li>
-                  <li><a href="/dashboard" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">My Dashboard</a></li>
-                  <li><a href="/login" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">Login / Sign Up</a></li>
+                  <li><Link href="/medical-form" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">Medical Questionnaire</Link></li>
+                  <li><Link href="/dashboard" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">My Dashboard</Link></li>
+                  <li><Link href="/login" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">Login / Sign Up</Link></li>
                 </ul>
               </div>
-              
+
               <div>
                 <h4 className="text-sky-300 font-semibold mb-3 text-sm uppercase tracking-wider">Location</h4>
                 <ul className="space-y-2 text-sm">
                   <li><span className="text-slate-400">Havelock Island</span></li>
                   <li><span className="text-slate-400">Andaman & Nicobar</span></li>
                   <li><span className="text-slate-400">India</span></li>
-                  <li><a href="/itinerary" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">How to Reach</a></li>
+                  <li><Link href="/itinerary" className="text-slate-400 hover:text-sky-300 transition-colors duration-300">How to Reach</Link></li>
                 </ul>
               </div>
             </div>
@@ -129,13 +130,13 @@ export default function RootLayout({
             <div className="border-t border-slate-700/50 pt-8">
               <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
                 <p className="text-sm text-slate-400 flex items-center space-x-2">
-                  <span>© 2025</span>
+                  <span>© {new Date().getFullYear()}</span>
                   <span className="w-1 h-1 bg-slate-500 rounded-full"></span>
                   <span className="font-medium text-slate-300">BlueBelong Diving School</span>
                   <span className="w-1 h-1 bg-slate-500 rounded-full"></span>
                   <span>All rights reserved</span>
                 </p>
-                
+
                 <div className="flex items-center space-x-6 text-xs text-slate-500">
                   <span>SSI Certified Diving Center</span>
                   <div className="flex items-center space-x-1">
@@ -146,10 +147,10 @@ export default function RootLayout({
               </div>
             </div>
           </div>
-          
+
           {/* Bottom gradient */}
           <div className="absolute bottom-0 left-0 w-full h-20 bg-gradient-to-t from-black/30 to-transparent"></div>
-          </footer>
+        </footer>
       </body>
     </html>
   );
