@@ -96,6 +96,26 @@ CREATE TABLE IF NOT EXISTS medical_forms (
   FOREIGN KEY (booking_id) REFERENCES bookings(id)
 );
 
+-- Reviews table (customer course reviews, moderated before public display)
+CREATE TABLE IF NOT EXISTS reviews (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER,
+  booking_id INTEGER,
+  course_id TEXT,
+  course_name TEXT,
+  reviewer_name TEXT,
+  rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  comment TEXT NOT NULL,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  admin_notes TEXT,
+  approved_at DATETIME,
+  approved_by TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (booking_id) REFERENCES bookings(id)
+);
+
 -- Contact inquiries table
 CREATE TABLE IF NOT EXISTS contact_inquiries (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -153,3 +173,6 @@ CREATE INDEX IF NOT EXISTS idx_bookings_date ON bookings(preferred_date);
 CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);
 CREATE INDEX IF NOT EXISTS idx_medical_forms_booking ON medical_forms(booking_id);
 CREATE INDEX IF NOT EXISTS idx_contact_inquiries_status ON contact_inquiries(status);
+CREATE INDEX IF NOT EXISTS idx_reviews_status ON reviews(status);
+CREATE INDEX IF NOT EXISTS idx_reviews_course ON reviews(course_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_booking ON reviews(booking_id);

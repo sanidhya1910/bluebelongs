@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Plus, Edit, Trash2, Save, X, Clock, Award, MapPin, Waves, Users, BookOpen, Calendar, Eye, EyeOff, TrendingUp } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Clock, Award, MapPin, Waves, Users, BookOpen, Calendar, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardBody, CardHeader, Button, Chip, Input, Textarea, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from '@heroui/react';
+import { Card, CardBody, CardHeader, Button, Chip, Input, Textarea } from '@heroui/react';
 
 interface Course {
   id: string;
@@ -124,6 +124,16 @@ type ViewModalState =
   | { type: 'user'; data: User }
   | { type: null; data: null };
 
+interface AdminReview {
+  id: number;
+  course_name: string;
+  reviewer_name: string;
+  rating: number;
+  comment: string;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+}
+
 export default function AdminDashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -131,8 +141,9 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<User[]>([]);
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [reviews, setReviews] = useState<AdminReview[]>([]);
   // Removed unused stats state
-  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'bookings' | 'users' | 'blogs' | 'gallery' | 'messages'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'bookings' | 'users' | 'blogs' | 'gallery' | 'messages' | 'reviews'>('overview');
   const [editingBlog, setEditingBlog] = useState<BlogPost | null>(null);
   const [showBlogForm, setShowBlogForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -179,6 +190,8 @@ export default function AdminDashboard() {
       loadBlogs();
     } else if (activeTab === 'messages') {
       loadAnnouncements();
+    } else if (activeTab === 'reviews') {
+      loadReviews();
     }
   }, [activeTab]);
 
@@ -389,11 +402,53 @@ export default function AdminDashboard() {
     }
   };
 
+  const loadReviews = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('https://bluebelong-api.blackburn1910.workers.dev/api/admin/reviews', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setReviews(data.reviews || []);
+      }
+    } catch (err) {
+      console.error('Error loading reviews:', err);
+    }
+  };
+
+  const updateReviewStatus = async (reviewId: number, status: 'approved' | 'rejected') => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`https://bluebelong-api.blackburn1910.workers.dev/api/admin/reviews/${reviewId}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status })
+      });
+
+      if (response.ok) {
+        setReviews((prev) => prev.map((r) => (r.id === reviewId ? { ...r, status } : r)));
+      } else {
+        const error = await response.json().catch(() => ({}));
+        alert(error.error || 'Failed to update review');
+      }
+    } catch (err) {
+      console.error('Error updating review:', err);
+      alert('Failed to update review');
+    }
+  };
+
   const handleUpdateUser = async (userId: number, updates: Partial<User>) => {
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch(`https://bluebelong-api.blackburn1910.workers.dev/api/admin/users/${userId}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -440,35 +495,6 @@ export default function AdminDashboard() {
     } catch (err) {
       console.error('Error deleting user:', err);
       alert('Failed to delete user');
-    }
-  };
-
-  const handleChangeUserRole = async (userId: number, newRole: string) => {
-    if (!confirm(`Are you sure you want to change this user's role to ${newRole}?`)) {
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`https://bluebelong-api.blackburn1910.workers.dev/api/admin/users/${userId}/role`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ role: newRole })
-      });
-
-      if (response.ok) {
-        alert('User role updated successfully!');
-        loadUsers();
-      } else {
-        const error = await response.json();
-        alert(error.message || 'Failed to update user role');
-      }
-    } catch (err) {
-      console.error('Error updating user role:', err);
-      alert('Failed to update user role');
     }
   };
 
@@ -952,7 +978,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-blue-50 to-cyan-50 pt-20">
+    <div className="admin-panel min-h-screen bg-gradient-to-br from-sky-50 via-blue-50 to-cyan-50 pt-20">
       {/* View Details Modal */}
       {viewModal.type && viewModal.data && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="view-modal-title">
@@ -1165,6 +1191,16 @@ export default function AdminDashboard() {
             >
               Message Board
             </Button>
+            <Button
+              onPress={() => setActiveTab('reviews')}
+              className={`px-6 py-3 rounded-xl font-medium whitespace-nowrap transition-all ${
+                activeTab === 'reviews'
+                  ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow-lg'
+                  : 'bg-transparent text-gray-600 hover:bg-white/50'
+              }`}
+            >
+              Reviews
+            </Button>
           </div>
         </div>
 
@@ -1196,13 +1232,13 @@ export default function AdminDashboard() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="bg-white rounded-lg shadow-sm border p-6 mb-6"
+              className="bg-white rounded-xl shadow-md border border-slate-200/80 p-6 mb-6"
             >
               <h3 className="text-lg font-semibold text-slate-800 mb-4">
                 {editingCourse ? 'Edit Course' : 'Create New Course'}
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Course Title *
@@ -1349,8 +1385,8 @@ export default function AdminDashboard() {
           {courses.map((course) => (
             <motion.div
               key={course.id}
-              className="bg-white rounded-lg shadow-sm border p-6"
-              whileHover={{ scale: 1.01 }}
+              className="bg-white rounded-xl shadow-sm border border-slate-200/80 p-6 hover:shadow-md transition-shadow duration-300"
+              whileHover={{ scale: 1.005 }}
             >
               <div className="flex justify-between items-start">
                 <div className="flex-1">
@@ -1497,10 +1533,10 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="sand-gradient">
+                    <thead className="bg-gradient-to-r from-sky-50 to-cyan-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           Booking ID
@@ -1530,7 +1566,7 @@ export default function AdminDashboard() {
                     </thead>
                     <tbody className="bg-white divide-y divide-slate-200">
                       {bookings.map((booking) => (
-                        <tr key={booking.id} className="hover:bg-sand-50">
+                        <tr key={booking.id} className="hover:bg-sky-50/50 transition-colors duration-150">
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
                             #{booking.id.toString().padStart(6, '0')}
                           </td>
@@ -1613,7 +1649,7 @@ export default function AdminDashboard() {
                 <div className="flex gap-2">
                   <select 
                     className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                    onChange={(e) => {
+                    onChange={() => {
                       // Filter users by role
                       loadUsers(); // Reload all users first
                     }}
@@ -1628,7 +1664,7 @@ export default function AdminDashboard() {
 
               {/* User Edit Form */}
               {showUserForm && editingUser && (
-                <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+                <div className="bg-white rounded-xl shadow-md border border-slate-200/80 p-6 mb-6">
                   <h3 className="text-lg font-semibold text-slate-800 mb-4">Edit User</h3>
                   <div className="space-y-4">
                     <div>
@@ -1691,10 +1727,10 @@ export default function AdminDashboard() {
                 </div>
               )}
 
-              <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="sand-gradient">
+                    <thead className="bg-gradient-to-r from-sky-50 to-cyan-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                           User ID
@@ -1724,7 +1760,7 @@ export default function AdminDashboard() {
                     </thead>
                     <tbody className="bg-white divide-y divide-slate-200">
                       {users.map((user) => (
-                        <tr key={user.id} className="hover:bg-sand-50">
+                        <tr key={user.id} className="hover:bg-sky-50/50 transition-colors duration-150">
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
                             #{user.id.toString().padStart(4, '0')}
                           </td>
@@ -1818,7 +1854,7 @@ export default function AdminDashboard() {
 
               {/* Blog Form */}
               {showBlogForm && (
-                <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+                <div className="bg-white rounded-xl shadow-md border border-slate-200/80 p-6 mb-6">
                   <h3 className="text-lg font-semibold text-slate-800 mb-4">
                     {editingBlog ? 'Edit Blog Post' : 'Create New Blog Post'}
                   </h3>
@@ -1834,11 +1870,11 @@ export default function AdminDashboard() {
               )}
 
               {/* Blogs List */}
-              <div className="bg-white rounded-lg shadow-sm border">
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200/80">
                 <div className="overflow-x-auto">
           <table className="w-full">
                     <thead>
-            <tr className="border-b border-slate-200 sand-gradient">
+            <tr className="border-b border-slate-200 bg-gradient-to-r from-sky-50 to-cyan-50">
             <th className="text-left p-4 text-sm font-medium text-slate-700">Image</th>
             <th className="text-left p-4 text-sm font-medium text-slate-700">Title</th>
             <th className="text-left p-4 text-sm font-medium text-slate-700">Category</th>
@@ -1850,7 +1886,7 @@ export default function AdminDashboard() {
                     </thead>
           <tbody>
                       {blogs.map((blog) => (
-            <tr key={blog.id} className="border-b border-slate-100 hover:bg-sand-50">
+            <tr key={blog.id} className="border-b border-slate-100 hover:bg-sky-50/50 transition-colors duration-150">
                           <td className="p-4">
                             <div className="relative w-16 h-12">
                               <Image
@@ -1950,7 +1986,7 @@ export default function AdminDashboard() {
 
               {/* Gallery Form */}
               {showGalleryForm && (
-                <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+                <div className="bg-white rounded-xl shadow-md border border-slate-200/80 p-6 mb-6">
                   <h3 className="text-lg font-semibold text-slate-800 mb-4">{editingGallery ? 'Edit' : 'Add'} Gallery Item</h3>
                   <form
                     onSubmit={async (e) => {
@@ -1999,7 +2035,7 @@ export default function AdminDashboard() {
               {/* Gallery Items List */}
               <div className="grid gap-4">
                 {galleryItems.map(item => (
-                  <div key={item.id} className="bg-white rounded-lg shadow-sm border p-4 flex items-center gap-4">
+                  <div key={item.id} className="bg-white rounded-xl shadow-sm border border-slate-200/80 p-4 flex items-center gap-4 hover:shadow-md transition-shadow duration-300">
                     <div className="relative w-24 h-16 overflow-hidden rounded">
                       <Image src={item.img} alt={item.title} fill className="object-cover" sizes="96px" />
                     </div>
@@ -2298,6 +2334,71 @@ export default function AdminDashboard() {
                     <CardBody className="text-center py-12 text-slate-500">
                       <p className="text-lg mb-2">No announcements yet</p>
                       <p className="text-sm">Create your first announcement to communicate with customers</p>
+                    </CardBody>
+                  </Card>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'reviews' && (
+            <motion.div
+              key="reviews"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-slate-800">Customer Reviews</h2>
+                <p className="text-slate-500 text-sm mt-1">Approve a review to publish it on the site; reject to hide it.</p>
+              </div>
+              <div className="space-y-4">
+                {reviews.map((review) => (
+                  <Card key={review.id}>
+                    <CardBody className="p-5">
+                      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex flex-wrap items-center gap-3 mb-1">
+                            <span className="font-semibold text-slate-800">{review.reviewer_name}</span>
+                            <span className="text-yellow-500 text-sm" aria-label={`${review.rating} out of 5 stars`}>
+                              {'★'.repeat(review.rating)}
+                              <span className="text-slate-300">{'★'.repeat(5 - review.rating)}</span>
+                            </span>
+                            <Chip
+                              size="sm"
+                              variant="flat"
+                              color={review.status === 'approved' ? 'success' : review.status === 'rejected' ? 'danger' : 'warning'}
+                            >
+                              {review.status}
+                            </Chip>
+                          </div>
+                          <p className="text-xs text-slate-500 mb-2">
+                            {review.course_name} · {new Date(review.created_at).toLocaleDateString()}
+                          </p>
+                          <p className="text-slate-700">{review.comment}</p>
+                        </div>
+                        <div className="flex md:flex-col gap-2 shrink-0">
+                          {review.status !== 'approved' && (
+                            <Button size="sm" color="success" variant="flat" onPress={() => updateReviewStatus(review.id, 'approved')}>
+                              Approve
+                            </Button>
+                          )}
+                          {review.status !== 'rejected' && (
+                            <Button size="sm" color="danger" variant="flat" onPress={() => updateReviewStatus(review.id, 'rejected')}>
+                              Reject
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </CardBody>
+                  </Card>
+                ))}
+
+                {reviews.length === 0 && (
+                  <Card>
+                    <CardBody className="text-center py-12 text-slate-500">
+                      <p className="text-lg mb-2">No reviews yet</p>
+                      <p className="text-sm">Reviews submitted by customers will appear here for approval</p>
                     </CardBody>
                   </Card>
                 )}

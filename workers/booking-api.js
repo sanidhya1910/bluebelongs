@@ -90,6 +90,9 @@ export default {
       } else if (path.startsWith('/api/admin/users/') && request.method === 'PATCH') {
         const userId = path.split('/')[4];
         response = await handleAdminUserUpdate(userId, request, env);
+      } else if (path.startsWith('/api/admin/users/') && request.method === 'DELETE') {
+        const userId = path.split('/')[4];
+        response = await handleAdminUserDelete(userId, request, env);
       } else if (path === '/api/gallery' && request.method === 'GET') {
         response = await handleGalleryGet(env);
       } else if (path === '/api/admin/gallery' && request.method === 'GET') {
@@ -106,6 +109,15 @@ export default {
         response = await handleContactForm(request, env);
       } else if (path === '/api/medical-form' && request.method === 'POST') {
         response = await handleMedicalForm(request, env);
+      } else if (path === '/api/reviews' && request.method === 'GET') {
+        response = await handleReviewsGet(request, env);
+      } else if (path === '/api/reviews' && request.method === 'POST') {
+        response = await handleReviewCreate(request, env);
+      } else if (path === '/api/admin/reviews' && request.method === 'GET') {
+        response = await handleAdminReviewsGet(request, env);
+      } else if (path.startsWith('/api/admin/reviews/') && request.method === 'PATCH') {
+        const reviewId = path.split('/')[4];
+        response = await handleAdminReviewUpdate(reviewId, request, env);
       } else {
         response = new Response(JSON.stringify({ error: 'Endpoint not found' }), {
           status: 404,
@@ -1049,6 +1061,226 @@ async function handleMedicalForm(request, env) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Reviews
+// ---------------------------------------------------------------------------
+
+// Public: list approved reviews (optionally filtered by course)
+async function handleReviewsGet(request, env) {
+  try {
+    const url = new URL(request.url);
+    const courseId = url.searchParams.get('courseId');
+
+    let query = `
+      SELECT id, course_id, course_name, reviewer_name, rating, comment, created_at, approved_at
+      FROM reviews
+      WHERE status = 'approved'
+    `;
+    const binds = [];
+    if (courseId) {
+      query += ' AND course_id = ?';
+      binds.push(courseId);
+    }
+    query += ' ORDER BY COALESCE(approved_at, created_at) DESC LIMIT 50';
+
+    const stmt = env.DB.prepare(query);
+    const result = await (binds.length ? stmt.bind(...binds) : stmt).all();
+
+    const reviews = (result.results || []).map((r) => ({
+      id: String(r.id),
+      courseId: r.course_id,
+      courseName: r.course_name,
+      userName: r.reviewer_name || 'Anonymous Diver',
+      rating: r.rating,
+      comment: r.comment,
+      createdAt: r.created_at,
+      approvedAt: r.approved_at
+    }));
+
+    return new Response(JSON.stringify({ success: true, reviews }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Get reviews error:', error);
+    return new Response(JSON.stringify({ success: false, error: 'Failed to load reviews' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Authenticated: submit a review for one of the caller's own bookings
+async function handleReviewCreate(request, env) {
+  try {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    const decoded = await verifyJWT(authHeader.substring(7), env);
+    if (!decoded) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const { bookingId, courseId, courseName, rating, comment } = await request.json();
+
+    const numericRating = parseInt(rating, 10);
+    if (!bookingId || !Number.isFinite(numericRating) || numericRating < 1 || numericRating > 5) {
+      return new Response(JSON.stringify({ error: 'A booking and a rating of 1-5 are required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    if (!comment || String(comment).trim().length < 10) {
+      return new Response(JSON.stringify({ error: 'Please write at least 10 characters' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Verify the booking exists and belongs to this user
+    const booking = await env.DB
+      .prepare('SELECT id, user_id, course_id, course_name FROM bookings WHERE id = ?')
+      .bind(bookingId).first();
+    if (!booking) {
+      return new Response(JSON.stringify({ error: 'Booking not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    if (booking.user_id !== decoded.userId) {
+      return new Response(JSON.stringify({ error: 'Not authorized for this booking' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // One review per booking
+    const existing = await env.DB.prepare('SELECT id FROM reviews WHERE booking_id = ?').bind(bookingId).first();
+    if (existing) {
+      return new Response(JSON.stringify({ error: 'You have already reviewed this booking' }), {
+        status: 409,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const userRow = await env.DB.prepare('SELECT name FROM users WHERE id = ?').bind(decoded.userId).first();
+    const reviewerName = (userRow && userRow.name) || 'Anonymous Diver';
+
+    await env.DB.prepare(`
+      INSERT INTO reviews (user_id, booking_id, course_id, course_name, reviewer_name, rating, comment, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')
+    `).bind(
+      decoded.userId,
+      bookingId,
+      courseId || booking.course_id,
+      courseName || booking.course_name,
+      reviewerName,
+      numericRating,
+      String(comment).trim()
+    ).run();
+
+    return new Response(JSON.stringify({ success: true, message: 'Review submitted for approval' }), {
+      status: 201,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Create review error:', error);
+    return new Response(JSON.stringify({ success: false, error: 'Failed to submit review' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Admin: list every review (any status) for moderation
+async function handleAdminReviewsGet(request, env) {
+  try {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    const decoded = await verifyJWT(authHeader.substring(7), env);
+    if (!decoded || decoded.role !== 'admin') {
+      return new Response(JSON.stringify({ error: 'Admin access required' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const result = await env.DB.prepare('SELECT * FROM reviews ORDER BY created_at DESC').all();
+    return new Response(JSON.stringify({ success: true, reviews: result.results || [] }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Admin get reviews error:', error);
+    return new Response(JSON.stringify({ success: false, error: 'Failed to load reviews' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Admin: approve / reject a review
+async function handleAdminReviewUpdate(reviewId, request, env) {
+  try {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    const decoded = await verifyJWT(authHeader.substring(7), env);
+    if (!decoded || decoded.role !== 'admin') {
+      return new Response(JSON.stringify({ error: 'Admin access required' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const { status, adminNotes } = await request.json();
+    if (!['approved', 'rejected', 'pending'].includes(status)) {
+      return new Response(JSON.stringify({ error: 'Invalid status' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const approvedAt = status === 'approved' ? new Date().toISOString() : null;
+    await env.DB.prepare(`
+      UPDATE reviews
+      SET status = ?,
+          admin_notes = COALESCE(?, admin_notes),
+          approved_at = ?,
+          approved_by = ?,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(status, adminNotes || null, approvedAt, decoded.email, reviewId).run();
+
+    return new Response(JSON.stringify({ success: true, message: 'Review updated' }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Admin update review error:', error);
+    return new Response(JSON.stringify({ success: false, error: 'Failed to update review' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
 // Email functions (you'll need to implement with your chosen email service)
 async function sendBookingConfirmationEmail(env, bookingData) {
   // This is a placeholder - implement with SendGrid, Resend, or similar
@@ -1974,6 +2206,66 @@ async function handleAdminUserUpdate(userId, request, env) {
     return new Response(JSON.stringify({
       success: false,
       error: 'Failed to update user'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+async function handleAdminUserDelete(userId, request, env) {
+  try {
+    // Verify admin authentication
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = await verifyJWT(token, env);
+    if (!decoded || decoded.role !== 'admin') {
+      return new Response(JSON.stringify({ error: 'Admin access required' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // An admin cannot delete their own account (would risk locking out admin access)
+    if (String(decoded.userId) === String(userId)) {
+      return new Response(JSON.stringify({ error: 'You cannot delete your own account' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const target = await env.DB.prepare('SELECT id FROM users WHERE id = ?').bind(userId).first();
+    if (!target) {
+      return new Response(JSON.stringify({ error: 'User not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Preserve booking history by detaching it from the user before deletion
+    // (bookings.user_id has a FK to users.id).
+    await env.DB.prepare('UPDATE bookings SET user_id = NULL WHERE user_id = ?').bind(userId).run();
+    await env.DB.prepare('DELETE FROM users WHERE id = ?').bind(userId).run();
+
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'User deleted successfully'
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Failed to delete user'
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
