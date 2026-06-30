@@ -6,21 +6,57 @@ import Navigation from "./components/NavigationWithTabs";
 import ClientRoot from './components/ClientRoot';
 import ServiceWorkerRegistration from '../components/ServiceWorkerRegistration';
 import BackToTop from '../components/BackToTop';
+import { siteConfig } from '../lib/site';
 
 const inter = Inter({
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Blue Belong - Diving School Andaman",
-  description: "Premier diving school in Andaman Islands offering certified diving courses, underwater adventures, and marine exploration experiences.",
-  keywords: "diving school, scuba diving, Andaman, SSI courses, underwater adventure, marine life",
+  metadataBase: new URL(siteConfig.url),
+  title: {
+    default: "Blue Belong - Diving School Andaman",
+    template: "%s | Blue Belong",
+  },
+  description: siteConfig.description,
+  applicationName: siteConfig.shortName,
   manifest: "/manifest.json",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: siteConfig.name,
+    title: "Blue Belong - Diving School Andaman",
+    description: siteConfig.description,
+    url: siteConfig.url,
+    images: [{ url: siteConfig.ogImage, alt: "Blue Belong Diving School" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Blue Belong - Diving School Andaman",
+    description: siteConfig.description,
+    images: [siteConfig.ogImage],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "BlueBelongs"
+    title: "BlueBelong"
   }
+};
+
+const localBusinessJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SportsActivityLocation",
+  name: siteConfig.name,
+  description: siteConfig.description,
+  url: siteConfig.url,
+  image: `${siteConfig.url}${siteConfig.ogImage}`,
+  sport: "Scuba Diving",
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: siteConfig.locality,
+    addressRegion: siteConfig.region,
+    addressCountry: siteConfig.country,
+  },
 };
 
 export const viewport = {
@@ -37,6 +73,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} w-full`}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
+        />
         <ServiceWorkerRegistration />
         <Navigation />
         <ClientRoot>
