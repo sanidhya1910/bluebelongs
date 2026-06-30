@@ -149,12 +149,13 @@ export default function LoginPage() {
               {/* Name Field (Registration only) */}
               {!isLogin && !isForgotPassword && (
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">
                     Full Name *
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
                     <input
+                      id="name"
                       type="text"
                       name="name"
                       required={!isLogin}
@@ -169,12 +170,13 @@ export default function LoginPage() {
 
               {/* Email Field */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
                   Email Address *
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
                   <input
+                    id="email"
                     type="email"
                     name="email"
                     required
@@ -189,10 +191,11 @@ export default function LoginPage() {
               {/* Phone Field (Registration only) */}
               {!isLogin && !isForgotPassword && (
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label htmlFor="phone" className="block text-sm font-medium text-slate-700 mb-1">
                     Phone Number
                   </label>
                   <input
+                    id="phone"
                     type="tel"
                     name="phone"
                     value={formData.phone}
@@ -206,10 +209,11 @@ export default function LoginPage() {
               {/* Date of Birth Field (Registration only) */}
               {!isLogin && !isForgotPassword && (
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label htmlFor="birthdate" className="block text-sm font-medium text-slate-700 mb-1">
                     Date of Birth
                   </label>
                   <input
+                    id="birthdate"
                     type="date"
                     name="birthdate"
                     value={formData.birthdate}
@@ -222,12 +226,13 @@ export default function LoginPage() {
               {/* Password Field */}
               {!isForgotPassword && (
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">
                     Password *
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
                     <input
+                      id="password"
                       type={showPassword ? 'text' : 'password'}
                       name="password"
                       required
@@ -239,6 +244,8 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      aria-pressed={showPassword}
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
                     >
                       {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -250,12 +257,13 @@ export default function LoginPage() {
               {/* Confirm Password Field (Registration only) */}
               {!isLogin && !isForgotPassword && (
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-1">
                     Confirm Password *
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
                     <input
+                      id="confirmPassword"
                       type={showPassword ? 'text' : 'password'}
                       name="confirmPassword"
                       required={!isLogin}

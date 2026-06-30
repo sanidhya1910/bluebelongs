@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Fish, Waves, Leaf, Heart, Shield, Info, MapPin, Calendar, AlertCircle } from 'lucide-react';
 
@@ -478,6 +479,21 @@ export default function MarineLifePage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSpecies, setSelectedSpecies] = useState<MarineSpecies | null>(null);
 
+  // Close the detail modal on Escape and lock background scroll while open
+  useEffect(() => {
+    if (!selectedSpecies) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelectedSpecies(null);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [selectedSpecies]);
+
   const filteredSpecies = useMemo(() => {
     return marineSpeciesData.filter(species => {
       const matchesSearch = species.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -571,14 +587,25 @@ export default function MarineLifePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
               whileHover={{ y: -8 }}
+              role="button"
+              tabIndex={0}
+              aria-label={`View details for ${species.name}`}
               onClick={() => setSelectedSpecies(species)}
-              className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden group"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSelectedSpecies(species);
+                }
+              }}
+              className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden group focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
             >
               {/* Image */}
               <div className="relative h-48 overflow-hidden">
-                <img
+                <Image
                   src={species.imageUrl}
                   alt={species.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
                 {/* Common Sighting Badge */}
@@ -617,9 +644,12 @@ export default function MarineLifePage() {
                   </div>
                 )}
 
-                <button className="mt-4 w-full bg-gradient-to-r from-sky-500 to-cyan-500 text-white font-semibold py-2 px-4 rounded-xl hover:shadow-lg transition-all duration-300">
+                <span
+                  aria-hidden="true"
+                  className="mt-4 block text-center w-full bg-gradient-to-r from-sky-500 to-cyan-500 text-white font-semibold py-2 px-4 rounded-xl group-hover:shadow-lg transition-all duration-300"
+                >
                   Learn More
-                </button>
+                </span>
               </div>
             </motion.div>
           ))}
@@ -667,6 +697,9 @@ export default function MarineLifePage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedSpecies(null)}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${selectedSpecies.name} details`}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           >
             <motion.div
@@ -676,17 +709,20 @@ export default function MarineLifePage() {
               onClick={(e) => e.stopPropagation()}
               className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
             >
-              <div className="relative">
-                <img
+              <div className="relative h-64 md:h-96">
+                <Image
                   src={selectedSpecies.imageUrl}
                   alt={selectedSpecies.name}
-                  className="w-full h-64 md:h-96 object-cover rounded-t-3xl"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 896px"
+                  className="object-cover rounded-t-3xl"
                 />
                 <button
                   onClick={() => setSelectedSpecies(null)}
+                  aria-label="Close"
                   className="absolute top-4 right-4 bg-white/90 hover:bg-white rounded-full p-2 transition-colors"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>

@@ -186,17 +186,17 @@ export default function SafetyPage() {
             <div>
               <h3 className="font-bold text-lg mb-2">DAN (Divers Alert Network)</h3>
               <p className="text-blue-100">Emergency Hotline:</p>
-              <p className="text-2xl font-bold">+1-919-684-9111</p>
+              <a href="tel:+19196849111" className="text-2xl font-bold underline-offset-2 hover:underline">+1-919-684-9111</a>
             </div>
             <div>
               <h3 className="font-bold text-lg mb-2">Local Emergency</h3>
               <p className="text-blue-100">India Emergency Services:</p>
-              <p className="text-2xl font-bold">108</p>
+              <a href="tel:108" className="text-2xl font-bold underline-offset-2 hover:underline">108</a>
             </div>
             <div>
               <h3 className="font-bold text-lg mb-2">Coast Guard</h3>
               <p className="text-blue-100">Marine Emergency:</p>
-              <p className="text-2xl font-bold">1554</p>
+              <a href="tel:1554" className="text-2xl font-bold underline-offset-2 hover:underline">1554</a>
             </div>
           </div>
         </motion.div>
