@@ -165,10 +165,10 @@ export default function HomePage() {
       <BluesBelongHero />
 
       {/* MAIN CONTENT */}
-      <main className="sand-section">
-        
+      <div className="sand-section w-full">
+
       {/* BENEFITS SECTION - shadcn Style */}
-      <section ref={featuresRef} className="py-24 relative bg-white">
+      <section ref={featuresRef} className="py-24 relative bg-white w-full">
           <div className="container mx-auto px-4">
             {/* Section Header */}
             <motion.div
@@ -330,8 +330,8 @@ export default function HomePage() {
           </div>
         </section>
 
-    {/* GALLERY SECTION - Masonry */}
-  <section className="py-16 relative overflow-hidden bg-gradient-to-b from-[rgb(239,236,229)] to-white">
+        {/* GALLERY SECTION - Masonry */}
+        <section className="py-16 relative overflow-hidden bg-gradient-to-b from-[rgb(239,236,229)] to-white w-full">
           <div className="container mx-auto px-4">
               <motion.div
               className="text-center mb-12"
@@ -361,9 +361,7 @@ export default function HomePage() {
           </div>
           
           {/* Masonry gallery */}
-          <div className="relative container mx-auto px-4">
-            <MasonryGallery items={masonryItems} />
-          </div>
+          <MasonryGallery items={masonryItems} />
           
           {/* Gallery description */}
           <div className="container mx-auto px-4 mt-12">
@@ -383,7 +381,7 @@ export default function HomePage() {
         </section>
 
         {/* TESTIMONIALS SECTION - Framer Style */}
-  <section ref={testimonialsRef} className="py-24 relative bg-white">
+        <section ref={testimonialsRef} className="py-24 relative bg-white w-full">
           <div className="container mx-auto px-4">
             <motion.div
               className="text-center mb-16"
@@ -445,7 +443,7 @@ export default function HomePage() {
         <ReviewsSection maxReviews={5} />
 
         {/* CTA SECTION - Framer Style with Ocean Background */}
-  <section ref={ctaRef} className="py-24 relative overflow-hidden bg-gradient-to-br from-sky-500 via-blue-600 to-cyan-500">
+        <section ref={ctaRef} className="py-24 relative overflow-hidden bg-gradient-to-br from-sky-500 via-blue-600 to-cyan-500 w-full">
           {/* Ocean pattern overlay */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.1),transparent_50%)] z-0"></div>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(255,255,255,0.05),transparent_50%)] z-0"></div>
@@ -519,7 +517,7 @@ export default function HomePage() {
             </motion.div>
           </div>
         </section>
-      </main>
+      </div>
 
       {/* Special Offers Banner */}
       <SpecialOffersBanner />

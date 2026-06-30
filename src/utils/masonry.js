@@ -264,7 +264,7 @@ const Masonry = ({
     // Add some bottom padding and ensure minimum height
     const containerHeight = Math.max(maxBottom + 32, 400);
     containerRef.current.style.height = `${Math.ceil(containerHeight)}px`;
-  }, [grid]);
+  }, [containerRef, grid]);
 
   return (
     <div ref={containerRef} className="relative w-full">

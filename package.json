@@ -53,6 +53,7 @@
     "zod": "^4.0.11"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.1",
     "@eslint/eslintrc": "^3",
     "@types/imagesloaded": "^4.1.7",
     "@types/node": "^20",
@@ -61,7 +62,7 @@
     "autoprefixer": "^10.4.21",
     "eslint": "^9",
     "eslint-config-next": "15.4.4",
-    "tailwindcss": "^3.4.17",
+    "tailwindcss": "^4.2.1",
     "typescript": "^5"
   }
 }

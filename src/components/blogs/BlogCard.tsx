@@ -16,10 +16,10 @@ export default function BlogCard({ post, featured = false, index = 0 }: Props) {
     return (
       <motion.article
         className="card group cursor-pointer"
-        initial={{ opacity: 0, y: 50 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.2, duration: 0.8 }}
-        whileHover={{ scale: 1.02 }}
+        transition={{ delay: index * 0.15, duration: 0.6, ease: "easeOut" }}
+        whileHover={{ y: -4 }}
       >
         <div className="relative mb-6 overflow-hidden rounded-lg">
           <motion.div
@@ -61,10 +61,10 @@ export default function BlogCard({ post, featured = false, index = 0 }: Props) {
     <motion.article
       key={post.id}
       className="card group cursor-pointer"
-      initial={{ opacity: 0, y: 50 }}
+      initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1, duration: 0.8 }}
-      whileHover={{ scale: 1.05, y: -5 }}
+      transition={{ delay: index * 0.08, duration: 0.5, ease: "easeOut" }}
+      whileHover={{ y: -6 }}
     >
       <div className="relative mb-4 overflow-hidden rounded-lg">
         <motion.div

@@ -1,6 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
+import Image from 'next/image';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, ZoomIn } from 'lucide-react';
 
 interface GalleryItem {
   id: string | number;
@@ -15,112 +18,125 @@ interface MasonryGalleryProps {
 }
 
 const MasonryGallery = ({ items }: MasonryGalleryProps) => {
-  const gridRef = useRef<HTMLDivElement>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const masonryInstance = useRef<any>(null);
-  const [mounted, setMounted] = useState(false);
+  const [lightbox, setLightbox] = useState<GalleryItem | null>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted || !gridRef.current || items.length === 0) return;
-
-    const initMasonry = async () => {
-      const Masonry = (await import('masonry-layout')).default;
-      const imagesLoaded = (await import('imagesloaded')).default;
-
-      // Initialize Masonry
-      masonryInstance.current = new Masonry(gridRef.current!, {
-        itemSelector: '.masonry-item',
-        columnWidth: '.masonry-sizer',
-        percentPosition: true,
-        gutter: 16,
-        transitionDuration: '0.3s',
-        fitWidth: false,
-        horizontalOrder: false,
-      });
-
-      // Wait for images to load before laying out
-      const imgLoad = imagesLoaded(gridRef.current!);
-      const masonry = masonryInstance.current;
-      
-      imgLoad.on('progress', () => {
-        // Layout Masonry after each image loads
-        masonry.layout();
-      });
-
-      imgLoad.on('always', () => {
-        // Final layout when all images are loaded
-        masonry.layout();
-      });
-
-      // Handle window resize
-      const handleResize = () => {
-        masonry.layout();
-      };
-
-      window.addEventListener('resize', handleResize);
-
-      return () => {
-        window.removeEventListener('resize', handleResize);
-        masonry.destroy();
-      };
-    };
-
-    const cleanup = initMasonry();
-
-    return () => {
-      cleanup.then((cleanupFn) => cleanupFn?.());
-    };
-  }, [items, mounted]);
-
-  // Re-layout when items change
-  useEffect(() => {
-    if (!mounted) return;
-    
-    const masonry = masonryInstance.current;
-    if (masonry) {
-      // Small delay to ensure DOM updates are complete
-      setTimeout(() => {
-        masonry.reloadItems();
-        masonry.layout();
-      }, 100);
-    }
-  }, [items, mounted]);
-
-  if (!mounted) {
-    return null; // Don't render during SSR
-  }
+  if (!items || items.length === 0) return null;
 
   return (
-    <div className="w-full px-4">
-      <div ref={gridRef} className="masonry-grid">
-        {/* Grid sizer for responsive column width */}
-        <div className="masonry-sizer w-full sm:w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5"></div>
-        
-        {items.map((item) => (
-          <div
+    <>
+      {/* CSS Columns Masonry Grid */}
+      <div className="masonry-grid w-full max-w-7xl mx-auto px-4">
+
+        {items.map((item, index) => (
+          <motion.div
             key={item.id}
-            className="masonry-item w-full sm:w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5 p-2"
+            className="mb-4 break-inside-avoid"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.5, delay: index * 0.08, ease: 'easeOut' }}
           >
             <div
-              className="relative overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer group"
-              onClick={() => item.url && window.open(item.url, '_blank', 'noopener')}
+              className="relative overflow-hidden rounded-2xl shadow-md hover:shadow-2xl transition-all duration-500 cursor-pointer group"
+              onClick={() => setLightbox(item)}
             >
-              <img
+              <Image
                 src={item.img}
-                alt={`Gallery item ${item.id}`}
-                className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-300"
+                alt={item.title || `Gallery item ${item.id}`}
+                width={800}
+                height={600}
+                className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
                 loading="lazy"
+                unoptimized
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+              {/* Hover overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+              {/* Zoom icon */}
+              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-400">
+                <div className="bg-white/20 backdrop-blur-sm rounded-full p-2">
+                  <ZoomIn className="h-4 w-4 text-white" />
+                </div>
+              </div>
+
+              {/* Title & description overlay */}
+              {(item.title || item.desc) && (
+                <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out">
+                  {item.title && (
+                    <h4 className="text-white font-semibold text-sm mb-1 drop-shadow-md">
+                      {item.title}
+                    </h4>
+                  )}
+                  {item.desc && (
+                    <p className="text-white/80 text-xs line-clamp-2 drop-shadow">
+                      {item.desc}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
-    </div>
+
+      {/* Lightbox Modal */}
+      <AnimatePresence>
+        {lightbox && (
+          <motion.div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            onClick={() => setLightbox(null)}
+          >
+            <motion.div
+              className="relative max-w-5xl max-h-[90vh] w-full"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close button */}
+              <button
+                onClick={() => setLightbox(null)}
+                className="absolute -top-12 right-0 text-white/80 hover:text-white transition-colors z-10"
+                aria-label="Close lightbox"
+              >
+                <X className="h-8 w-8" />
+              </button>
+
+              {/* Image */}
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+                <Image
+                  src={lightbox.img}
+                  alt={lightbox.title || 'Gallery image'}
+                  width={1600}
+                  height={1200}
+                  className="w-full h-auto max-h-[85vh] object-contain bg-black/50"
+                  unoptimized
+                  priority
+                />
+
+                {/* Caption */}
+                {(lightbox.title || lightbox.desc) && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
+                    {lightbox.title && (
+                      <h3 className="text-white font-bold text-lg mb-1">{lightbox.title}</h3>
+                    )}
+                    {lightbox.desc && (
+                      <p className="text-white/80 text-sm">{lightbox.desc}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 
