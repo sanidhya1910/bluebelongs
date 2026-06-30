@@ -584,11 +584,13 @@ export default function AdminDashboard() {
   // Announcement Management Functions
   const loadAnnouncements = async () => {
     try {
-      const storedAnnouncements = localStorage.getItem('announcements');
-      if (storedAnnouncements) {
-        setAnnouncements(JSON.parse(storedAnnouncements));
-      } else {
-        setAnnouncements([]);
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('https://bluebelong-api.blackburn1910.workers.dev/api/admin/announcements', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setAnnouncements(data.announcements || []);
       }
     } catch (err) {
       console.error('Error loading announcements:', err);
@@ -597,27 +599,37 @@ export default function AdminDashboard() {
 
   const saveAnnouncement = async (announcement: Omit<Announcement, 'id' | 'createdAt' | 'replies'> | Announcement) => {
     try {
-      let updatedAnnouncements;
-      if ('id' in announcement) {
-        // Update existing announcement
-        updatedAnnouncements = announcements.map(a => a.id === announcement.id ? announcement : a);
-      } else {
-        // Create new announcement
-        const newAnnouncement: Announcement = {
-          ...announcement,
-          id: Date.now().toString(),
-          createdAt: new Date().toISOString(),
-          replies: []
-        };
-        updatedAnnouncements = [...announcements, newAnnouncement];
+      const token = localStorage.getItem('authToken');
+      const isUpdate = 'id' in announcement;
+      const url = isUpdate
+        ? `https://bluebelong-api.blackburn1910.workers.dev/api/admin/announcements/${(announcement as Announcement).id}`
+        : 'https://bluebelong-api.blackburn1910.workers.dev/api/admin/announcements';
+
+      const response = await fetch(url, {
+        method: isUpdate ? 'PUT' : 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: announcement.title,
+          message: announcement.message,
+          type: announcement.type,
+          priority: announcement.priority,
+          active: announcement.active,
+          expiresAt: announcement.expiresAt
+        })
+      });
+
+      if (response.ok) {
+        setEditingAnnouncement(null);
+        setShowAnnouncementForm(false);
+        await loadAnnouncements();
+        return true;
       }
-      
-      setAnnouncements(updatedAnnouncements);
-      localStorage.setItem('announcements', JSON.stringify(updatedAnnouncements));
-      setEditingAnnouncement(null);
-      setShowAnnouncementForm(false);
-      alert('Announcement saved successfully!');
-      return true;
+      const error = await response.json().catch(() => ({}));
+      alert(error.error || 'Failed to save announcement');
+      return false;
     } catch (err) {
       console.error('Error saving announcement:', err);
       alert('Failed to save announcement');
@@ -630,11 +642,17 @@ export default function AdminDashboard() {
       return;
     }
     try {
-      const updatedAnnouncements = announcements.filter(a => a.id !== id);
-      setAnnouncements(updatedAnnouncements);
-      localStorage.setItem('announcements', JSON.stringify(updatedAnnouncements));
-      alert('Announcement deleted successfully!');
-      return true;
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`https://bluebelong-api.blackburn1910.workers.dev/api/admin/announcements/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        await loadAnnouncements();
+        return true;
+      }
+      alert('Failed to delete announcement');
+      return false;
     } catch (err) {
       console.error('Error deleting announcement:', err);
       alert('Failed to delete announcement');
@@ -643,13 +661,30 @@ export default function AdminDashboard() {
   };
 
   const toggleAnnouncementActive = async (id: string) => {
+    const target = announcements.find(a => a.id === id);
+    if (!target) return false;
     try {
-      const updatedAnnouncements = announcements.map(a => 
-        a.id === id ? { ...a, active: !a.active } : a
-      );
-      setAnnouncements(updatedAnnouncements);
-      localStorage.setItem('announcements', JSON.stringify(updatedAnnouncements));
-      return true;
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`https://bluebelong-api.blackburn1910.workers.dev/api/admin/announcements/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: target.title,
+          message: target.message,
+          type: target.type,
+          priority: target.priority,
+          active: !target.active,
+          expiresAt: target.expiresAt
+        })
+      });
+      if (response.ok) {
+        setAnnouncements(prev => prev.map(a => a.id === id ? { ...a, active: !a.active } : a));
+        return true;
+      }
+      return false;
     } catch (err) {
       console.error('Error toggling announcement:', err);
       return false;

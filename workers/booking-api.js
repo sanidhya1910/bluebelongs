@@ -118,6 +118,21 @@ export default {
       } else if (path.startsWith('/api/admin/reviews/') && request.method === 'PATCH') {
         const reviewId = path.split('/')[4];
         response = await handleAdminReviewUpdate(reviewId, request, env);
+      } else if (path === '/api/announcements' && request.method === 'GET') {
+        response = await handleAnnouncementsGet(env);
+      } else if (path.startsWith('/api/announcements/') && path.endsWith('/replies') && request.method === 'POST') {
+        const announcementId = path.split('/')[3];
+        response = await handleAnnouncementReplyCreate(announcementId, request, env);
+      } else if (path === '/api/admin/announcements' && request.method === 'GET') {
+        response = await handleAdminAnnouncementsGet(request, env);
+      } else if (path === '/api/admin/announcements' && request.method === 'POST') {
+        response = await handleAdminAnnouncementCreate(request, env);
+      } else if (path.startsWith('/api/admin/announcements/') && request.method === 'PUT') {
+        const announcementId = path.split('/')[4];
+        response = await handleAdminAnnouncementUpdate(announcementId, request, env);
+      } else if (path.startsWith('/api/admin/announcements/') && request.method === 'DELETE') {
+        const announcementId = path.split('/')[4];
+        response = await handleAdminAnnouncementDelete(announcementId, request, env);
       } else {
         response = new Response(JSON.stringify({ error: 'Endpoint not found' }), {
           status: 404,
@@ -1275,6 +1290,268 @@ async function handleAdminReviewUpdate(reviewId, request, env) {
   } catch (error) {
     console.error('Admin update review error:', error);
     return new Response(JSON.stringify({ success: false, error: 'Failed to update review' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Announcements (message board)
+// ---------------------------------------------------------------------------
+
+function mapAnnouncement(row, replyRows) {
+  return {
+    id: String(row.id),
+    title: row.title,
+    message: row.message,
+    type: row.type,
+    priority: row.priority,
+    active: !!row.active,
+    createdAt: row.created_at,
+    expiresAt: row.expires_at || undefined,
+    replies: (replyRows || []).map((r) => ({
+      id: String(r.id),
+      announcementId: String(r.announcement_id),
+      userId: r.user_id,
+      userName: r.user_name,
+      userEmail: r.user_email,
+      message: r.message,
+      createdAt: r.created_at
+    }))
+  };
+}
+
+async function fetchRepliesGrouped(ids, env) {
+  const grouped = {};
+  if (!ids.length) return grouped;
+  const placeholders = ids.map(() => '?').join(',');
+  const res = await env.DB
+    .prepare(`SELECT * FROM announcement_replies WHERE announcement_id IN (${placeholders}) ORDER BY created_at ASC`)
+    .bind(...ids).all();
+  (res.results || []).forEach((r) => {
+    (grouped[r.announcement_id] = grouped[r.announcement_id] || []).push(r);
+  });
+  return grouped;
+}
+
+async function requireAdmin(request, env) {
+  const authHeader = request.headers.get('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return { error: new Response(JSON.stringify({ error: 'Authentication required' }), { status: 401, headers: { 'Content-Type': 'application/json' } }) };
+  }
+  const decoded = await verifyJWT(authHeader.substring(7), env);
+  if (!decoded || decoded.role !== 'admin') {
+    return { error: new Response(JSON.stringify({ error: 'Admin access required' }), { status: 403, headers: { 'Content-Type': 'application/json' } }) };
+  }
+  return { decoded };
+}
+
+// Public: active, non-expired announcements with their replies
+async function handleAnnouncementsGet(env) {
+  try {
+    const nowIso = new Date().toISOString();
+    const res = await env.DB
+      .prepare(`SELECT * FROM announcements WHERE active = 1 AND (expires_at IS NULL OR expires_at > ?) ORDER BY created_at DESC`)
+      .bind(nowIso).all();
+    const rows = res.results || [];
+    const grouped = await fetchRepliesGrouped(rows.map((r) => r.id), env);
+    const announcements = rows.map((r) => mapAnnouncement(r, grouped[r.id]));
+
+    return new Response(JSON.stringify({ success: true, announcements }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Get announcements error:', error);
+    return new Response(JSON.stringify({ success: false, error: 'Failed to load announcements' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Authenticated: post a reply to an announcement
+async function handleAnnouncementReplyCreate(announcementId, request, env) {
+  try {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    const decoded = await verifyJWT(authHeader.substring(7), env);
+    if (!decoded) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const { message } = await request.json();
+    if (!message || !String(message).trim()) {
+      return new Response(JSON.stringify({ error: 'A message is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const announcement = await env.DB.prepare('SELECT id FROM announcements WHERE id = ?').bind(announcementId).first();
+    if (!announcement) {
+      return new Response(JSON.stringify({ error: 'Announcement not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const userRow = await env.DB.prepare('SELECT name, email FROM users WHERE id = ?').bind(decoded.userId).first();
+
+    await env.DB.prepare(`
+      INSERT INTO announcement_replies (announcement_id, user_id, user_name, user_email, message)
+      VALUES (?, ?, ?, ?, ?)
+    `).bind(
+      announcementId,
+      decoded.userId,
+      (userRow && userRow.name) || 'User',
+      (userRow && userRow.email) || decoded.email,
+      String(message).trim()
+    ).run();
+
+    return new Response(JSON.stringify({ success: true, message: 'Reply posted' }), {
+      status: 201,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Create reply error:', error);
+    return new Response(JSON.stringify({ success: false, error: 'Failed to post reply' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Admin: all announcements (any status) with replies
+async function handleAdminAnnouncementsGet(request, env) {
+  try {
+    const auth = await requireAdmin(request, env);
+    if (auth.error) return auth.error;
+
+    const res = await env.DB.prepare('SELECT * FROM announcements ORDER BY created_at DESC').all();
+    const rows = res.results || [];
+    const grouped = await fetchRepliesGrouped(rows.map((r) => r.id), env);
+    const announcements = rows.map((r) => mapAnnouncement(r, grouped[r.id]));
+
+    return new Response(JSON.stringify({ success: true, announcements }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Admin get announcements error:', error);
+    return new Response(JSON.stringify({ success: false, error: 'Failed to load announcements' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Admin: create announcement
+async function handleAdminAnnouncementCreate(request, env) {
+  try {
+    const auth = await requireAdmin(request, env);
+    if (auth.error) return auth.error;
+
+    const { title, message, type, priority, active, expiresAt } = await request.json();
+    if (!title || !message) {
+      return new Response(JSON.stringify({ error: 'Title and message are required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const result = await env.DB.prepare(`
+      INSERT INTO announcements (title, message, type, priority, active, expires_at, created_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      title,
+      message,
+      type || 'info',
+      priority || 'low',
+      active === false ? 0 : 1,
+      expiresAt || null,
+      auth.decoded.email
+    ).run();
+
+    return new Response(JSON.stringify({ success: true, id: result.meta.last_row_id }), {
+      status: 201,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Create announcement error:', error);
+    return new Response(JSON.stringify({ success: false, error: 'Failed to create announcement' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Admin: update announcement (full object; also used for active toggle)
+async function handleAdminAnnouncementUpdate(announcementId, request, env) {
+  try {
+    const auth = await requireAdmin(request, env);
+    if (auth.error) return auth.error;
+
+    const { title, message, type, priority, active, expiresAt } = await request.json();
+    if (!title || !message) {
+      return new Response(JSON.stringify({ error: 'Title and message are required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    await env.DB.prepare(`
+      UPDATE announcements
+      SET title = ?, message = ?, type = ?, priority = ?, active = ?, expires_at = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(
+      title,
+      message,
+      type || 'info',
+      priority || 'low',
+      active ? 1 : 0,
+      expiresAt || null,
+      announcementId
+    ).run();
+
+    return new Response(JSON.stringify({ success: true, message: 'Announcement updated' }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Update announcement error:', error);
+    return new Response(JSON.stringify({ success: false, error: 'Failed to update announcement' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Admin: delete announcement (and its replies)
+async function handleAdminAnnouncementDelete(announcementId, request, env) {
+  try {
+    const auth = await requireAdmin(request, env);
+    if (auth.error) return auth.error;
+
+    await env.DB.prepare('DELETE FROM announcement_replies WHERE announcement_id = ?').bind(announcementId).run();
+    await env.DB.prepare('DELETE FROM announcements WHERE id = ?').bind(announcementId).run();
+
+    return new Response(JSON.stringify({ success: true, message: 'Announcement deleted' }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Delete announcement error:', error);
+    return new Response(JSON.stringify({ success: false, error: 'Failed to delete announcement' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });

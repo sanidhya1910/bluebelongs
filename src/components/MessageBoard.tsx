@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { X, MessageCircle, Send, AlertCircle, Info, CheckCircle, Megaphone } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const API_BASE = 'https://bluebelong-api.blackburn1910.workers.dev';
+
 interface Announcement {
   id: string;
   title: string;
@@ -35,10 +37,21 @@ export default function MessageBoard() {
   const [hasUnread, setHasUnread] = useState(false);
 
   useEffect(() => {
-    loadAnnouncements();
     loadUser();
-    checkUnreadAnnouncements();
+    loadAnnouncements();
   }, []);
+
+  // Derive unread state from the newest announcement vs the last-read marker
+  useEffect(() => {
+    if (announcements.length === 0) {
+      setHasUnread(false);
+      return;
+    }
+    const lastRead = localStorage.getItem('lastReadAnnouncement');
+    const latest = Math.max(...announcements.map(a => new Date(a.createdAt).getTime()));
+    const lastReadTime = lastRead ? new Date(lastRead).getTime() : 0;
+    setHasUnread(latest > lastReadTime);
+  }, [announcements]);
 
   const loadUser = () => {
     try {
@@ -51,39 +64,14 @@ export default function MessageBoard() {
     }
   };
 
-  const loadAnnouncements = () => {
+  const loadAnnouncements = async () => {
     try {
-      const storedAnnouncements = localStorage.getItem('announcements');
-      if (storedAnnouncements) {
-        const allAnnouncements: Announcement[] = JSON.parse(storedAnnouncements);
-        // Filter active announcements that haven't expired
-        const activeAnnouncements = allAnnouncements.filter(a => {
-          if (!a.active) return false;
-          if (a.expiresAt && new Date(a.expiresAt) < new Date()) return false;
-          return true;
-        });
-        setAnnouncements(activeAnnouncements);
-      }
+      const response = await fetch(`${API_BASE}/api/announcements`);
+      if (!response.ok) return;
+      const data = await response.json();
+      setAnnouncements(Array.isArray(data.announcements) ? data.announcements : []);
     } catch (err) {
       console.error('Error loading announcements:', err);
-    }
-  };
-
-  const checkUnreadAnnouncements = () => {
-    try {
-      const lastRead = localStorage.getItem('lastReadAnnouncement');
-      const storedAnnouncements = localStorage.getItem('announcements');
-      if (storedAnnouncements) {
-        const allAnnouncements: Announcement[] = JSON.parse(storedAnnouncements);
-        const activeAnnouncements = allAnnouncements.filter(a => a.active);
-        if (activeAnnouncements.length > 0) {
-          const latestAnnouncementDate = Math.max(...activeAnnouncements.map(a => new Date(a.createdAt).getTime()));
-          const lastReadDate = lastRead ? new Date(lastRead).getTime() : 0;
-          setHasUnread(latestAnnouncementDate > lastReadDate);
-        }
-      }
-    } catch (err) {
-      console.error('Error checking unread announcements:', err);
     }
   };
 
@@ -92,7 +80,7 @@ export default function MessageBoard() {
     setHasUnread(false);
   };
 
-  const handleReply = (announcementId: string) => {
+  const handleReply = async (announcementId: string) => {
     if (!user) {
       alert('Please login to reply to announcements');
       return;
@@ -104,35 +92,35 @@ export default function MessageBoard() {
     }
 
     try {
-      const storedAnnouncements = localStorage.getItem('announcements');
-      if (storedAnnouncements) {
-        const allAnnouncements: Announcement[] = JSON.parse(storedAnnouncements);
-        const updatedAnnouncements = allAnnouncements.map(a => {
-          if (a.id === announcementId) {
-            const newReply: AnnouncementReply = {
-              id: Date.now().toString(),
-              announcementId,
-              userId: user.id,
-              userName: user.name,
-              userEmail: user.email,
-              message: replyMessage,
-              createdAt: new Date().toISOString()
-            };
-            return {
-              ...a,
-              replies: [...(a.replies || []), newReply]
-            };
-          }
-          return a;
-        });
-        localStorage.setItem('announcements', JSON.stringify(updatedAnnouncements));
-        setReplyMessage('');
-        loadAnnouncements();
-        alert('Reply sent successfully!');
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_BASE}/api/announcements/${announcementId}/replies`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ message: replyMessage.trim() })
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to send reply');
+      }
+
+      setReplyMessage('');
+
+      // Refresh and keep the current announcement selected so the new reply shows
+      const refreshed = await fetch(`${API_BASE}/api/announcements`)
+        .then(r => (r.ok ? r.json() : null))
+        .catch(() => null);
+      if (refreshed && Array.isArray(refreshed.announcements)) {
+        setAnnouncements(refreshed.announcements);
+        const updated = refreshed.announcements.find((a: Announcement) => a.id === announcementId);
+        if (updated) setSelectedAnnouncement(updated);
       }
     } catch (err) {
       console.error('Error sending reply:', err);
-      alert('Failed to send reply');
+      alert(err instanceof Error ? err.message : 'Failed to send reply');
     }
   };
 
@@ -284,7 +272,7 @@ export default function MessageBoard() {
                               onChange={(e) => setReplyMessage(e.target.value)}
                               placeholder="Type your message..."
                               className="flex-1 px-3 py-2 border border-current/30 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-current/50 bg-white/80"
-                              onKeyPress={(e) => e.key === 'Enter' && handleReply(selectedAnnouncement.id)}
+                              onKeyDown={(e) => e.key === 'Enter' && handleReply(selectedAnnouncement.id)}
                             />
                             <button
                               onClick={() => handleReply(selectedAnnouncement.id)}
