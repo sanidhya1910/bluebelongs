@@ -1961,7 +1961,13 @@ async function handleProfile(request, env) {
 
     const token = authHeader.replace('Bearer ', '');
     const payload = await verifyJWT(token, env);
-    
+    if (!payload) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     // Get user details
     const userStmt = env.DB.prepare('SELECT id, name, email, role, phone, certification_level, total_dives, created_at FROM users WHERE id = ?');
     const user = await userStmt.bind(payload.userId).first();
@@ -1996,17 +2002,10 @@ async function handleProfile(request, env) {
 
 async function handleDashboardStats(request, env) {
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Authorization required' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
+    // Returns global stats + recent bookings (PII) — admin only
+    const auth = await requireAdmin(request, env);
+    if (auth.error) return auth.error;
 
-    const token = authHeader.replace('Bearer ', '');
-    const payload = await verifyJWT(token, env);
-    
     // Get dashboard statistics
     const totalBookingsStmt = env.DB.prepare('SELECT COUNT(*) as count FROM bookings');
     const totalBookings = await totalBookingsStmt.first();
