@@ -1,24 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, ChevronLeft, ChevronRight, User } from 'lucide-react';
 import { Card, CardBody } from '@heroui/react';
+
+const API_BASE = 'https://bluebelong-api.blackburn1910.workers.dev';
 
 interface Review {
   id: string;
   courseId: string;
   courseName: string;
-  bookingId: string;
   rating: number;
   comment: string;
-  status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
-  adminNotes?: string;
   approvedAt?: string;
-  approvedBy?: string;
   userName?: string;
-  userEmail?: string;
 }
 
 interface ReviewsSectionProps {
@@ -32,54 +29,46 @@ export default function ReviewsSection({ courseId, maxReviews, title = 'What Our
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
-    // Load approved reviews from all users
-    const usersData = localStorage.getItem('users') || '[]';
-    const users = JSON.parse(usersData);
-    
-    const allReviews: Review[] = [];
-    
-    users.forEach((user: { email: string; name?: string; reviews?: Review[] }) => {
-      if (user.reviews && Array.isArray(user.reviews)) {
-        user.reviews.forEach((review: Review) => {
-          if (review.status === 'approved') {
-            // Add user info to review
-            allReviews.push({
-              ...review,
-              userName: user.name || 'Anonymous Diver',
-              userEmail: user.email
-            });
-          }
-        });
+    let cancelled = false;
+
+    const loadReviews = async () => {
+      try {
+        const url = courseId
+          ? `${API_BASE}/api/reviews?courseId=${encodeURIComponent(courseId)}`
+          : `${API_BASE}/api/reviews`;
+        const response = await fetch(url);
+        if (!response.ok) return;
+        const data = await response.json();
+        if (cancelled) return;
+
+        let list: Review[] = Array.isArray(data.reviews) ? data.reviews : [];
+        if (maxReviews) {
+          list = list.slice(0, maxReviews);
+        }
+        setReviews(list);
+      } catch (error) {
+        console.error('Failed to load reviews:', error);
       }
-    });
+    };
 
-    // Filter by courseId if provided
-    let filteredReviews = courseId 
-      ? allReviews.filter(r => r.courseId === courseId)
-      : allReviews;
-
-    // Sort by approval date (newest first)
-    filteredReviews.sort((a, b) => {
-      const dateA = new Date(a.approvedAt || a.createdAt).getTime();
-      const dateB = new Date(b.approvedAt || b.createdAt).getTime();
-      return dateB - dateA;
-    });
-
-    // Limit number of reviews if specified
-    if (maxReviews) {
-      filteredReviews = filteredReviews.slice(0, maxReviews);
-    }
-
-    setReviews(filteredReviews);
+    loadReviews();
+    return () => {
+      cancelled = true;
+    };
   }, [courseId, maxReviews]);
+
+  // Keep the carousel index valid if the list shrinks
+  useEffect(() => {
+    setCurrentIndex((prev) => (prev >= reviews.length ? 0 : prev));
+  }, [reviews.length]);
 
   const handlePrevious = () => {
     setCurrentIndex((prev) => (prev === 0 ? reviews.length - 1 : prev - 1));
   };
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     setCurrentIndex((prev) => (prev === reviews.length - 1 ? 0 : prev + 1));
-  };
+  }, [reviews.length]);
 
   // Auto-rotate reviews every 8 seconds
   useEffect(() => {
@@ -90,7 +79,7 @@ export default function ReviewsSection({ courseId, maxReviews, title = 'What Our
     }, 8000);
 
     return () => clearInterval(interval);
-  }, [reviews.length, currentIndex]);
+  }, [reviews.length, handleNext]);
 
   if (reviews.length === 0) {
     return null; // Don't show section if no reviews

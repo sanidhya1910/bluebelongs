@@ -5,22 +5,10 @@ import { motion } from 'framer-motion';
 import { Star, Send, CheckCircle } from 'lucide-react';
 import { Card, CardBody, CardHeader, Button, Textarea } from '@heroui/react';
 
-interface Review {
-  id: string;
-  courseId: string;
-  courseName: string;
-  bookingId: string;
-  rating: number;
-  comment: string;
-  status: 'pending' | 'approved' | 'rejected';
-  createdAt: string;
-  adminNotes?: string;
-  approvedAt?: string;
-  approvedBy?: string;
-}
+const API_BASE = 'https://bluebelong-api.blackburn1910.workers.dev';
 
 interface ReviewFormProps {
-  bookingId: string;
+  bookingId: string | number;
   courseId: string;
   courseName: string;
   onSuccess?: () => void;
@@ -51,43 +39,30 @@ export default function ReviewForm({ bookingId, courseId, courseName, onSuccess 
     setError('');
 
     try {
-      // Get current user
-      const userData = localStorage.getItem('user');
-      if (!userData) {
-        throw new Error('User not logged in');
-      }
-      
-      const user = JSON.parse(userData);
-      
-      // Get existing reviews from user data
-      const usersData = localStorage.getItem('users') || '[]';
-      const users = JSON.parse(usersData);
-      const userIndex = users.findIndex((u: { email: string }) => u.email === user.email);
-      
-      if (userIndex === -1) {
-        throw new Error('User not found');
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('Please log in to submit a review');
       }
 
-      // Create new review
-      const newReview: Review = {
-        id: `review-${Date.now()}`,
-        courseId,
-        courseName,
-        bookingId,
-        rating,
-        comment: comment.trim(),
-        status: 'pending',
-        createdAt: new Date().toISOString()
-      };
+      const response = await fetch(`${API_BASE}/api/reviews`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          bookingId,
+          courseId,
+          courseName,
+          rating,
+          comment: comment.trim()
+        })
+      });
 
-      // Add review to user's reviews array
-      if (!users[userIndex].reviews) {
-        users[userIndex].reviews = [];
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to submit review');
       }
-      users[userIndex].reviews.push(newReview);
-
-      // Save updated users data
-      localStorage.setItem('users', JSON.stringify(users));
 
       setIsSubmitted(true);
       setTimeout(() => {

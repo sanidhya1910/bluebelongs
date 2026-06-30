@@ -14,9 +14,10 @@ import {
   User as UserIcon,
   Clock,
   Users,
-  Waves
+  Star
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import ReviewForm from '@/components/ReviewForm';
 
 interface UserData {
   id: number;
@@ -50,13 +51,13 @@ interface DashboardStats {
 export default function DashboardPage() {
   const [user, setUser] = useState<UserData | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
   const [userBookings, setUserBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirm: '' });
   const [pwLoading, setPwLoading] = useState(false);
   const [pwMessage, setPwMessage] = useState<string | null>(null);
+  const [reviewBooking, setReviewBooking] = useState<Booking | null>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -98,7 +99,6 @@ export default function DashboardPage() {
         if (statsResponse.ok) {
           const statsData = await statsResponse.json();
           setStats(statsData.stats);
-          setRecentBookings(statsData.recentBookings || []);
         }
       }
 
@@ -402,6 +402,17 @@ export default function DashboardPage() {
                                   Cancel
                                 </Button>
                               )}
+                              {booking.status === 'completed' && (
+                                <Button
+                                  onClick={() => setReviewBooking(booking)}
+                                  color="primary"
+                                  variant="flat"
+                                  size="sm"
+                                  startContent={<Star className="h-4 w-4" />}
+                                >
+                                  Write a review
+                                </Button>
+                              )}
                             </div>
                           </div>
                         </CardBody>
@@ -546,6 +557,36 @@ export default function DashboardPage() {
           </Tab>
         </Tabs>
       </div>
+
+      {/* Write-a-review modal */}
+      {reviewBooking && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Write a review"
+          onClick={() => setReviewBooking(null)}
+        >
+          <div
+            className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setReviewBooking(null)}
+              className="absolute right-3 top-3 z-10 rounded-full bg-white/90 p-2 text-slate-600 shadow hover:bg-white"
+              aria-label="Close review form"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <ReviewForm
+              bookingId={reviewBooking.id}
+              courseId=""
+              courseName={reviewBooking.course_name}
+              onSuccess={() => setReviewBooking(null)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

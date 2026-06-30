@@ -8,6 +8,12 @@ export interface BlogPost {
   readTime: string;
   image: string;
   featured: boolean;
+  /**
+   * Full article body, rendered as paragraphs (split on blank lines) on the
+   * /blogs/[id] page. Optional — when omitted the detail page falls back to the
+   * excerpt plus a contact prompt, so links never 404.
+   */
+  content?: string;
 }
 
 export const blogPosts: BlogPost[] = [

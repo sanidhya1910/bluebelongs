@@ -1,11 +1,13 @@
 const CACHE_NAME = 'blue-belongs-v2'; // Increment version to force update
+// Paths use trailing slashes to match the static export (trailingSlash: true).
 const urlsToCache = [
   '/',
-  '/courses',
-  '/about',
-  '/dashboard',
-  '/faq',
-  '/safety',
+  '/courses/',
+  '/about/',
+  '/dashboard/',
+  '/faq/',
+  '/safety/',
+  '/blogs/',
   '/offline.html'
 ];
 
@@ -77,9 +79,9 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('push', (event) => {
   const data = event.data ? event.data.json() : {};
   const options = {
-    body: data.body || 'New notification from Blue Belongs',
-    icon: '/icon-192x192.png',
-    badge: '/icon-192x192.png',
+    body: data.body || 'New notification from Blue Belong',
+    icon: '/icon-192x192.svg',
+    badge: '/icon-192x192.svg',
     vibrate: [200, 100, 200],
     data: {
       url: data.url || '/'

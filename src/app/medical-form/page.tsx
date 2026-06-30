@@ -146,6 +146,8 @@ export default function MedicalFormPage() {
   const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
   const [hasBookings, setHasBookings] = useState(false);
+  const [bookings, setBookings] = useState<{ id: number; course_name: string; preferred_date: string }[]>([]);
+  const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -179,7 +181,14 @@ export default function MedicalFormPage() {
       return;
     }
     
-    const parsedUser = JSON.parse(userData);
+    let parsedUser;
+    try {
+      parsedUser = JSON.parse(userData);
+    } catch {
+      alert('Your session looks invalid. Please log in again.');
+      window.location.href = '/login';
+      return;
+    }
     setUser(parsedUser);
     
     // Check if user has bookings
@@ -206,6 +215,8 @@ export default function MedicalFormPage() {
       if (response.ok) {
         const data = await response.json();
         if (data.bookings && data.bookings.length > 0) {
+          setBookings(data.bookings);
+          setSelectedBookingId(data.bookings[0].id);
           setHasBookings(true);
         }
       }
@@ -275,6 +286,11 @@ export default function MedicalFormPage() {
       return;
     }
 
+    if (!selectedBookingId) {
+      alert('Please select which booking this medical form is for.');
+      return;
+    }
+
     // Check if all main questions are answered
     if (Object.keys(formData.mainQuestions).length !== medicalData.questions.length) {
       alert('Please answer all medical questions.');
@@ -300,7 +316,7 @@ export default function MedicalFormPage() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          bookingId: 1, // You might want to get this from the user's bookings
+          bookingId: selectedBookingId,
           name: formData.personalInfo.name,
           email: user?.email,
           medicalAnswers: {
@@ -468,6 +484,24 @@ export default function MedicalFormPage() {
             <div className="bg-gray-50 rounded-lg p-6">
               <h2 className="text-xl font-semibold text-blue-900 mb-4">Personal Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label htmlFor="booking-select" className="block text-sm font-medium text-gray-700 mb-2">
+                    For which booking? *
+                  </label>
+                  <select
+                    id="booking-select"
+                    value={selectedBookingId ?? ''}
+                    onChange={(e) => setSelectedBookingId(Number(e.target.value))}
+                    className="w-full p-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  >
+                    {bookings.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.course_name} — {b.preferred_date}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Full Name *
