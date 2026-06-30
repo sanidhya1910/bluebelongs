@@ -31,10 +31,12 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title: `${post.title} - Blue Belong Diving Blog`,
     description: post.excerpt,
+    alternates: { canonical: `/blogs/${post.id}` },
     openGraph: {
       title: post.title,
       description: post.excerpt,
       type: 'article',
+      url: `/blogs/${post.id}`,
       images: [{ url: post.image }],
     },
   };
