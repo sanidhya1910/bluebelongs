@@ -6,10 +6,26 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    // CORS headers
+    // CORS headers — reflect the request Origin only when it is in the configured
+    // allow-list. A single ACAO value is the only spec-valid form (a comma-joined
+    // list is rejected by browsers). Falls back to '*' only when no list is set.
+    const requestOrigin = request.headers.get('Origin');
+    const allowedOrigins = (env.ALLOWED_ORIGINS || '')
+      .split(',')
+      .map(o => o.trim())
+      .filter(Boolean);
+    let allowOrigin;
+    if (allowedOrigins.length === 0) {
+      allowOrigin = '*';
+    } else if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
+      allowOrigin = requestOrigin;
+    } else {
+      allowOrigin = allowedOrigins[0];
+    }
     const corsHeaders = {
-      'Access-Control-Allow-Origin': env.ALLOWED_ORIGINS || '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Origin': allowOrigin,
+      'Vary': 'Origin',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Access-Control-Max-Age': '86400',
     };
@@ -43,7 +59,7 @@ export default {
         response = await handleBookingsGet(request, env);
       } else if (path.startsWith('/api/bookings/') && request.method === 'GET') {
         const bookingId = path.split('/')[3];
-        response = await handleBookingGet(bookingId, env);
+        response = await handleBookingGet(bookingId, request, env);
       } else if (path.startsWith('/api/bookings/') && path.endsWith('/cancel') && request.method === 'PUT') {
         const bookingId = path.split('/')[3];
         response = await handleBookingCancel(bookingId, request, env);
@@ -74,6 +90,9 @@ export default {
       } else if (path.startsWith('/api/admin/users/') && request.method === 'PATCH') {
         const userId = path.split('/')[4];
         response = await handleAdminUserUpdate(userId, request, env);
+      } else if (path.startsWith('/api/admin/users/') && request.method === 'DELETE') {
+        const userId = path.split('/')[4];
+        response = await handleAdminUserDelete(userId, request, env);
       } else if (path === '/api/gallery' && request.method === 'GET') {
         response = await handleGalleryGet(env);
       } else if (path === '/api/admin/gallery' && request.method === 'GET') {
@@ -90,6 +109,30 @@ export default {
         response = await handleContactForm(request, env);
       } else if (path === '/api/medical-form' && request.method === 'POST') {
         response = await handleMedicalForm(request, env);
+      } else if (path === '/api/reviews' && request.method === 'GET') {
+        response = await handleReviewsGet(request, env);
+      } else if (path === '/api/reviews' && request.method === 'POST') {
+        response = await handleReviewCreate(request, env);
+      } else if (path === '/api/admin/reviews' && request.method === 'GET') {
+        response = await handleAdminReviewsGet(request, env);
+      } else if (path.startsWith('/api/admin/reviews/') && request.method === 'PATCH') {
+        const reviewId = path.split('/')[4];
+        response = await handleAdminReviewUpdate(reviewId, request, env);
+      } else if (path === '/api/announcements' && request.method === 'GET') {
+        response = await handleAnnouncementsGet(env);
+      } else if (path.startsWith('/api/announcements/') && path.endsWith('/replies') && request.method === 'POST') {
+        const announcementId = path.split('/')[3];
+        response = await handleAnnouncementReplyCreate(announcementId, request, env);
+      } else if (path === '/api/admin/announcements' && request.method === 'GET') {
+        response = await handleAdminAnnouncementsGet(request, env);
+      } else if (path === '/api/admin/announcements' && request.method === 'POST') {
+        response = await handleAdminAnnouncementCreate(request, env);
+      } else if (path.startsWith('/api/admin/announcements/') && request.method === 'PUT') {
+        const announcementId = path.split('/')[4];
+        response = await handleAdminAnnouncementUpdate(announcementId, request, env);
+      } else if (path.startsWith('/api/admin/announcements/') && request.method === 'DELETE') {
+        const announcementId = path.split('/')[4];
+        response = await handleAdminAnnouncementDelete(announcementId, request, env);
       } else {
         response = new Response(JSON.stringify({ error: 'Endpoint not found' }), {
           status: 404,
@@ -127,7 +170,7 @@ async function handleBookingCreate(request, env) {
     }
 
     const token = authHeader.substring(7);
-    const decoded = await verifyJWT(token);
+    const decoded = await verifyJWT(token, env);
     if (!decoded) {
       return new Response(JSON.stringify({ error: 'Invalid token' }), {
         status: 401,
@@ -271,7 +314,7 @@ async function handleAdminGalleryGet(request, env) {
     return new Response(JSON.stringify({ error: 'Authentication required' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
   }
   const token = authHeader.substring(7);
-  const decoded = await verifyJWT(token);
+  const decoded = await verifyJWT(token, env);
   if (!decoded || decoded.role !== 'admin') {
     return new Response(JSON.stringify({ error: 'Admin access required' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
   }
@@ -285,7 +328,7 @@ async function handleAdminGalleryCreate(request, env) {
     return new Response(JSON.stringify({ error: 'Authentication required' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
   }
   const token = authHeader.substring(7);
-  const decoded = await verifyJWT(token);
+  const decoded = await verifyJWT(token, env);
   if (!decoded || decoded.role !== 'admin') {
     return new Response(JSON.stringify({ error: 'Admin access required' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
   }
@@ -309,7 +352,7 @@ async function handleAdminGalleryUpdate(id, request, env) {
     return new Response(JSON.stringify({ error: 'Authentication required' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
   }
   const token = authHeader.substring(7);
-  const decoded = await verifyJWT(token);
+  const decoded = await verifyJWT(token, env);
   if (!decoded || decoded.role !== 'admin') {
     return new Response(JSON.stringify({ error: 'Admin access required' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
   }
@@ -339,7 +382,7 @@ async function handleAdminGalleryDelete(id, request, env) {
     return new Response(JSON.stringify({ error: 'Authentication required' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
   }
   const token = authHeader.substring(7);
-  const decoded = await verifyJWT(token);
+  const decoded = await verifyJWT(token, env);
   if (!decoded || decoded.role !== 'admin') {
     return new Response(JSON.stringify({ error: 'Admin access required' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
   }
@@ -362,7 +405,7 @@ async function handleChangePassword(request, env) {
     }
 
     const token = authHeader.substring(7);
-    const decoded = await verifyJWT(token);
+    const decoded = await verifyJWT(token, env);
     if (!decoded || !decoded.userId) {
       return new Response(JSON.stringify({ error: 'Invalid token' }), {
         status: 401,
@@ -422,14 +465,38 @@ async function handleChangePassword(request, env) {
 }
 
 // Handle booking retrieval
-async function handleBookingGet(bookingId, env) {
+async function handleBookingGet(bookingId, request, env) {
   try {
+    // Require authentication and enforce ownership (prevents enumerating others' bookings)
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    const decoded = await verifyJWT(authHeader.substring(7), env);
+    if (!decoded) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     const stmt = env.DB.prepare('SELECT * FROM bookings WHERE id = ?');
     const booking = await stmt.bind(bookingId).first();
-    
+
     if (!booking) {
       return new Response(JSON.stringify({ error: 'Booking not found' }), {
         status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Only the owner (or an admin) may read a booking
+    if (decoded.role !== 'admin' && booking.user_id !== decoded.userId) {
+      return new Response(JSON.stringify({ error: 'Not authorized' }), {
+        status: 403,
         headers: { 'Content-Type': 'application/json' }
       });
     }
@@ -461,7 +528,7 @@ async function handleBookingCancel(bookingId, request, env) {
     }
 
     const token = authHeader.substring(7);
-    const decoded = await verifyJWT(token);
+    const decoded = await verifyJWT(token, env);
     if (!decoded) {
       return new Response(JSON.stringify({ error: 'Invalid token' }), {
         status: 401,
@@ -558,7 +625,7 @@ async function handleAdminCoursesGet(request, env) {
     }
 
     const token = authHeader.substring(7);
-    const decoded = await verifyJWT(token);
+    const decoded = await verifyJWT(token, env);
     if (!decoded || decoded.role !== 'admin') {
       return new Response(JSON.stringify({ error: 'Admin access required' }), {
         status: 403,
@@ -596,7 +663,7 @@ async function handleAdminCourseCreate(request, env) {
     }
 
     const token = authHeader.substring(7);
-    const decoded = await verifyJWT(token);
+    const decoded = await verifyJWT(token, env);
     if (!decoded || decoded.role !== 'admin') {
       return new Response(JSON.stringify({ error: 'Admin access required' }), {
         status: 403,
@@ -659,7 +726,7 @@ async function handleAdminCourseUpdate(courseId, request, env) {
     }
 
     const token = authHeader.substring(7);
-    const decoded = await verifyJWT(token);
+    const decoded = await verifyJWT(token, env);
     if (!decoded || decoded.role !== 'admin') {
       return new Response(JSON.stringify({ error: 'Admin access required' }), {
         status: 403,
@@ -724,7 +791,7 @@ async function handleAdminCourseDelete(courseId, request, env) {
     }
 
     const token = authHeader.substring(7);
-    const decoded = await verifyJWT(token);
+    const decoded = await verifyJWT(token, env);
     if (!decoded || decoded.role !== 'admin') {
       return new Response(JSON.stringify({ error: 'Admin access required' }), {
         status: 403,
@@ -787,7 +854,7 @@ async function handleAdminStats(request, env) {
     }
 
     const token = authHeader.substring(7);
-    const decoded = await verifyJWT(token);
+    const decoded = await verifyJWT(token, env);
     if (!decoded || decoded.role !== 'admin') {
       return new Response(JSON.stringify({ error: 'Admin access required' }), {
         status: 403,
@@ -836,7 +903,7 @@ async function handleAdminCourseToggle(courseId, request, env) {
     }
 
     const token = authHeader.substring(7);
-    const decoded = await verifyJWT(token);
+    const decoded = await verifyJWT(token, env);
     if (!decoded || decoded.role !== 'admin') {
       return new Response(JSON.stringify({ error: 'Admin access required' }), {
         status: 403,
@@ -934,12 +1001,44 @@ async function handleContactForm(request, env) {
 // Handle medical form submission
 async function handleMedicalForm(request, env) {
   try {
+    // Require authentication — this endpoint stores sensitive medical data
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    const decoded = await verifyJWT(authHeader.substring(7), env);
+    if (!decoded) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     const medicalForm = await request.json();
     const { bookingId, name, email, medicalAnswers, physicianApproval } = medicalForm;
-    
+
     if (!bookingId || !name || !email || !medicalAnswers) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
         status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Verify the booking exists and belongs to this user (admins may submit for any booking)
+    const ownerStmt = env.DB.prepare('SELECT id, user_id FROM bookings WHERE id = ?');
+    const ownerBooking = await ownerStmt.bind(bookingId).first();
+    if (!ownerBooking) {
+      return new Response(JSON.stringify({ error: 'Booking not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    if (decoded.role !== 'admin' && ownerBooking.user_id !== decoded.userId) {
+      return new Response(JSON.stringify({ error: 'Not authorized for this booking' }), {
+        status: 403,
         headers: { 'Content-Type': 'application/json' }
       });
     }
@@ -971,6 +1070,488 @@ async function handleMedicalForm(request, env) {
   } catch (error) {
     console.error('Medical form error:', error);
     return new Response(JSON.stringify({ error: 'Failed to submit medical form' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Reviews
+// ---------------------------------------------------------------------------
+
+// Public: list approved reviews (optionally filtered by course)
+async function handleReviewsGet(request, env) {
+  try {
+    const url = new URL(request.url);
+    const courseId = url.searchParams.get('courseId');
+
+    let query = `
+      SELECT id, course_id, course_name, reviewer_name, rating, comment, created_at, approved_at
+      FROM reviews
+      WHERE status = 'approved'
+    `;
+    const binds = [];
+    if (courseId) {
+      query += ' AND course_id = ?';
+      binds.push(courseId);
+    }
+    query += ' ORDER BY COALESCE(approved_at, created_at) DESC LIMIT 50';
+
+    const stmt = env.DB.prepare(query);
+    const result = await (binds.length ? stmt.bind(...binds) : stmt).all();
+
+    const reviews = (result.results || []).map((r) => ({
+      id: String(r.id),
+      courseId: r.course_id,
+      courseName: r.course_name,
+      userName: r.reviewer_name || 'Anonymous Diver',
+      rating: r.rating,
+      comment: r.comment,
+      createdAt: r.created_at,
+      approvedAt: r.approved_at
+    }));
+
+    return new Response(JSON.stringify({ success: true, reviews }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Get reviews error:', error);
+    return new Response(JSON.stringify({ success: false, error: 'Failed to load reviews' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Authenticated: submit a review for one of the caller's own bookings
+async function handleReviewCreate(request, env) {
+  try {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    const decoded = await verifyJWT(authHeader.substring(7), env);
+    if (!decoded) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const { bookingId, courseId, courseName, rating, comment } = await request.json();
+
+    const numericRating = parseInt(rating, 10);
+    if (!bookingId || !Number.isFinite(numericRating) || numericRating < 1 || numericRating > 5) {
+      return new Response(JSON.stringify({ error: 'A booking and a rating of 1-5 are required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    if (!comment || String(comment).trim().length < 10) {
+      return new Response(JSON.stringify({ error: 'Please write at least 10 characters' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Verify the booking exists and belongs to this user
+    const booking = await env.DB
+      .prepare('SELECT id, user_id, course_id, course_name FROM bookings WHERE id = ?')
+      .bind(bookingId).first();
+    if (!booking) {
+      return new Response(JSON.stringify({ error: 'Booking not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    if (booking.user_id !== decoded.userId) {
+      return new Response(JSON.stringify({ error: 'Not authorized for this booking' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // One review per booking
+    const existing = await env.DB.prepare('SELECT id FROM reviews WHERE booking_id = ?').bind(bookingId).first();
+    if (existing) {
+      return new Response(JSON.stringify({ error: 'You have already reviewed this booking' }), {
+        status: 409,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const userRow = await env.DB.prepare('SELECT name FROM users WHERE id = ?').bind(decoded.userId).first();
+    const reviewerName = (userRow && userRow.name) || 'Anonymous Diver';
+
+    await env.DB.prepare(`
+      INSERT INTO reviews (user_id, booking_id, course_id, course_name, reviewer_name, rating, comment, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')
+    `).bind(
+      decoded.userId,
+      bookingId,
+      courseId || booking.course_id,
+      courseName || booking.course_name,
+      reviewerName,
+      numericRating,
+      String(comment).trim()
+    ).run();
+
+    return new Response(JSON.stringify({ success: true, message: 'Review submitted for approval' }), {
+      status: 201,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Create review error:', error);
+    return new Response(JSON.stringify({ success: false, error: 'Failed to submit review' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Admin: list every review (any status) for moderation
+async function handleAdminReviewsGet(request, env) {
+  try {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    const decoded = await verifyJWT(authHeader.substring(7), env);
+    if (!decoded || decoded.role !== 'admin') {
+      return new Response(JSON.stringify({ error: 'Admin access required' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const result = await env.DB.prepare('SELECT * FROM reviews ORDER BY created_at DESC').all();
+    return new Response(JSON.stringify({ success: true, reviews: result.results || [] }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Admin get reviews error:', error);
+    return new Response(JSON.stringify({ success: false, error: 'Failed to load reviews' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Admin: approve / reject a review
+async function handleAdminReviewUpdate(reviewId, request, env) {
+  try {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    const decoded = await verifyJWT(authHeader.substring(7), env);
+    if (!decoded || decoded.role !== 'admin') {
+      return new Response(JSON.stringify({ error: 'Admin access required' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const { status, adminNotes } = await request.json();
+    if (!['approved', 'rejected', 'pending'].includes(status)) {
+      return new Response(JSON.stringify({ error: 'Invalid status' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const approvedAt = status === 'approved' ? new Date().toISOString() : null;
+    await env.DB.prepare(`
+      UPDATE reviews
+      SET status = ?,
+          admin_notes = COALESCE(?, admin_notes),
+          approved_at = ?,
+          approved_by = ?,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(status, adminNotes || null, approvedAt, decoded.email, reviewId).run();
+
+    return new Response(JSON.stringify({ success: true, message: 'Review updated' }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Admin update review error:', error);
+    return new Response(JSON.stringify({ success: false, error: 'Failed to update review' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Announcements (message board)
+// ---------------------------------------------------------------------------
+
+function mapAnnouncement(row, replyRows) {
+  return {
+    id: String(row.id),
+    title: row.title,
+    message: row.message,
+    type: row.type,
+    priority: row.priority,
+    active: !!row.active,
+    createdAt: row.created_at,
+    expiresAt: row.expires_at || undefined,
+    replies: (replyRows || []).map((r) => ({
+      id: String(r.id),
+      announcementId: String(r.announcement_id),
+      userId: r.user_id,
+      userName: r.user_name,
+      userEmail: r.user_email,
+      message: r.message,
+      createdAt: r.created_at
+    }))
+  };
+}
+
+async function fetchRepliesGrouped(ids, env) {
+  const grouped = {};
+  if (!ids.length) return grouped;
+  const placeholders = ids.map(() => '?').join(',');
+  const res = await env.DB
+    .prepare(`SELECT * FROM announcement_replies WHERE announcement_id IN (${placeholders}) ORDER BY created_at ASC`)
+    .bind(...ids).all();
+  (res.results || []).forEach((r) => {
+    (grouped[r.announcement_id] = grouped[r.announcement_id] || []).push(r);
+  });
+  return grouped;
+}
+
+async function requireAdmin(request, env) {
+  const authHeader = request.headers.get('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return { error: new Response(JSON.stringify({ error: 'Authentication required' }), { status: 401, headers: { 'Content-Type': 'application/json' } }) };
+  }
+  const decoded = await verifyJWT(authHeader.substring(7), env);
+  if (!decoded || decoded.role !== 'admin') {
+    return { error: new Response(JSON.stringify({ error: 'Admin access required' }), { status: 403, headers: { 'Content-Type': 'application/json' } }) };
+  }
+  return { decoded };
+}
+
+// Public: active, non-expired announcements with their replies
+async function handleAnnouncementsGet(env) {
+  try {
+    const nowIso = new Date().toISOString();
+    const res = await env.DB
+      .prepare(`SELECT * FROM announcements WHERE active = 1 AND (expires_at IS NULL OR expires_at > ?) ORDER BY created_at DESC`)
+      .bind(nowIso).all();
+    const rows = res.results || [];
+    const grouped = await fetchRepliesGrouped(rows.map((r) => r.id), env);
+    const announcements = rows.map((r) => mapAnnouncement(r, grouped[r.id]));
+
+    return new Response(JSON.stringify({ success: true, announcements }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Get announcements error:', error);
+    return new Response(JSON.stringify({ success: false, error: 'Failed to load announcements' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Authenticated: post a reply to an announcement
+async function handleAnnouncementReplyCreate(announcementId, request, env) {
+  try {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    const decoded = await verifyJWT(authHeader.substring(7), env);
+    if (!decoded) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const { message } = await request.json();
+    if (!message || !String(message).trim()) {
+      return new Response(JSON.stringify({ error: 'A message is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const announcement = await env.DB.prepare('SELECT id FROM announcements WHERE id = ?').bind(announcementId).first();
+    if (!announcement) {
+      return new Response(JSON.stringify({ error: 'Announcement not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const userRow = await env.DB.prepare('SELECT name, email FROM users WHERE id = ?').bind(decoded.userId).first();
+
+    await env.DB.prepare(`
+      INSERT INTO announcement_replies (announcement_id, user_id, user_name, user_email, message)
+      VALUES (?, ?, ?, ?, ?)
+    `).bind(
+      announcementId,
+      decoded.userId,
+      (userRow && userRow.name) || 'User',
+      (userRow && userRow.email) || decoded.email,
+      String(message).trim()
+    ).run();
+
+    return new Response(JSON.stringify({ success: true, message: 'Reply posted' }), {
+      status: 201,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Create reply error:', error);
+    return new Response(JSON.stringify({ success: false, error: 'Failed to post reply' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Admin: all announcements (any status) with replies
+async function handleAdminAnnouncementsGet(request, env) {
+  try {
+    const auth = await requireAdmin(request, env);
+    if (auth.error) return auth.error;
+
+    const res = await env.DB.prepare('SELECT * FROM announcements ORDER BY created_at DESC').all();
+    const rows = res.results || [];
+    const grouped = await fetchRepliesGrouped(rows.map((r) => r.id), env);
+    const announcements = rows.map((r) => mapAnnouncement(r, grouped[r.id]));
+
+    return new Response(JSON.stringify({ success: true, announcements }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Admin get announcements error:', error);
+    return new Response(JSON.stringify({ success: false, error: 'Failed to load announcements' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Admin: create announcement
+async function handleAdminAnnouncementCreate(request, env) {
+  try {
+    const auth = await requireAdmin(request, env);
+    if (auth.error) return auth.error;
+
+    const { title, message, type, priority, active, expiresAt } = await request.json();
+    if (!title || !message) {
+      return new Response(JSON.stringify({ error: 'Title and message are required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const result = await env.DB.prepare(`
+      INSERT INTO announcements (title, message, type, priority, active, expires_at, created_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      title,
+      message,
+      type || 'info',
+      priority || 'low',
+      active === false ? 0 : 1,
+      expiresAt || null,
+      auth.decoded.email
+    ).run();
+
+    return new Response(JSON.stringify({ success: true, id: result.meta.last_row_id }), {
+      status: 201,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Create announcement error:', error);
+    return new Response(JSON.stringify({ success: false, error: 'Failed to create announcement' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Admin: update announcement (full object; also used for active toggle)
+async function handleAdminAnnouncementUpdate(announcementId, request, env) {
+  try {
+    const auth = await requireAdmin(request, env);
+    if (auth.error) return auth.error;
+
+    const { title, message, type, priority, active, expiresAt } = await request.json();
+    if (!title || !message) {
+      return new Response(JSON.stringify({ error: 'Title and message are required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    await env.DB.prepare(`
+      UPDATE announcements
+      SET title = ?, message = ?, type = ?, priority = ?, active = ?, expires_at = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(
+      title,
+      message,
+      type || 'info',
+      priority || 'low',
+      active ? 1 : 0,
+      expiresAt || null,
+      announcementId
+    ).run();
+
+    return new Response(JSON.stringify({ success: true, message: 'Announcement updated' }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Update announcement error:', error);
+    return new Response(JSON.stringify({ success: false, error: 'Failed to update announcement' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Admin: delete announcement (and its replies)
+async function handleAdminAnnouncementDelete(announcementId, request, env) {
+  try {
+    const auth = await requireAdmin(request, env);
+    if (auth.error) return auth.error;
+
+    await env.DB.prepare('DELETE FROM announcement_replies WHERE announcement_id = ?').bind(announcementId).run();
+    await env.DB.prepare('DELETE FROM announcements WHERE id = ?').bind(announcementId).run();
+
+    return new Response(JSON.stringify({ success: true, message: 'Announcement deleted' }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Delete announcement error:', error);
+    return new Response(JSON.stringify({ success: false, error: 'Failed to delete announcement' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
@@ -1062,7 +1643,7 @@ async function handleLogin(request, env) {
       });
     }
 
-    // Verify password using bcrypt
+    // Verify password
     const isValidPassword = await verifyPassword(password, user.password_hash);
     if (!isValidPassword) {
       return new Response(JSON.stringify({ error: 'Invalid credentials' }), {
@@ -1071,8 +1652,19 @@ async function handleLogin(request, env) {
       });
     }
 
-    // Create JWT token (simplified)
-    const token = await createJWT({ userId: user.id, email: user.email, role: user.role });
+    // Transparently upgrade legacy hashes to PBKDF2 on successful login
+    if (isLegacyHash(user.password_hash)) {
+      try {
+        const upgraded = await hashPassword(password);
+        await env.DB.prepare('UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+          .bind(upgraded, user.id).run();
+      } catch (rehashError) {
+        console.error('Password hash upgrade failed:', rehashError);
+      }
+    }
+
+    // Create signed JWT token
+    const token = await createJWT({ userId: user.id, email: user.email, role: user.role }, env);
     
     return new Response(JSON.stringify({
       success: true,
@@ -1133,7 +1725,7 @@ async function handleRegister(request, env) {
     const result = await insertStmt.bind(name, email, passwordHash, phone || null, birthdate || null).run();
     
     if (result.success) {
-      const token = await createJWT({ userId: result.meta.last_row_id, email, role: 'customer' });
+      const token = await createJWT({ userId: result.meta.last_row_id, email, role: 'customer' }, env);
       
       return new Response(JSON.stringify({
         success: true,
@@ -1368,8 +1960,14 @@ async function handleProfile(request, env) {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const payload = await verifyJWT(token);
-    
+    const payload = await verifyJWT(token, env);
+    if (!payload) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     // Get user details
     const userStmt = env.DB.prepare('SELECT id, name, email, role, phone, certification_level, total_dives, created_at FROM users WHERE id = ?');
     const user = await userStmt.bind(payload.userId).first();
@@ -1404,17 +2002,10 @@ async function handleProfile(request, env) {
 
 async function handleDashboardStats(request, env) {
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Authorization required' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
+    // Returns global stats + recent bookings (PII) — admin only
+    const auth = await requireAdmin(request, env);
+    if (auth.error) return auth.error;
 
-    const token = authHeader.replace('Bearer ', '');
-    const payload = await verifyJWT(token);
-    
     // Get dashboard statistics
     const totalBookingsStmt = env.DB.prepare('SELECT COUNT(*) as count FROM bookings');
     const totalBookings = await totalBookingsStmt.first();
@@ -1465,7 +2056,7 @@ async function handleBookingsGet(request, env) {
     }
 
     const token = authHeader.substring(7);
-    const decoded = await verifyJWT(token);
+    const decoded = await verifyJWT(token, env);
     if (!decoded) {
       return new Response(JSON.stringify({ error: 'Invalid token' }), {
         status: 401,
@@ -1515,110 +2106,167 @@ async function handleBookingsGet(request, env) {
 }
 
 // Utility functions
-async function hashPassword(password) {
-  // Simple hash for demo - in production use bcrypt
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password + 'bluebelongs_salt');
+// ---------------------------------------------------------------------------
+// Auth crypto utilities
+//
+// Passwords are hashed with PBKDF2-HMAC-SHA256 (per-user random salt) using the
+// Web Crypto API available in Workers — no external bcrypt dependency. Hashes are
+// stored as `pbkdf2$<iterations>$<saltB64url>$<hashB64url>`. Legacy SHA-256 hashes
+// (the previous scheme) still verify and are transparently upgraded on next login.
+//
+// JWTs are signed with HMAC-SHA256 using env.JWT_SECRET and the signature is
+// verified before the payload is trusted. Set the secret with:
+//   npx wrangler secret put JWT_SECRET --config wrangler.worker.toml
+// ---------------------------------------------------------------------------
+
+const PBKDF2_ITERATIONS = 210000;
+
+function base64urlEncode(bytes) {
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function base64urlToBytes(str) {
+  const padded = str.replace(/-/g, '+').replace(/_/g, '/').padEnd(str.length + ((4 - str.length % 4) % 4), '=');
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+function timingSafeEqual(a, b) {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= a[i] ^ b[i];
+  }
+  return diff === 0;
+}
+
+async function derivePbkdf2(password, salt, iterations, lengthBytes) {
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(password),
+    { name: 'PBKDF2' },
+    false,
+    ['deriveBits']
+  );
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
+    keyMaterial,
+    lengthBytes * 8
+  );
+  return new Uint8Array(bits);
+}
+
+// Previous (insecure) hashing scheme — kept only so existing users can still log
+// in once, after which their hash is upgraded to PBKDF2.
+async function legacySha256Hash(password) {
+  const data = new TextEncoder().encode(password + 'bluebelongs_salt');
   const hash = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hash))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-async function verifyPassword(password, hash) {
-  // Check if it's a bcrypt hash (starts with $2b$)
-  if (hash.startsWith('$2b$')) {
-    // For bcrypt hashes, we need to use a bcrypt library
-    // Since we can't easily import bcrypt in Cloudflare Workers,
-    // we'll implement a simple verification for our known hash
-    
-    // This is the hash for 'neilu@havelock'
-    const knownAdminHash = '$2b$10$QU5QZJ704lTfrkX9W/4RIuWbQGaYjptGmOjrlcIJuPL.cHBpHpNDe';
-    
-    if (hash === knownAdminHash && password === 'neilu@havelock') {
-      return true;
-    }
-    
-    // For other bcrypt hashes, we'd need a proper bcrypt implementation
-    // For now, return false for unknown bcrypt hashes
-    return false;
-  } else {
-    // For SHA-256 hashes (legacy)
-    const expectedHash = await hashPassword(password);
-    return hash === expectedHash;
+function isLegacyHash(stored) {
+  return typeof stored === 'string' && !stored.startsWith('pbkdf2$');
+}
+
+async function hashPassword(password) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const hashBytes = await derivePbkdf2(password, salt, PBKDF2_ITERATIONS, 32);
+  return `pbkdf2$${PBKDF2_ITERATIONS}$${base64urlEncode(salt)}$${base64urlEncode(hashBytes)}`;
+}
+
+async function verifyPassword(password, stored) {
+  if (!stored || typeof stored !== 'string') return false;
+
+  if (stored.startsWith('pbkdf2$')) {
+    const parts = stored.split('$');
+    if (parts.length !== 4) return false;
+    const iterations = parseInt(parts[1], 10);
+    if (!Number.isFinite(iterations) || iterations <= 0) return false;
+    const salt = base64urlToBytes(parts[2]);
+    const expected = base64urlToBytes(parts[3]);
+    const actual = await derivePbkdf2(password, salt, iterations, expected.length);
+    return timingSafeEqual(actual, expected);
   }
-}
 
-async function createJWT(payload) {
-  try {
-    // Simplified JWT for demo - in production use proper JWT library
-    const header = { alg: 'HS256', typ: 'JWT' };
-    
-    // Add expiration time (24 hours from now)
-    const payloadWithExp = {
-      ...payload,
-      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // Use seconds instead of milliseconds
-      iat: Math.floor(Date.now() / 1000) // Issued at time
-    };
-    
-    // Use TextEncoder/TextDecoder for proper encoding
-    const encoder = new TextEncoder();
-    const decoder = new TextDecoder();
-    
-    const headerBytes = encoder.encode(JSON.stringify(header));
-    const payloadBytes = encoder.encode(JSON.stringify(payloadWithExp));
-    
-    // Convert to base64url (URL-safe base64)
-    const encodedHeader = btoa(String.fromCharCode(...headerBytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-    const encodedPayload = btoa(String.fromCharCode(...payloadBytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-    
-    return `${encodedHeader}.${encodedPayload}.signature`;
-  } catch (error) {
-    console.error('JWT creation error:', error);
-    throw new Error('Failed to create token');
+  // Legacy hex SHA-256 hashes — verify with the old scheme. Unknown formats
+  // (e.g. old bcrypt $2b$ hashes that can't be verified without a bcrypt lib)
+  // fail closed; those accounts must reset their password.
+  if (/^[0-9a-f]{64}$/i.test(stored)) {
+    const legacy = await legacySha256Hash(password);
+    return timingSafeEqual(new TextEncoder().encode(legacy), new TextEncoder().encode(stored));
   }
+
+  return false;
 }
 
-async function verifyJWT(token) {
+async function getSigningKey(env) {
+  const secret = env && env.JWT_SECRET;
+  if (!secret || typeof secret !== 'string' || secret.length < 16) {
+    throw new Error('JWT_SECRET is not configured (set it with `wrangler secret put JWT_SECRET`)');
+  }
+  return crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign', 'verify']
+  );
+}
+
+async function createJWT(payload, env) {
+  const header = { alg: 'HS256', typ: 'JWT' };
+  const now = Math.floor(Date.now() / 1000);
+  const fullPayload = { ...payload, iat: now, exp: now + (24 * 60 * 60) };
+
+  const encoder = new TextEncoder();
+  const encodedHeader = base64urlEncode(encoder.encode(JSON.stringify(header)));
+  const encodedPayload = base64urlEncode(encoder.encode(JSON.stringify(fullPayload)));
+  const signingInput = `${encodedHeader}.${encodedPayload}`;
+
+  const key = await getSigningKey(env);
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(signingInput));
+  const encodedSignature = base64urlEncode(new Uint8Array(signature));
+
+  return `${signingInput}.${encodedSignature}`;
+}
+
+// Returns the decoded payload, or null if the token is missing/malformed/expired
+// or — critically — if the HMAC signature does not verify.
+async function verifyJWT(token, env) {
   try {
-    if (!token || typeof token !== 'string') {
-      throw new Error('Invalid token format');
-    }
-    
+    if (!token || typeof token !== 'string') return null;
+
     const parts = token.split('.');
-    if (parts.length !== 3) {
-      throw new Error('Invalid token structure');
-    }
-    
-    const [header, payload, signature] = parts;
-    
-    // Convert from base64url back to base64
-    const paddedPayload = payload.replace(/-/g, '+').replace(/_/g, '/').padEnd(payload.length + (4 - payload.length % 4) % 4, '=');
-    
-    let decodedPayload;
-    try {
-      const payloadJson = atob(paddedPayload);
-      decodedPayload = JSON.parse(payloadJson);
-    } catch (parseError) {
-      console.error('Token parsing error:', parseError);
-      throw new Error('Invalid token format');
-    }
-    
-    // Check expiration (now using seconds)
-    const currentTime = Math.floor(Date.now() / 1000);
-    if (decodedPayload.exp && decodedPayload.exp < currentTime) {
-      throw new Error('Token expired');
-    }
-    
-    // Validate required fields
-    if (!decodedPayload.userId || !decodedPayload.email) {
-      throw new Error('Invalid token payload');
-    }
-    
-    return decodedPayload;
+    if (parts.length !== 3) return null;
+
+    const [encodedHeader, encodedPayload, encodedSignature] = parts;
+    const encoder = new TextEncoder();
+    const signingInput = `${encodedHeader}.${encodedPayload}`;
+
+    const key = await getSigningKey(env);
+    const signatureBytes = base64urlToBytes(encodedSignature);
+    const valid = await crypto.subtle.verify('HMAC', key, signatureBytes, encoder.encode(signingInput));
+    if (!valid) return null;
+
+    const payloadJson = new TextDecoder().decode(base64urlToBytes(encodedPayload));
+    const decoded = JSON.parse(payloadJson);
+
+    const now = Math.floor(Date.now() / 1000);
+    if (decoded.exp && decoded.exp < now) return null;
+    if (!decoded.userId || !decoded.email) return null;
+
+    return decoded;
   } catch (error) {
     console.error('JWT verification error:', error.message);
-    throw new Error('Invalid token');
+    return null;
   }
 }
 
@@ -1635,7 +2283,7 @@ async function handleAdminBookingsGet(request, env) {
     }
 
     const token = authHeader.substring(7);
-    const decoded = await verifyJWT(token);
+    const decoded = await verifyJWT(token, env);
     if (!decoded || decoded.role !== 'admin') {
       return new Response(JSON.stringify({ error: 'Admin access required' }), {
         status: 403,
@@ -1686,7 +2334,7 @@ async function handleAdminBookingUpdate(bookingId, request, env) {
     }
 
     const token = authHeader.substring(7);
-    const decoded = await verifyJWT(token);
+    const decoded = await verifyJWT(token, env);
     if (!decoded || decoded.role !== 'admin') {
       return new Response(JSON.stringify({ error: 'Admin access required' }), {
         status: 403,
@@ -1740,7 +2388,7 @@ async function handleAdminUsersGet(request, env) {
     }
 
     const token = authHeader.substring(7);
-    const decoded = await verifyJWT(token);
+    const decoded = await verifyJWT(token, env);
     if (!decoded || decoded.role !== 'admin') {
       return new Response(JSON.stringify({ error: 'Admin access required' }), {
         status: 403,
@@ -1795,7 +2443,7 @@ async function handleAdminUserUpdate(userId, request, env) {
     }
 
     const token = authHeader.substring(7);
-    const decoded = await verifyJWT(token);
+    const decoded = await verifyJWT(token, env);
     if (!decoded || decoded.role !== 'admin') {
       return new Response(JSON.stringify({ error: 'Admin access required' }), {
         status: 403,
@@ -1834,6 +2482,66 @@ async function handleAdminUserUpdate(userId, request, env) {
     return new Response(JSON.stringify({
       success: false,
       error: 'Failed to update user'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+async function handleAdminUserDelete(userId, request, env) {
+  try {
+    // Verify admin authentication
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = await verifyJWT(token, env);
+    if (!decoded || decoded.role !== 'admin') {
+      return new Response(JSON.stringify({ error: 'Admin access required' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // An admin cannot delete their own account (would risk locking out admin access)
+    if (String(decoded.userId) === String(userId)) {
+      return new Response(JSON.stringify({ error: 'You cannot delete your own account' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const target = await env.DB.prepare('SELECT id FROM users WHERE id = ?').bind(userId).first();
+    if (!target) {
+      return new Response(JSON.stringify({ error: 'User not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Preserve booking history by detaching it from the user before deletion
+    // (bookings.user_id has a FK to users.id).
+    await env.DB.prepare('UPDATE bookings SET user_id = NULL WHERE user_id = ?').bind(userId).run();
+    await env.DB.prepare('DELETE FROM users WHERE id = ?').bind(userId).run();
+
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'User deleted successfully'
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Failed to delete user'
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }

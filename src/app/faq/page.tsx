@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Search, HelpCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Input, Select, SelectItem, Card, CardBody, Button, Accordion, AccordionItem, Chip } from '@heroui/react';
 
 interface FAQ {
@@ -185,15 +185,13 @@ export default function FAQPage() {
     }))
   ];
 
-  const filteredFAQs = useMemo(() => {
-    return faqs.filter(faq => {
-      const matchesCategory = selectedCategory === 'all' || faq.category === selectedCategory;
-      const matchesSearch = searchTerm === '' || 
-        faq.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        faq.answer.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesCategory && matchesSearch;
-    });
-  }, [searchTerm, selectedCategory]);
+  const filteredFAQs = faqs.filter(faq => {
+    const matchesCategory = selectedCategory === 'all' || faq.category === selectedCategory;
+    const matchesSearch = searchTerm === '' || 
+      faq.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      faq.answer.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-blue-50 to-cyan-50 pt-20">
@@ -287,7 +285,7 @@ export default function FAQPage() {
               selectionMode="multiple"
               className="gap-4"
             >
-              {filteredFAQs.map((faq, index) => (
+              {filteredFAQs.map((faq) => (
                 <AccordionItem
                   key={faq.id}
                   aria-label={faq.question}

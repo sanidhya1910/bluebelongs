@@ -80,9 +80,6 @@ export default function CoursesPage() {
         timestamp: new Date().toISOString()
       };
       
-      // Log the request payload for debugging
-      console.log('Sending booking request:', requestPayload);
-      console.log('Token:', token ? 'Present' : 'Missing');
       
       const response = await fetch('https://bluebelong-api.blackburn1910.workers.dev/api/bookings', {
         method: 'POST',
@@ -95,10 +92,6 @@ export default function CoursesPage() {
 
       const data = await response.json();
       
-      // Log response for debugging
-      console.log('Response status:', response.status);
-      console.log('Response data:', data);
-
       if (response.ok) {
         alert(`✅ Booking request submitted successfully! 
         
@@ -130,14 +123,11 @@ A confirmation email has been sent to ${bookingForm.email}.`);
       console.error('Booking error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       
-      // Log the full response for debugging
-      console.error('Full error details:', error);
-      
       alert(`❌ Booking submission failed: ${errorMessage}
       
 Please try again or contact us directly:
 📧 Email: info@bluebelongs.com
-📱 Phone: +91-XXXX-XXXX`);
+📱 Phone: +91 88706 84362`);
     } finally {
       // Reset button state
       button.disabled = false;

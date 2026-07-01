@@ -165,8 +165,8 @@ export default function AboutPage() {
         </motion.div>
 
         {/* Achievements Grid */}
-  <motion.div
-    className="mb-16"
+        <motion.div
+          className="mb-16"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.8 }}
@@ -185,7 +185,7 @@ export default function AboutPage() {
                 whileHover={{ scale: 1.05 }}
               >
                 <motion.div
-      className={`w-16 h-16 rounded-full bg-gradient-to-r ${achievement.color} mx-auto mb-4 flex items-center justify-center text-white`}
+                  className={`w-16 h-16 rounded-full bg-gradient-to-r ${achievement.color} mx-auto mb-4 flex items-center justify-center text-white`}
                   animate={{ scale: [1, 1.05, 1] }}
                   transition={{ duration: 3, repeat: Infinity, delay: index * 0.5 }}
                 >
