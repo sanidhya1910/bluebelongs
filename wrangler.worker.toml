@@ -9,15 +9,18 @@ binding = "DB"
 database_name = "bluebelong-bookings"
 database_id = "8e4a3945-3150-4c16-bc22-13059e14fa13"
 
-# Environment variables
+# Environment variables (top-level = the default deploy target used by `wrangler deploy`)
 [vars]
 ENVIRONMENT = "production"
 ADMIN_EMAIL = "admin@bluebelong.com"
 RESEND_API_KEY = "re_ZFPSeZHG_4QF4CSdYwLWSi3ybej8LNJSA"
+# Allowed CORS origins (production Pages domain + local dev). The worker echoes
+# the request Origin only when it's in this list; otherwise no wildcard.
+ALLOWED_ORIGINS = "https://bluebelongs.pages.dev,http://localhost:3000"
 
-# CORS settings
+# CORS settings for the named environments (used only when deploying with --env)
 [env.production.vars]
-ALLOWED_ORIGINS = "https://bluebelong.pages.dev,https://www.bluebelong.pages.dev"
+ALLOWED_ORIGINS = "https://bluebelongs.pages.dev"
 
 [env.development.vars]
 ALLOWED_ORIGINS = "http://localhost:3000"
